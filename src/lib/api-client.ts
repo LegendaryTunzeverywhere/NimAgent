@@ -1,23 +1,28 @@
 // API client for NimHub backend
+//
+// This client now uses the BFF (Backend-for-Frontend) pattern.
+// Instead of calling Railway directly, it calls Next.js API routes
+// which proxy requests to Railway with the API secret on the server.
+//
+// Flow: Browser → /api/* (Next.js) → Railway Backend
+//
+// Benefits:
+// - API secret never exposed to browser
+// - No CORS issues (same-origin requests)
+// - Additional security layer
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET || '';
+const API_URL = '/api'; // BFF proxy endpoint (same-origin)
 
 import type { ActionCard } from '@/types';
 
 /**
- * Get headers with API secret for authentication
+ * Get headers for API requests
+ * No API key needed - handled by BFF layer on server
  */
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
+  return {
     'Content-Type': 'application/json',
   };
-  
-  if (API_SECRET) {
-    headers['x-api-key'] = API_SECRET;
-  }
-  
-  return headers;
 }
 
 export interface ChatMessage {
