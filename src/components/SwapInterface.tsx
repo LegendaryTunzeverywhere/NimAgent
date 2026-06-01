@@ -51,7 +51,7 @@ export default function SwapInterface() {
 
   const fetchRates = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
       const response = await fetch(`${apiUrl}/api/swap/rates`);
       const data = await response.json();
       setRates(data);
@@ -65,7 +65,7 @@ export default function SwapInterface() {
 
     setQuoteLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
       const endpoint = fromCoin === 'NIM' 
         ? '/api/swap/quote/nim-to-btc'
         : '/api/swap/quote/btc-to-nim';
