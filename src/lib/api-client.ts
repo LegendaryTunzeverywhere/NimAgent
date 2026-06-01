@@ -68,7 +68,7 @@ export async function chatWithAgent(
   history: ChatMessage[],
   walletAddress?: string
 ): Promise<ChatResponse> {
-  const res = await fetch(`${API_URL}/api/agent/chat`, {
+  const res = await fetch(`${API_URL}/agent/chat`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ message, history, walletAddress }),
@@ -92,7 +92,7 @@ export async function recordTransaction(data: {
   txHash?: string;
   status?: string;
 }): Promise<Transaction> {
-  const res = await fetch(`${API_URL}/api/transactions`, {
+  const res = await fetch(`${API_URL}/transactions`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -114,7 +114,7 @@ export async function validateOrder(data: {
   details: any;
   walletAddress?: string;
 }): Promise<{ valid: boolean; error?: string; quoteId?: string; expiresAt?: string; [key: string]: any }> {
-  const res = await fetch(`${API_URL}/api/orders/validate`, {
+  const res = await fetch(`${API_URL}/orders/validate`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -139,7 +139,7 @@ export async function createOrder(data: {
   walletAddress: string;
   quoteId?: string;
 }): Promise<any> {
-  const res = await fetch(`${API_URL}/api/orders`, {
+  const res = await fetch(`${API_URL}/orders`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -159,7 +159,7 @@ export async function createOrder(data: {
  * Get order history for a wallet
  */
 export async function getOrders(walletAddress: string): Promise<Order[]> {
-  const res = await fetch(`${API_URL}/api/orders?wallet=${encodeURIComponent(walletAddress)}`, {
+  const res = await fetch(`${API_URL}/orders?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
   
@@ -180,7 +180,7 @@ export async function getBalances(address: string): Promise<{
   totalUSD: number;
 }> {
   const cleanAddress = address.replace(/\s/g, '');
-  const res = await fetch(`${API_URL}/api/balances/${cleanAddress}`, {
+  const res = await fetch(`${API_URL}/balances/${cleanAddress}`, {
     headers: getHeaders(),
   });
   
@@ -201,7 +201,7 @@ export async function saveChatMessage(data: {
   content: string;
   action?: ActionCard;
 }): Promise<void> {
-  const res = await fetch(`${API_URL}/api/chat/history`, {
+  const res = await fetch(`${API_URL}/chat/history`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -216,7 +216,7 @@ export async function saveChatMessage(data: {
  * Get chat history for a session
  */
 export async function getChatHistory(sessionId: string, walletAddress: string): Promise<any[]> {
-  const res = await fetch(`${API_URL}/api/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
+  const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
   
@@ -232,7 +232,7 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
  * Get all chat sessions for a wallet
  */
 export async function getChatSessions(walletAddress: string): Promise<any[]> {
-  const res = await fetch(`${API_URL}/api/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
+  const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
   
@@ -248,7 +248,7 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
  * Delete a chat session
  */
 export async function deleteChatSession(sessionId: string, walletAddress: string): Promise<void> {
-  const res = await fetch(`${API_URL}/api/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
+  const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
