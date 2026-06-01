@@ -84,12 +84,12 @@ export default function HistoryPage() {
     setLastFetch(Date.now());
     
     try {
-      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+      // Use BFF proxy (same-origin request)
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`${apiUrl}/api/transactions?wallet=${encodeURIComponent(wallet.address)}`),
-        fetch(`${apiUrl}/api/orders?wallet=${encodeURIComponent(wallet.address)}`)
+        fetch(`/api/transactions?wallet=${encodeURIComponent(wallet.address)}`),
+        fetch(`/api/orders?wallet=${encodeURIComponent(wallet.address)}`)
       ]);
       
       let allTransactions: Transaction[] = [];

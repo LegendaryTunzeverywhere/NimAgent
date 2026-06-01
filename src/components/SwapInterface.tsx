@@ -51,8 +51,8 @@ export default function SwapInterface() {
 
   const fetchRates = async () => {
     try {
-      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-      const response = await fetch(`${apiUrl}/api/swap/rates`);
+      // Use BFF proxy (same-origin request)
+      const response = await fetch(`/api/swap/rates`);
       const data = await response.json();
       setRates(data);
     } catch (error) {
@@ -65,7 +65,7 @@ export default function SwapInterface() {
 
     setQuoteLoading(true);
     try {
-      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+      // Use BFF proxy (same-origin request)
       const endpoint = fromCoin === 'NIM' 
         ? '/api/swap/quote/nim-to-btc'
         : '/api/swap/quote/btc-to-nim';
@@ -74,7 +74,7 @@ export default function SwapInterface() {
         ? { nimAmount: parseFloat(amount) }
         : { btcAmount: parseFloat(amount) };
 
-      const response = await fetch(`${apiUrl}${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
