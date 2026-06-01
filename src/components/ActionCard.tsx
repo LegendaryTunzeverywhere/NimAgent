@@ -126,6 +126,12 @@ export default function ActionCard({ action }: ActionCardProps) {
     try {
       if (action.type === 'send') {
         // Send NIM transaction
+        console.log('[ActionCard] Initiating send transaction:', {
+          recipient: action.recipient,
+          amountLuna,
+          walletAddress: wallet.address
+        });
+        
         const hash = await requestPayment(
           action.recipient!,
           amountLuna,
@@ -133,6 +139,8 @@ export default function ActionCard({ action }: ActionCardProps) {
           'direct',
           wallet.address // Pass wallet address to skip address selection
         );
+
+        console.log('[ActionCard] Transaction successful, hash:', hash);
 
         await recordTransaction({
           type: 'send',
@@ -232,9 +240,22 @@ export default function ActionCard({ action }: ActionCardProps) {
       }
     } catch (error: any) {
       console.error('Action execution error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Payment failed: ';
+      if (error.message?.includes('User closed')) {
+        errorMessage += 'You cancelled the transaction.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage += 'The wallet took too long to respond. Please try again.';
+      } else if (error.message?.includes('popup')) {
+        errorMessage += 'Popup was blocked. Please allow popups for this site and try again.';
+      } else {
+        errorMessage += error.message || 'Something went wrong. Please try again.';
+      }
+      
       addMessage({
         role: 'ai',
-        content: `Payment failed: ${error.message || 'Something went wrong'}. You can try again.`,
+        content: errorMessage,
       });
     } finally {
       setLoading(false);

@@ -107,25 +107,34 @@ nimpay-next/
 
 ## 🔧 Configuration
 
-### Frontend Environment (.env.local)
+### Quick Setup
+
+1. **Generate API Secret**:
+```bash
+node generate-api-key.js
+```
+
+2. **Frontend Environment (.env.local)**:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_API_SECRET=<paste_generated_key>
 NEXT_PUBLIC_NIMIQ_NETWORK=testnet
 NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq-testnet.com
 NEXT_PUBLIC_SERVICE_ADDRESS=NQ07 0000 0000 0000 0000 0000 0000 0000 0000
 ```
 
-### Backend Environment (nimsplit/server/.env)
+3. **Backend Environment (n_server/server/.env)**:
 ```env
 PORT=3000
 NODE_ENV=development
+API_SECRET=<paste_same_key>  # MUST match frontend!
 
 # Database
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_service_role_key
+SUPABASE_SERVICE_KEY=your_service_role_key
 
 # AI Agent
-GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_KEYS=your_gemini_api_key
 
 # Services
 RELOADLY_CLIENT_ID=your_client_id
@@ -134,7 +143,10 @@ RELOADLY_SANDBOX=true
 
 # Service Wallet
 SERVICE_WALLET_ADDRESS=NQ07 0000 0000 0000 0000 0000 0000 0000 0000
+FRONTEND_URL=http://localhost:3001
 ```
+
+⚠️ **Security Note**: Never commit `.env.local` or `.env` files to Git!
 
 ---
 
@@ -221,9 +233,10 @@ This creates:
 
 ## 🔒 Security
 
-NimHub implements **enterprise-grade cryptographic security** with 13 layers of defense:
+NimHub implements **enterprise-grade cryptographic security** with 13+ layers of defense:
 
 ### Core Security Features
+✅ **API Authentication** - Secret key required for all API calls (NEW)  
 ✅ **On-Chain Verification** - All payments verified on Nimiq blockchain  
 ✅ **Server-Side Pricing** - Client cannot manipulate amounts  
 ✅ **10% Volatility Buffer** - Protects against price fluctuations  
@@ -233,14 +246,18 @@ NimHub implements **enterprise-grade cryptographic security** with 13 layers of 
 ✅ **Multi-Currency Support** - Secure conversion for 14 currencies  
 ✅ **Row Level Security** - Database access control enabled  
 
-### Enhanced Security Features (NEW)
+### Enhanced Security Features
 ✅ **Rate Limiting** - 20 validations/min, 10 orders/min per wallet  
 ✅ **Quote Expiry** - 60-second quote lifetime prevents stale prices  
 ✅ **Audit Logging** - 12 security event types tracked to database  
 ✅ **Entity Blocking** - Ban malicious wallets/IPs (permanent or temporary)  
 ✅ **Periodic Cleanup** - Automatic maintenance every hour  
+✅ **Input Sanitization** - All user inputs validated and sanitized  
+✅ **CORS Protection** - Strict origin whitelist  
+✅ **Helmet.js** - Security headers enabled  
 
-### Attack Vectors Blocked (13 Total)
+### Attack Vectors Blocked (14 Total)
+❌ Unauthorized API access (NEW)  
 ❌ Client-side amount manipulation  
 ❌ Network request tampering  
 ❌ Fake transaction hashes  
@@ -248,27 +265,56 @@ NimHub implements **enterprise-grade cryptographic security** with 13 layers of 
 ❌ Transaction replay attacks  
 ❌ Wrong recipient attacks  
 ❌ AI price manipulation  
+❌ AI prompt injection  
 ❌ Race conditions (UI editing during validation)  
 ❌ Quote reuse attacks  
 ❌ Expired quote usage  
 ❌ Wallet mismatch attacks  
 ❌ Rate limit bypass attempts  
-❌ Spam/abuse attacks  
+
+### Security Setup (IMPORTANT)
+
+**Generate API Secret Key**:
+```bash
+node generate-api-key.js
+```
+
+**Frontend (.env.local)**:
+```env
+NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+NEXT_PUBLIC_API_SECRET=your_generated_secret_key_here
+NEXT_PUBLIC_NIMIQ_NETWORK=testnet
+NEXT_PUBLIC_SERVICE_ADDRESS=NQ07...
+```
+
+**Backend (n_server/server/.env)**:
+```env
+PORT=3000
+API_SECRET=your_generated_secret_key_here  # MUST match frontend
+FRONTEND_URL=https://your-app.vercel.app
+SERVICE_WALLET_ADDRESS=NQ07...
+SUPABASE_URL=https://...
+SUPABASE_SERVICE_KEY=...
+GEMINI_API_KEYS=...
+RELOADLY_CLIENT_ID=...
+RELOADLY_CLIENT_SECRET=...
+```
+
+⚠️ **CRITICAL**: The `API_SECRET` in backend and `NEXT_PUBLIC_API_SECRET` in frontend MUST match exactly!
 
 ### Security Documentation
 For detailed security information, see:
+- **SECURITY_FIXES.md** - Latest security fixes and setup guide (NEW)
 - **IMPLEMENTATION_COMPLETE.md** - Complete implementation summary
 - **ENHANCED_SECURITY_FEATURES.md** - New security features documentation
 - **SECURITY_SUMMARY.md** - Executive summary of security implementation
 - **SECURITY_ARCHITECTURE.md** - System architecture and trust boundaries
 - **SECURITY_FLOW.txt** - Step-by-step secure payment flow
 - **SECURITY_CHECKLIST.md** - Pre-deployment security checklist
-- **DEPLOYMENT_GUIDE_ENHANCED.md** - Enhanced deployment guide
-- **QUICK_REFERENCE_SECURITY.md** - Quick reference card
 
 **Security Level**: ENTERPRISE-GRADE ✓  
-**Total Security Layers**: 13  
-**Last Security Audit**: 2026-06-01 (self-audited)  
+**Total Security Layers**: 14+  
+**Last Security Audit**: 2026-06-01  
 **Production Ready**: YES ✓
 
 ---

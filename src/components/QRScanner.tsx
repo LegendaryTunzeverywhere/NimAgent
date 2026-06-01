@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 import Modal from './Modal';
+import jsQR from 'jsqr';
 
 interface QRScannerProps {
   onScan?: (data: string) => void;
@@ -16,6 +17,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
+  const [scanSuccess, setScanSuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -29,14 +31,15 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const startScanning = async () => {
     try {
       setError(null);
+      setScanSuccess(false);
       setIsScanning(true);
 
       // Request camera access
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'environment', // Use back camera if available
-          width: { ideal: 640 },
-          height: { ideal: 480 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       });
 
@@ -46,10 +49,10 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play();
 
-        // Start scanning for QR codes
+        // Start scanning for QR codes (scan every 250ms for better responsiveness)
         scanIntervalRef.current = setInterval(() => {
           scanFrame();
-        }, 500);
+        }, 250);
       }
     } catch (err: any) {
       console.error('Camera access error:', err);
@@ -92,34 +95,54 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // For now, we'll simulate QR detection
-    // In a real implementation, you'd use a QR code detection library here
-    // like jsQR or qr-scanner to analyze the canvas image data
+    // Get image data from canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
-    // Placeholder for QR detection logic
-    // const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    // const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+    // Detect QR code using jsQR
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert',
+    });
     
-    // if (qrCode) {
-    //   handleQRDetected(qrCode.data);
-    // }
+    if (code && code.data) {
+      // QR code detected!
+      handleQRDetected(code.data);
+    }
   };
 
   const handleQRDetected = (data: string) => {
-    stopScanning();
+    // Show success feedback
+    setScanSuccess(true);
+    
+    // Stop scanning after a short delay to show the success state
+    setTimeout(() => {
+      stopScanning();
+    }, 500);
+    
+    // Helper function to normalize Nimiq address (remove spaces)
+    const normalizeAddress = (addr: string): string => {
+      return addr.replace(/\s/g, '').toUpperCase();
+    };
+
+    // Helper function to format Nimiq address with spaces
+    const formatAddress = (addr: string): string => {
+      const normalized = normalizeAddress(addr);
+      return normalized.match(/.{1,4}/g)?.join(' ') || normalized;
+    };
     
     // Parse QR code data
     const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.vercel.app';
     
-    if (data.startsWith(`${baseUrl}/pay/`)) {
+    if (data.startsWith(`${baseUrl}/pay/`) || data.includes('/pay/')) {
       // NimHub payment link detected
       try {
         const url = new URL(data);
-        const address = url.pathname.split('/pay/')[1];
+        const addressFromUrl = decodeURIComponent(url.pathname.split('/pay/')[1] || '');
+        const normalizedAddress = normalizeAddress(addressFromUrl);
+        const formattedAddress = formatAddress(normalizedAddress);
         const amount = url.searchParams.get('amount');
         const message = url.searchParams.get('message');
         
-        let responseMessage = `QR code scanned! 📷\n\nNimHub payment link detected:\nTo: ${address}`;
+        let responseMessage = `QR code scanned! 📷\n\nNimHub payment link detected:\nTo: ${formattedAddress}`;
         if (amount) {
           responseMessage += `\nAmount: ${amount} NIM`;
         }
@@ -132,7 +155,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           content: responseMessage,
           action: {
             type: 'send',
-            recipient: address,
+            recipient: formattedAddress,
             amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
           }
         });
@@ -142,14 +165,15 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           content: `QR code scanned but couldn't parse NimHub payment link: ${data}`,
         });
       }
-    } else if (data.startsWith('NQ') && data.length >= 36) {
-      // Nimiq address detected
+    } else if (data.toUpperCase().startsWith('NQ') && normalizeAddress(data).length >= 36) {
+      // Nimiq address detected (with or without spaces)
+      const formattedAddress = formatAddress(data);
       addMessage({
         role: 'ai',
-        content: `QR code scanned! 📷\n\nDetected Nimiq address:\n${data}\n\nHow much NIM would you like to send to this address?`,
+        content: `QR code scanned! 📷\n\nDetected Nimiq address:\n${formattedAddress}\n\nHow much NIM would you like to send to this address?`,
         action: {
           type: 'send',
-          recipient: data,
+          recipient: formattedAddress,
           amountLuna: 0,
         }
       });
@@ -157,10 +181,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       // Nimiq payment request URI
       try {
         const url = new URL(data);
-        const address = url.pathname;
+        const addressFromUri = url.pathname;
+        const formattedAddress = formatAddress(addressFromUri);
         const amount = url.searchParams.get('amount');
         
-        let message = `QR code scanned! 📷\n\nPayment request detected:\nTo: ${address}`;
+        let message = `QR code scanned! 📷\n\nPayment request detected:\nTo: ${formattedAddress}`;
         if (amount) {
           message += `\nAmount: ${amount} NIM`;
         }
@@ -170,7 +195,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           content: message,
           action: {
             type: 'send',
-            recipient: address,
+            recipient: formattedAddress,
             amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
           }
         });
@@ -237,11 +262,37 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
             {/* Scanning overlay */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-48 h-48 border border-white/20 rounded-xl relative">
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-gold rounded-tl-xl" />
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-gold rounded-tr-xl" />
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-gold rounded-bl-xl" />
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-gold rounded-br-xl" />
+              <div className={`w-48 h-48 border rounded-xl relative transition-all ${
+                scanSuccess ? 'border-success border-2' : 'border-white/20'
+              }`}>
+                <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-xl transition-colors ${
+                  scanSuccess ? 'border-success' : 'border-gold'
+                }`} />
+                <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 rounded-tr-xl transition-colors ${
+                  scanSuccess ? 'border-success' : 'border-gold'
+                }`} />
+                <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 rounded-bl-xl transition-colors ${
+                  scanSuccess ? 'border-success' : 'border-gold'
+                }`} />
+                <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 rounded-br-xl transition-colors ${
+                  scanSuccess ? 'border-success' : 'border-gold'
+                }`} />
+                
+                {/* Success checkmark */}
+                {scanSuccess && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-success/20 rounded-xl animate-fade-in">
+                    <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center">
+                      <Icon name="check" size={32} strokeWidth={3} className="text-white" />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Scanning line animation */}
+                {!scanSuccess && (
+                  <div className="absolute inset-0 overflow-hidden rounded-xl">
+                    <div className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent animate-scan" />
+                  </div>
+                )}
               </div>
             </div>
           </div>

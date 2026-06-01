@@ -14,9 +14,12 @@ export default function QRCodeDisplay({ address }: QRCodeDisplayProps) {
   const [error, setError] = useState(false);
   const [qrType, setQrType] = useState<'nimhub' | 'address'>('nimhub');
 
-  // Create NimHub URL for the address
+  // Normalize address by removing spaces for URL
+  const normalizedAddress = address.replace(/\s/g, '');
+
+  // Create NimHub URL for the address (without spaces)
   const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.vercel.app';
-  const nimhubUrl = `${baseUrl}/pay/${address}`;
+  const nimhubUrl = `${baseUrl}/pay/${normalizedAddress}`;
   const qrData = qrType === 'nimhub' ? nimhubUrl : address;
 
   useEffect(() => {
