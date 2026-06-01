@@ -55,11 +55,10 @@ export default function HomePage() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch NIM price
+    // Fetch NIM price via BFF proxy
     const fetchPrice = async () => {
       try {
-        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-        const res = await fetch(`${apiUrl}/api/nim-price?currency=usd`);
+        const res = await fetch(`/api/nim-price?currency=usd`);
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
@@ -88,12 +87,10 @@ export default function HomePage() {
       if (!wallet.address) return;
 
       try {
-        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-        
-        // Fetch both orders and transactions
+        // Fetch both orders and transactions via BFF proxy
         const [ordersRes, transactionsRes] = await Promise.all([
-          fetch(`${apiUrl}/api/orders?wallet=${encodeURIComponent(wallet.address)}`),
-          fetch(`${apiUrl}/api/transactions?wallet=${encodeURIComponent(wallet.address)}`)
+          fetch(`/api/orders?wallet=${encodeURIComponent(wallet.address)}`),
+          fetch(`/api/transactions?wallet=${encodeURIComponent(wallet.address)}`)
         ]);
 
         let allOrders: any[] = [];
