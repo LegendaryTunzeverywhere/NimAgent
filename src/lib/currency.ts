@@ -31,7 +31,7 @@ export async function getNimPrice(currency: string = 'USD'): Promise<number> {
   }
   
   // Fetch from API
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
   const res = await fetch(`${apiUrl}/api/nim-price?currency=${key}`);
   
   if (!res.ok) {
