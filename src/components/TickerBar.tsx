@@ -14,7 +14,7 @@ export default function TickerBar() {
     const fetchPrice = async () => {
       try {
         // Always use backend URL (port 3000)
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
         const res = await fetch(`${apiUrl}/api/nim-price?currency=usd`);
         if (res.ok) {
           const data = await res.json();
