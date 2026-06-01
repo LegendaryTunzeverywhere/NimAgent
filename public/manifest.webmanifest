@@ -1,0 +1,17 @@
+{
+  "name": "NimHub — AI-Powered Nimiq Payments",
+  "short_name": "NimHub",
+  "description": "Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto all powered by AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0C17",
+  "theme_color": "#0A0C17",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
