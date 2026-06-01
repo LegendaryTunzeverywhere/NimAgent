@@ -54,8 +54,16 @@ export const hubAdapter: WalletAdapter = {
     if (req.data) checkoutOptions.extraData = req.data;
     if (fromAddress) checkoutOptions.sender = fromAddress;
 
-    const result = await hub.checkout(checkoutOptions);
-    return result.hash;
+    console.log('[Hub] Initiating checkout with options:', checkoutOptions);
+    
+    try {
+      const result = await hub.checkout(checkoutOptions);
+      console.log('[Hub] Checkout result:', result);
+      return result.hash;
+    } catch (error) {
+      console.error('[Hub] Checkout error:', error);
+      throw error;
+    }
   },
 
   async signMessage(message: string, signer?: string): Promise<SignResult> {
