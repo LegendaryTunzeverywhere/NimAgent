@@ -343,11 +343,11 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2 mb-6">
                 <span className="text-sm text-white/40 font-mono">
-                  Ôëê ${wallet.balance.nim.balanceUSD} USD
+                  ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
                   <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-success bg-success/10' : 'text-error bg-error/10'}`}>
-                    {priceChange >= 0 ? 'Ôû▓' : 'Ôû╝'} {Math.abs(priceChange).toFixed(2)}%
+                    {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                   </span>
                 )}
               </div>
