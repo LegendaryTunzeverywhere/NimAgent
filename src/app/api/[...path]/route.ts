@@ -38,6 +38,19 @@ export async function GET(
       },
     });
 
+    console.log('[BFF] Response status:', response.status);
+    console.log('[BFF] Response headers:', Object.fromEntries(response.headers.entries()));
+
+    // If not OK, log the raw response
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[BFF] Error response:', text.substring(0, 200));
+      return NextResponse.json(
+        { error: 'Backend returned error', status: response.status, preview: text.substring(0, 100) },
+        { status: response.status }
+      );
+    }
+
     const data = await response.json();
 
     return NextResponse.json(data, {
