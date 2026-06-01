@@ -49,7 +49,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
     if (isOrder) {
       let cancelled = false;
-      validateOrder({ type: action.type, details: action, walletAddress: wallet.address })
+      validateOrder({ type: action.type, details: action, walletAddress: wallet.address || undefined })
         .then((validation) => {
           if (cancelled) return;
           if (validation.valid) {
