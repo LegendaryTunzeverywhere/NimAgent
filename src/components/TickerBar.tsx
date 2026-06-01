@@ -10,12 +10,11 @@ export default function TickerBar() {
   const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
 
   useEffect(() => {
-    // Fetch NIM price from CoinGecko via backend
+    // Fetch NIM price from CoinGecko via BFF proxy
     const fetchPrice = async () => {
       try {
-        // Always use backend URL (port 3000)
-        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-        const res = await fetch(`${apiUrl}/api/nim-price?currency=usd`);
+        // Use BFF proxy (same-origin request)
+        const res = await fetch(`/api/nim-price?currency=usd`);
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
