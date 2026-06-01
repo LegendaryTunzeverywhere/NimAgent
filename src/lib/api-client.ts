@@ -1,8 +1,24 @@
 // API client for NimHub backend
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET || '';
 
 import type { ActionCard } from '@/types';
+
+/**
+ * Get headers with API secret for authentication
+ */
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (API_SECRET) {
+    headers['x-api-key'] = API_SECRET;
+  }
+  
+  return headers;
+}
 
 export interface ChatMessage {
   role: 'user' | 'ai';
@@ -49,7 +65,7 @@ export async function chatWithAgent(
 ): Promise<ChatResponse> {
   const res = await fetch(`${API_URL}/api/agent/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify({ message, history, walletAddress }),
   });
   
@@ -73,7 +89,7 @@ export async function recordTransaction(data: {
 }): Promise<Transaction> {
   const res = await fetch(`${API_URL}/api/transactions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
   
@@ -95,7 +111,7 @@ export async function validateOrder(data: {
 }): Promise<{ valid: boolean; error?: string; quoteId?: string; expiresAt?: string; [key: string]: any }> {
   const res = await fetch(`${API_URL}/api/orders/validate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
   
@@ -120,7 +136,7 @@ export async function createOrder(data: {
 }): Promise<any> {
   const res = await fetch(`${API_URL}/api/orders`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -138,7 +154,9 @@ export async function createOrder(data: {
  * Get order history for a wallet
  */
 export async function getOrders(walletAddress: string): Promise<Order[]> {
-  const res = await fetch(`${API_URL}/api/orders?wallet=${encodeURIComponent(walletAddress)}`);
+  const res = await fetch(`${API_URL}/api/orders?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: getHeaders(),
+  });
   
   if (!res.ok) {
     throw new Error('Failed to fetch orders');
@@ -157,7 +175,9 @@ export async function getBalances(address: string): Promise<{
   totalUSD: number;
 }> {
   const cleanAddress = address.replace(/\s/g, '');
-  const res = await fetch(`${API_URL}/api/balances/${cleanAddress}`);
+  const res = await fetch(`${API_URL}/api/balances/${cleanAddress}`, {
+    headers: getHeaders(),
+  });
   
   if (!res.ok) {
     throw new Error('Failed to fetch balances');
@@ -178,7 +198,7 @@ export async function saveChatMessage(data: {
 }): Promise<void> {
   const res = await fetch(`${API_URL}/api/chat/history`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
   
@@ -191,7 +211,9 @@ export async function saveChatMessage(data: {
  * Get chat history for a session
  */
 export async function getChatHistory(sessionId: string, walletAddress: string): Promise<any[]> {
-  const res = await fetch(`${API_URL}/api/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`);
+  const res = await fetch(`${API_URL}/api/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: getHeaders(),
+  });
   
   if (!res.ok) {
     throw new Error('Failed to fetch chat history');
@@ -205,7 +227,9 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
  * Get all chat sessions for a wallet
  */
 export async function getChatSessions(walletAddress: string): Promise<any[]> {
-  const res = await fetch(`${API_URL}/api/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`);
+  const res = await fetch(`${API_URL}/api/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: getHeaders(),
+  });
   
   if (!res.ok) {
     throw new Error('Failed to fetch chat sessions');
@@ -221,6 +245,7 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
 export async function deleteChatSession(sessionId: string, walletAddress: string): Promise<void> {
   const res = await fetch(`${API_URL}/api/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     method: 'DELETE',
+    headers: getHeaders(),
   });
   
   if (!res.ok) {
