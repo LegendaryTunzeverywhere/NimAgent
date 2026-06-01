@@ -26,9 +26,12 @@ export async function GET(
   try {
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
-    const url = `${BACKEND_URL}/${path}${searchParams ? `?${searchParams}` : ''}`;
+    // Add /api prefix if not already present
+    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
+    const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log('[BFF] GET', url);
+    console.log('[BFF] API_SECRET present:', !!API_SECRET);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -78,9 +81,12 @@ export async function POST(
   try {
     const path = params.path.join('/');
     const body = await request.json();
-    const url = `${BACKEND_URL}/${path}`;
+    // Add /api prefix if not already present
+    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
+    const url = `${BACKEND_URL}/${apiPath}`;
 
     console.log('[BFF] POST', url);
+    console.log('[BFF] API_SECRET present:', !!API_SECRET);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -118,9 +124,12 @@ export async function DELETE(
   try {
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
-    const url = `${BACKEND_URL}/${path}${searchParams ? `?${searchParams}` : ''}`;
+    // Add /api prefix if not already present
+    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
+    const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log('[BFF] DELETE', url);
+    console.log('[BFF] API_SECRET present:', !!API_SECRET);
 
     const response = await fetch(url, {
       method: 'DELETE',
