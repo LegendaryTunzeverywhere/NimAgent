@@ -84,7 +84,7 @@ export default function HistoryPage() {
     setLastFetch(Date.now());
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
