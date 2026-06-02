@@ -39,11 +39,10 @@ export async function GET(
 
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
-    // Add /api prefix if not already present
-    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
-    const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
+    // Path already includes 'api/' from Next.js routing, use it directly
+    const url = `${BACKEND_URL}/api/${path}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] GET request to path:', apiPath);
+    console.log('[BFF] GET request to path:', path);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -99,11 +98,10 @@ export async function POST(
 
     const path = params.path.join('/');
     const body = await request.json();
-    // Add /api prefix if not already present
-    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
-    const url = `${BACKEND_URL}/${apiPath}`;
+    // Path already includes correct route from Next.js, use it directly
+    const url = `${BACKEND_URL}/api/${path}`;
 
-    console.log('[BFF] POST request to path:', apiPath);
+    console.log('[BFF] POST request to path:', path);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -148,11 +146,10 @@ export async function DELETE(
 
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
-    // Add /api prefix if not already present
-    const apiPath = path.startsWith('api/') ? path : `api/${path}`;
-    const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
+    // Path already includes correct route from Next.js, use it directly
+    const url = `${BACKEND_URL}/api/${path}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] DELETE request to path:', apiPath);
+    console.log('[BFF] DELETE request to path:', path);
 
     const response = await fetch(url, {
       method: 'DELETE',

@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 
       // Nimiq UUID on Coinranking: qzawljBAo
       const response = await fetch(
-        'https://api.coinranking.com/v2/coin/qzawljBAo',
+        'https://api.coinranking.com/v2/coin/54G1Zo8zgXxSD',
         {
           method: 'GET',
           headers: coinrankingHeaders,
