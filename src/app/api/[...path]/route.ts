@@ -7,13 +7,19 @@ import { NextRequest, NextResponse } from 'next/server';
  * The API secret is kept on the server and never exposed to the browser.
  * 
  * Flow: Browser → Next.js API Route → Railway Backend → Reloadly
+ * 
+ * SECURITY: Backend URL and API secret are never logged or exposed to client
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://nserver-production.up.railway.app';
-const API_SECRET = process.env.API_SECRET || '';
+const BACKEND_URL = process.env.BACKEND_URL;
+const API_SECRET = process.env.API_SECRET;
+
+if (!BACKEND_URL) {
+  console.error('[BFF] BACKEND_URL not configured. Set it in environment variables.');
+}
 
 if (!API_SECRET) {
-  console.warn('[BFF] API_SECRET not configured. Set it in Vercel environment variables.');
+  console.error('[BFF] API_SECRET not configured. Set it in environment variables.');
 }
 
 /**
@@ -24,14 +30,20 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
+    if (!BACKEND_URL || !API_SECRET) {
+      return NextResponse.json(
+        { error: 'Backend configuration missing' },
+        { status: 500 }
+      );
+    }
+
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
     // Add /api prefix if not already present
     const apiPath = path.startsWith('api/') ? path : `api/${path}`;
     const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] GET', url);
-    console.log('[BFF] API_SECRET present:', !!API_SECRET);
+    console.log('[BFF] GET request to path:', apiPath);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -42,14 +54,13 @@ export async function GET(
     });
 
     console.log('[BFF] Response status:', response.status);
-    console.log('[BFF] Response headers:', Object.fromEntries(response.headers.entries()));
 
-    // If not OK, log the raw response
+    // If not OK, log the error without exposing backend details
     if (!response.ok) {
       const text = await response.text();
-      console.error('[BFF] Error response:', text.substring(0, 200));
+      console.error('[BFF] Backend error status:', response.status);
       return NextResponse.json(
-        { error: 'Backend returned error', status: response.status, preview: text.substring(0, 100) },
+        { error: 'Backend request failed', status: response.status },
         { status: response.status }
       );
     }
@@ -65,7 +76,7 @@ export async function GET(
   } catch (error: any) {
     console.error('[BFF] GET error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to fetch from backend', message: error.message },
+      { error: 'Failed to fetch from backend' },
       { status: 502 }
     );
   }
@@ -79,14 +90,20 @@ export async function POST(
   { params }: { params: { path: string[] } }
 ) {
   try {
+    if (!BACKEND_URL || !API_SECRET) {
+      return NextResponse.json(
+        { error: 'Backend configuration missing' },
+        { status: 500 }
+      );
+    }
+
     const path = params.path.join('/');
     const body = await request.json();
     // Add /api prefix if not already present
     const apiPath = path.startsWith('api/') ? path : `api/${path}`;
     const url = `${BACKEND_URL}/${apiPath}`;
 
-    console.log('[BFF] POST', url);
-    console.log('[BFF] API_SECRET present:', !!API_SECRET);
+    console.log('[BFF] POST request to path:', apiPath);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -108,7 +125,7 @@ export async function POST(
   } catch (error: any) {
     console.error('[BFF] POST error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to post to backend', message: error.message },
+      { error: 'Failed to post to backend' },
       { status: 502 }
     );
   }
@@ -122,14 +139,20 @@ export async function DELETE(
   { params }: { params: { path: string[] } }
 ) {
   try {
+    if (!BACKEND_URL || !API_SECRET) {
+      return NextResponse.json(
+        { error: 'Backend configuration missing' },
+        { status: 500 }
+      );
+    }
+
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
     // Add /api prefix if not already present
     const apiPath = path.startsWith('api/') ? path : `api/${path}`;
     const url = `${BACKEND_URL}/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] DELETE', url);
-    console.log('[BFF] API_SECRET present:', !!API_SECRET);
+    console.log('[BFF] DELETE request to path:', apiPath);
 
     const response = await fetch(url, {
       method: 'DELETE',
@@ -150,7 +173,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('[BFF] DELETE error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to delete from backend', message: error.message },
+      { error: 'Failed to delete from backend' },
       { status: 502 }
     );
   }
