@@ -627,14 +627,15 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
               {[
-                { icon: 'send' as IconName, label: 'Feeless Transfers', color: '#F5A623' },
-                { icon: 'robot' as IconName, label: 'AI Assistant', color: '#2B6BD6' },
-                { icon: 'gift-card' as IconName, label: 'Gift Cards', color: '#2B6BD6' },
-                { icon: 'swap' as IconName, label: 'Crypto Swap', color: '#F5A623' },
+                { icon: 'send' as IconName, label: 'Feeless Transfers', color: '#F5A623', action: () => handleConnect() },
+                { icon: 'robot' as IconName, label: 'AI Assistant', color: '#2B6BD6', action: () => handleConnect() },
+                { icon: 'gift-card' as IconName, label: 'Gift Cards', color: '#2B6BD6', action: () => handleConnect() },
+                { icon: 'swap' as IconName, label: 'Crypto Swap', color: '#F5A623', action: () => handleConnect() },
               ].map((feature) => (
-                <div
+                <button
                   key={feature.label}
-                  className="flex items-center gap-2.5 rounded-xl p-3 bg-white/[0.03] border border-white/[0.06]"
+                  onClick={feature.action}
+                  className="flex items-center gap-2.5 rounded-xl p-3 bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all active:scale-95"
                 >
                   <span
                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -643,7 +644,7 @@ export default function HomePage() {
                     <Icon name={feature.icon} size={16} />
                   </span>
                   <span className="text-xs font-semibold text-white/70">{feature.label}</span>
-                </div>
+                </button>
               ))}
             </div>
 

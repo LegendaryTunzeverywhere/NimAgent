@@ -1,0 +1,35 @@
+{
+  "name": "NimHub - AI Payments",
+  "short_name": "NimHub",
+  "description": "Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto - all in one chat.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0C17",
+  "theme_color": "#F5A623",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Send NIM",
+      "short_name": "Send",
+      "description": "Send NIM to someone",
+      "url": "/?action=send",
+      "icons": []
+    },
+    {
+      "name": "AI Chat",
+      "short_name": "Chat",
+      "description": "Talk to your AI payment agent",
+      "url": "/?action=chat",
+      "icons": []
+    }
+  ]
+}

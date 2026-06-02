@@ -57,12 +57,26 @@ export const useAppStore = create<AppState>()(
           
           // Load last chat session or create new one
           get().loadOrCreateSession();
-        } catch (error) {
+        } catch (error: any) {
+          console.error('[Wallet] Connection failed:', error);
+          
+          // Provide specific error messages
+          let errorMessage = 'Failed to connect wallet';
+          if (error?.message?.includes('popup')) {
+            errorMessage = 'Please allow popups and try again';
+          } else if (error?.message?.includes('closed') || error?.message?.includes('reject')) {
+            errorMessage = 'Connection cancelled';
+          } else if (error?.message?.includes('unavailable')) {
+            errorMessage = 'Wallet unavailable. Try opening in Nimiq Pay app.';
+          } else if (error?.message?.includes('timeout')) {
+            errorMessage = 'Connection timed out. Please try again.';
+          }
+          
           set((state) => ({
             wallet: {
               ...state.wallet,
               loading: false,
-              error: 'Failed to connect wallet',
+              error: errorMessage,
             },
           }));
         }
@@ -220,6 +234,19 @@ export const useAppStore = create<AppState>()(
         // Client-side guard: trim and cap message length (server also enforces).
         const trimmed = (content || '').trim().slice(0, 2000);
         if (!trimmed) return;
+
+        // Rate limiting: prevent spam
+        const now = Date.now();
+        const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : 0;
+        const timeSinceLastMessage = now - (lastMessageTime || 0);
+        
+        if (timeSinceLastMessage < 2000) {
+          await addMessage({
+            role: 'ai',
+            content: 'Please wait a moment before sending another message.',
+          });
+          return;
+        }
 
         // Get history before adding user message
         const history = messages.slice(-10).map(m => ({

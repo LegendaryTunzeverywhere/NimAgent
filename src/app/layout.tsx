@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.json',
   openGraph: {
     title: 'NimHub — AI-Powered Nimiq Payments',
     description: 'Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto — all powered by AI.',
