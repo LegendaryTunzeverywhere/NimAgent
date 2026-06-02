@@ -86,10 +86,13 @@ export default function HomePage() {
       if (!wallet.address) return;
 
       try {
+        // Normalize wallet address - remove spaces for consistent querying
+        const normalizedAddress = wallet.address.replace(/\s/g, '');
+        
         // Fetch both orders and transactions via BFF proxy
         const [ordersRes, transactionsRes] = await Promise.all([
-          fetch(`/api/orders?wallet=${encodeURIComponent(wallet.address)}`),
-          fetch(`/api/transactions?wallet=${encodeURIComponent(wallet.address)}`)
+          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`),
+          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`)
         ]);
 
         let allOrders: any[] = [];

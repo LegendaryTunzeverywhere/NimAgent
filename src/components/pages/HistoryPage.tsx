@@ -84,12 +84,18 @@ export default function HistoryPage() {
     setLastFetch(Date.now());
     
     try {
+      // Normalize wallet address - remove spaces for consistent querying
+      const normalizedAddress = wallet.address.replace(/\s/g, '');
+      
+      console.log('[HistoryPage] Fetching for wallet:', wallet.address);
+      console.log('[HistoryPage] Normalized:', normalizedAddress);
+      
       // Use BFF proxy (same-origin request)
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`/api/transactions?wallet=${encodeURIComponent(wallet.address)}`),
-        fetch(`/api/orders?wallet=${encodeURIComponent(wallet.address)}`)
+        fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`),
+        fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`)
       ]);
       
       let allTransactions: Transaction[] = [];
