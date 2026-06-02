@@ -278,75 +278,392 @@
 }
 
 .light-theme body {
-  @apply bg-white text-gray-900;
+  @apply bg-gray-50 text-gray-900;
 }
 
 .light-theme .bg-mesh {
-  background-color: #f5f5f7;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
 }
 
 .light-theme .bg-grid {
-  opacity: 0.3;
+  opacity: 0.2;
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
 }
 
 .light-theme .glass {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
 }
 
 .light-theme .glass-strong {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .light-theme .card-premium {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+/* Text colors */
 .light-theme .text-white {
   color: #1a1a1a !important;
 }
 
+.light-theme .text-white\/85 {
+  color: rgba(26, 26, 26, 0.95) !important;
+}
+
 .light-theme .text-white\/80 {
-  color: rgba(26, 26, 26, 0.8) !important;
+  color: rgba(26, 26, 26, 0.85) !important;
 }
 
 .light-theme .text-white\/70 {
-  color: rgba(26, 26, 26, 0.7) !important;
+  color: rgba(26, 26, 26, 0.75) !important;
 }
 
 .light-theme .text-white\/60 {
-  color: rgba(26, 26, 26, 0.6) !important;
+  color: rgba(26, 26, 26, 0.65) !important;
 }
 
 .light-theme .text-white\/50 {
-  color: rgba(26, 26, 26, 0.5) !important;
+  color: rgba(26, 26, 26, 0.55) !important;
 }
 
 .light-theme .text-white\/40 {
-  color: rgba(26, 26, 26, 0.4) !important;
+  color: rgba(26, 26, 26, 0.45) !important;
 }
 
 .light-theme .text-white\/30 {
-  color: rgba(26, 26, 26, 0.3) !important;
+  color: rgba(26, 26, 26, 0.35) !important;
 }
 
+.light-theme .text-white\/25 {
+  color: rgba(26, 26, 26, 0.30) !important;
+}
+
+/* Borders */
 .light-theme .border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
 }
 
 .light-theme .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.light-theme .border-white\/\[0\.06\] {
   border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
+.light-theme .border-white\/\[0\.07\] {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.light-theme .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Backgrounds */
 .light-theme .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.03) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 .light-theme .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .bg-white\/\[0\.03\] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.light-theme .bg-white\/\[0\.04\] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.light-theme .bg-white\/\[0\.06\] {
   background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-theme .bg-white\/\[0\.08\] {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Gold color - darker for better contrast in light mode */
+.light-theme .text-gold {
+  color: #d97706 !important;
+}
+
+.light-theme .text-gradient-gold {
+  color: #d97706 !important;
+}
+
+.light-theme .bg-gold {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.light-theme .btn-gold {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.light-theme .border-gold\/20 {
+  border-color: rgba(217, 119, 6, 0.25) !important;
+}
+
+.light-theme .border-gold\/30 {
+  border-color: rgba(217, 119, 6, 0.35) !important;
+}
+
+.light-theme .bg-gold\/10 {
+  background-color: rgba(217, 119, 6, 0.12) !important;
+}
+
+.light-theme .bg-gold\/15 {
+  background-color: rgba(217, 119, 6, 0.15) !important;
+}
+
+.light-theme .bg-gold\/20 {
+  background-color: rgba(217, 119, 6, 0.2) !important;
+}
+
+/* Brand blue - darker for better contrast */
+.light-theme .text-brand-blue-light {
+  color: #1e40af !important;
+}
+
+.light-theme .bg-brand-blue\/10 {
+  background-color: rgba(30, 64, 175, 0.12) !important;
+}
+
+.light-theme .bg-brand-blue\/15 {
+  background-color: rgba(30, 64, 175, 0.15) !important;
+}
+
+.light-theme .bg-brand-blue\/20 {
+  background-color: rgba(30, 64, 175, 0.2) !important;
+}
+
+.light-theme .border-brand-blue\/25 {
+  border-color: rgba(30, 64, 175, 0.3) !important;
+}
+
+.light-theme .border-brand-blue\/30 {
+  border-color: rgba(30, 64, 175, 0.35) !important;
+}
+
+/* Success/Error colors - adjust for light mode */
+.light-theme .text-success {
+  color: #059669 !important;
+}
+
+.light-theme .bg-success\/10 {
+  background-color: rgba(5, 150, 105, 0.12) !important;
+}
+
+.light-theme .bg-success\/12 {
+  background-color: rgba(5, 150, 105, 0.14) !important;
+}
+
+.light-theme .border-success\/20 {
+  border-color: rgba(5, 150, 105, 0.25) !important;
+}
+
+.light-theme .text-error {
+  color: #dc2626 !important;
+}
+
+.light-theme .bg-error\/10 {
+  background-color: rgba(220, 38, 38, 0.12) !important;
+}
+
+.light-theme .border-error\/20 {
+  border-color: rgba(220, 38, 38, 0.25) !important;
+}
+
+/* Skeleton loading */
+.light-theme .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Make icons visible in light mode */
+.light-theme svg {
+  stroke: currentColor;
+  opacity: 1;
+}
+
+.light-theme svg[fill="none"] {
+  stroke: currentColor !important;
+}
+
+/* Ensure icon colors are visible */
+.light-theme .text-brand-blue-light svg,
+.light-theme .bg-brand-blue\/15 svg {
+  stroke: #1e40af !important;
+}
+
+.light-theme .text-gold svg,
+.light-theme .bg-gold\/10 svg {
+  stroke: #d97706 !important;
+}
+
+.light-theme .text-success svg {
+  stroke: #059669 !important;
+}
+
+.light-theme .text-error svg {
+  stroke: #dc2626 !important;
+}
+
+/* Chat bubbles - AI messages with proper contrast */
+.light-theme .glass.rounded-2xl {
+  background: #f3f4f6 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #1a1a1a !important;
+}
+
+/* Chat bubbles - user messages with darker gold */
+.light-theme .bg-gold.text-background-primary {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+/* Interactive hover states */
+.light-theme .hover\:bg-white\/\[0\.06\]:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .hover\:bg-white\/\[0\.08\]:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-theme .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-theme .hover\:bg-gold\/20:hover {
+  background-color: rgba(217, 119, 6, 0.25) !important;
+}
+
+/* Input fields */
+.light-theme input,
+.light-theme textarea {
+  color: #1a1a1a !important;
+  background-color: #ffffff !important;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: rgba(26, 26, 26, 0.4) !important;
+}
+
+/* Placeholder text in chat input */
+.light-theme .glass input::placeholder,
+.light-theme .glass textarea::placeholder {
+  color: rgba(26, 26, 26, 0.45) !important;
+}
+
+/* Button backgrounds and text in light mode */
+.light-theme button svg {
+  stroke: currentColor;
+}
+
+.light-theme .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .text-white\/50 {
+  color: rgba(26, 26, 26, 0.65) !important;
+}
+
+/* Chat bubble specific fixes */
+.light-theme .bg-brand-blue\/15 {
+  background-color: #dbeafe !important;
+}
+
+.light-theme .border-brand-blue\/30 {
+  border-color: #93c5fd !important;
+}
+
+.light-theme .text-brand-blue-light {
+  color: #1e40af !important;
+}
+
+/* Ensure AI chat bubbles have proper background and text */
+.light-theme .glass-strong {
+  background: #f9fafb !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  color: #1a1a1a !important;
+}
+
+/* Text colors for better readability */
+.light-theme h1, 
+.light-theme h2, 
+.light-theme h3, 
+.light-theme h4, 
+.light-theme h5, 
+.light-theme h6 {
+  color: #1a1a1a !important;
+}
+
+.light-theme p {
+  color: #1a1a1a;
+}
+
+/* Specific overrides for chat messages */
+.light-theme .text-white\/85 {
+  color: #1a1a1a !important;
+}
+
+.light-theme .text-white\/70 {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* Quick prompt buttons */
+.light-theme .bg-gold\/10 {
+  background-color: rgba(217, 119, 6, 0.15) !important;
+}
+
+.light-theme .text-gold {
+  color: #d97706 !important;
+}
+
+.light-theme .border-gold\/20 {
+  border-color: rgba(217, 119, 6, 0.3) !important;
+}
+
+/* Discover prompts with brand blue */
+.light-theme .bg-brand-blue\/10 {
+  background-color: rgba(30, 64, 175, 0.12) !important;
+}
+
+.light-theme .border-brand-blue\/25 {
+  border-color: rgba(30, 64, 175, 0.35) !important;
+}
+
+/* Voice/send button backgrounds */
+.light-theme .bg-white\/5 button {
+  color: rgba(26, 26, 26, 0.6) !important;
+}
+
+.light-theme .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-theme .hover\:text-white\/70:hover {
+  color: rgba(26, 26, 26, 0.8) !important;
 }
