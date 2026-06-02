@@ -38,6 +38,93 @@ export default function ActionCard({ action }: ActionCardProps) {
   // LOCK IMMEDIATELY for orders to prevent editing during validation
   const [amountLocked, setAmountLocked] = useState(isOrder);
   const [quoteId, setQuoteId] = useState<string | null>(null);
+  
+  // Real-time quote refresh state
+  const [quoteExpiry, setQuoteExpiry] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(60);
+  const [refreshing, setRefreshing] = useState(false);
+  const [priceChanged, setPriceChanged] = useState(false);
+  const [lastKnownAmount, setLastKnownAmount] = useState<number | null>(null);
+
+  // Refresh quote function
+  const refreshQuote = async () => {
+    if (!isOrder || success || loading) return;
+    
+    setRefreshing(true);
+    setPriceChanged(false);
+    
+    try {
+      const validation = await validateOrder({
+        type: action.type,
+        details: action,
+        walletAddress: wallet.address || undefined,
+      });
+      
+      if (validation.valid && typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
+        const oldAmountLuna = action.amountLuna || 0;
+        const newAmountLuna = validation.amountLuna;
+        const oldAmount = parseFloat(amount) || 0;
+        const newAmount = newAmountLuna / 100000;
+        
+        // Update IDs
+        if (validation.productId) action.productId = validation.productId;
+        if (validation.operatorId) action.operatorId = validation.operatorId;
+        if (validation.billerId) action.billerId = validation.billerId;
+        if (validation.quoteId) setQuoteId(validation.quoteId);
+        
+        // Check if price changed significantly (>2%)
+        if (oldAmountLuna > 0 && Math.abs((newAmount - oldAmount) / oldAmount) > 0.02) {
+          setPriceChanged(true);
+          const direction = newAmount > oldAmount ? 'increased' : 'decreased';
+          const percentChange = Math.abs(((newAmount - oldAmount) / oldAmount) * 100).toFixed(1);
+          console.log(`[Quote Refresh] Price ${direction} by ${percentChange}%: ${oldAmount.toFixed(2)} → ${newAmount.toFixed(2)} NIM`);
+        }
+        
+        // Update amount
+        action.amountLuna = newAmountLuna;
+        setAmount(newAmount.toFixed(2));
+        setLastKnownAmount(newAmount);
+        
+        // Set expiry if provided (default 60 seconds)
+        const expiryTime = validation.expiresAt 
+          ? new Date(validation.expiresAt).getTime()
+          : Date.now() + 60000;
+        setQuoteExpiry(expiryTime);
+        
+        setPrevalidationError(null);
+      } else if (!validation.valid) {
+        setPrevalidationError(validation.error || 'Quote validation failed');
+      }
+    } catch (err) {
+      console.error('[Quote Refresh] Failed:', err);
+      // Don't show error to user, just log it
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Countdown timer for quote expiry
+  useEffect(() => {
+    if (!isOrder || !quoteExpiry || success || loading) return;
+    
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((quoteExpiry - Date.now()) / 1000));
+      setTimeRemaining(remaining);
+      
+      // Auto-refresh when quote expires
+      if (remaining === 0) {
+        console.log('[Quote Refresh] Quote expired, refreshing...');
+        refreshQuote();
+      }
+      
+      // Warn user when less than 10 seconds
+      if (remaining <= 10 && remaining > 0 && !priceChanged) {
+        setPriceChanged(true);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [quoteExpiry, success, loading, isOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warm up the Hub and pre-validate orders as soon as the card mounts.
   // This keeps the eventual checkout() call inside the user's click gesture
@@ -63,6 +150,13 @@ export default function ActionCard({ action }: ActionCardProps) {
             if (typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
               action.amountLuna = validation.amountLuna;
               setAmount((validation.amountLuna / 100000).toFixed(2));
+              setLastKnownAmount(validation.amountLuna / 100000);
+              
+              // Set initial expiry (60 seconds default)
+              const expiryTime = validation.expiresAt 
+                ? new Date(validation.expiresAt).getTime()
+                : Date.now() + 60000;
+              setQuoteExpiry(expiryTime);
             }
             setPrevalidationError(null);
           } else {
@@ -344,7 +438,23 @@ export default function ActionCard({ action }: ActionCardProps) {
 
       {/* Amount Input */}
       <div className="space-y-1">
-        <label className="text-white/50 text-xs">Amount to pay</label>
+        <div className="flex items-center justify-between">
+          <label className="text-white/50 text-xs">Amount to pay</label>
+          {isOrder && !success && quoteExpiry && (
+            <button
+              onClick={refreshQuote}
+              disabled={refreshing || loading}
+              className="text-xs text-gold/70 hover:text-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              title="Refresh quote to get latest NIM price"
+            >
+              <svg className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 11-9-9 9 9 0 019 9z" />
+                <path d="M21 12a9 9 0 01-9 9" />
+              </svg>
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          )}
+        </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 ${amountLocked ? 'opacity-75' : 'focus-within:border-gold/50'}`}>
           <input
             type="number"
@@ -359,12 +469,29 @@ export default function ActionCard({ action }: ActionCardProps) {
           />
           <span className="text-white/50 text-sm font-semibold">NIM</span>
         </div>
-        <p className="text-white/30 text-xs">
-          {amountLocked
-            ? 'Make payment'
-            : action.amountLuna}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-white/30 text-xs">
+            {amountLocked ? 'Server-calculated amount' : 'Enter amount'}
+          </p>
+          {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
+            <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-white/40'}`}>
+              Quote expires in {timeRemaining}s
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* Price change alert */}
+      {priceChanged && !success && isOrder && (
+        <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-2.5">
+          <span className="text-warning mt-0.5">⚠️</span>
+          <p className="text-warning text-xs leading-relaxed">
+            {timeRemaining <= 10 && timeRemaining > 0
+              ? `Quote expiring soon! Click "Refresh" to update the price.`
+              : `NIM price updated. Amount changed from ${lastKnownAmount?.toFixed(2) || '?'} to ${amount} NIM.`}
+          </p>
+        </div>
+      )}
 
       {/* Pre-validation warning (orders only) */}
       {prevalidationError && !success && (
