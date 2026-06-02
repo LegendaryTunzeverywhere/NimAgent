@@ -115,12 +115,12 @@ export default function HomePage() {
         const transactions: Transaction[] = combinedData.slice(0, 3).map((item, index) => {
           if (item.source === 'order') {
             const typeMap: { [key: string]: { icon: string; color: string; label: string } } = {
-              'gift-card': { icon: '­ƒÄü', color: 'info', label: 'Gift Card' },
-              'airtime': { icon: '­ƒô▒', color: 'info', label: 'Airtime Top-up' },
-              'bill': { icon: 'ÔÜí', color: 'info', label: item.details?.service || 'Bill Payment' },
+              'gift-card': { icon: '🎁', color: 'info', label: 'Gift Card' },
+              'airtime': { icon: '📱', color: 'info', label: 'Airtime Top-up' },
+              'bill': { icon: '💵', color: 'info', label: item.details?.service || 'Bill Payment' },
             };
 
-            const typeInfo = typeMap[item.type] || { icon: '­ƒÆ©', color: 'info', label: 'Transaction' };
+            const typeInfo = typeMap[item.type] || { icon: '💰', color: 'info', label: 'Transaction' };
             
             // Calculate time ago
             const createdAt = new Date(item.created_at);
@@ -156,8 +156,8 @@ export default function HomePage() {
             // Transaction from transactions table
             const isSent = item.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
             const typeInfo = isSent 
-              ? { icon: 'Ôåæ', color: 'error', label: `Sent to ${item.to_address?.slice(0, 8)}...` }
-              : { icon: 'Ôåô', color: 'success', label: `Received from ${item.from_address?.slice(0, 8)}...` };
+              ? { icon: '↗', color: 'error', label: `Sent to ${item.to_address?.slice(0, 8)}...` }
+              : { icon: '↙', color: 'success', label: `Received from ${item.from_address?.slice(0, 8)}...` };
 
             // Calculate time ago
             const createdAt = new Date(item.created_at);
@@ -240,7 +240,7 @@ export default function HomePage() {
     if (actionType === 'Scan QR') {
       addMessage({
         role: 'ai',
-        content: 'Ready to scan! Point your camera at a QR code containing a Nimiq address or payment request. ­ƒôÀ',
+        content: 'Ready to scan! Point your camera at a QR code containing a Nimiq address or payment request. 📷',
         action: {
           type: 'qr-scan',
         }
@@ -252,7 +252,7 @@ export default function HomePage() {
     if (actionType === 'Crypto Swap') {
       addMessage({
         role: 'ai',
-        content: 'Welcome to the crypto swap interface! ­ƒöä\n\nExchange NIM for BTC or BTC for NIM with real-time rates. Perfect for diversifying your crypto portfolio or taking advantage of market opportunities.',
+        content: 'Welcome to the crypto swap interface! 🔄\n\nExchange NIM for BTC or BTC for NIM with real-time rates. Perfect for diversifying your crypto portfolio or taking advantage of market opportunities.',
         action: {
           type: 'crypto-swap',
         }
@@ -307,7 +307,7 @@ export default function HomePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-5 pb-8">
-      {/* Hero Balance Card ÔÇö only shown when connected (Welcome card covers the disconnected state) */}
+      {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
       <div className="animate-fade-up card-premium rounded-3xl p-6 relative overflow-hidden">
         <div className="relative">
@@ -390,7 +390,7 @@ export default function HomePage() {
         <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1">
           <div className="card-premium rounded-2xl p-4 text-center">
             <p className="text-[10px] text-white/40 mb-1 uppercase tracking-wider">NIM Price</p>
-            <p className="text-lg font-bold text-white tabular-nums">${nimPrice?.toFixed(4) || 'ÔÇö'}</p>
+            <p className="text-lg font-bold text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
             <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
               {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
             </p>
@@ -600,7 +600,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="card-premium rounded-2xl p-8 text-center">
-              <div className="text-3xl mb-2 opacity-50">­ƒô¡</div>
+              <div className="text-3xl mb-2 opacity-50">📊</div>
               <p className="text-sm text-white/40">No recent transactions</p>
               <p className="text-xs text-white/30 mt-1">Start by sending NIM or making a payment</p>
             </div>
@@ -619,7 +619,7 @@ export default function HomePage() {
               Welcome to Nim<span className="text-gradient-gold">Hub</span>
             </h2>
             <p className="text-sm text-white/55 mb-6 max-w-xs mx-auto leading-relaxed">
-              Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto ÔÇö all in one chat.
+              Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto - all in one chat.
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
