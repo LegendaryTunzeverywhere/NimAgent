@@ -105,6 +105,8 @@ export default function HistoryPage() {
         const transData = await transactionsRes.json();
         const rawTransactions = transData.transactions || [];
         
+        console.log('[HistoryPage] Raw transactions from API:', rawTransactions.length);
+        
         // Determine transaction type based on wallet address
         const processedTransactions = rawTransactions.map((tx: any) => {
           // Clean addresses for comparison (remove spaces)
@@ -112,17 +114,32 @@ export default function HistoryPage() {
           const cleanFromAddr = tx.from_address?.replace(/\s/g, '').toLowerCase();
           const cleanToAddr = tx.to_address?.replace(/\s/g, '').toLowerCase();
           
+          console.log('[HistoryPage] Processing tx:', {
+            id: tx.id,
+            from: cleanFromAddr?.slice(0, 10),
+            to: cleanToAddr?.slice(0, 10),
+            wallet: cleanWalletAddr?.slice(0, 10),
+            originalType: tx.type
+          });
+          
           // Determine if it's a send or receive
           let type = tx.type;
-          if (!type || type === 'transaction') {
-            // If type is not set or generic, determine from addresses
-            if (cleanFromAddr === cleanWalletAddr) {
-              type = 'send';
-            } else if (cleanToAddr === cleanWalletAddr) {
-              type = 'receive';
-            } else {
-              type = 'send'; // Default to send if unclear
-            }
+          
+          // If from_address matches wallet, it's a send
+          if (cleanFromAddr && cleanFromAddr === cleanWalletAddr) {
+            type = 'send';
+            console.log('[HistoryPage] Detected SEND (from matches wallet)');
+          } 
+          // If to_address matches wallet, it's a receive
+          else if (cleanToAddr && cleanToAddr === cleanWalletAddr) {
+            type = 'receive';
+            console.log('[HistoryPage] Detected RECEIVE (to matches wallet)');
+          }
+          // If type is not set and we have both addresses
+          else if (!type && cleanFromAddr && cleanToAddr) {
+            // Default to send if we can't determine
+            type = 'send';
+            console.log('[HistoryPage] Defaulting to SEND (unclear)');
           }
           
           return {
@@ -130,6 +147,8 @@ export default function HistoryPage() {
             type,
           };
         });
+        
+        console.log('[HistoryPage] Processed transaction types:', processedTransactions.map((t: any) => t.type));
         
         allTransactions = processedTransactions;
       }
