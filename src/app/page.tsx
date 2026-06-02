@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
+import ThemeProvider from '@/components/ThemeProvider';
 import Navigation from '@/components/Navigation';
 import TickerBar from '@/components/TickerBar';
 import BottomNav from '@/components/BottomNav';
@@ -70,21 +71,23 @@ export default function Home() {
   const { activeTab } = useAppStore();
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <Suspense fallback={null}>
-        <PaymentLinkHandler />
-      </Suspense>
+    <ThemeProvider>
+      <main className="min-h-screen flex flex-col">
+        <Suspense fallback={null}>
+          <PaymentLinkHandler />
+        </Suspense>
 
-      <Navigation />
-      <TickerBar />
+        <Navigation />
+        <TickerBar />
 
-      <div className="flex-1 overflow-y-auto pb-28">
-        {activeTab === 'home' && <HomePage />}
-        {activeTab === 'chat' && <ChatPage />}
-        {activeTab === 'history' && <HistoryPage />}
-      </div>
+        <div className="flex-1 overflow-y-auto pb-28">
+          {activeTab === 'home' && <HomePage />}
+          {activeTab === 'chat' && <ChatPage />}
+          {activeTab === 'history' && <HistoryPage />}
+        </div>
 
-      <BottomNav />
-    </main>
+        <BottomNav />
+      </main>
+    </ThemeProvider>
   );
 }

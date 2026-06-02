@@ -386,8 +386,18 @@ export default function ChatPage() {
                     return (
                       <div key={idx} className="mt-2 space-y-2">
                         <p className="text-xs text-white/60">Transaction Hash:</p>
-                        <div className="bg-black/30 rounded-lg p-2.5 font-mono text-[10px] leading-relaxed break-all border border-white/5">
-                          {txHash}
+                        <div 
+                          onClick={() => {
+                            navigator.clipboard.writeText(txHash);
+                            // You could add a toast notification here
+                          }}
+                          className="bg-black/30 rounded-lg p-2 font-mono text-[10px] leading-relaxed break-all border border-white/5 cursor-pointer hover:bg-black/40 transition-colors group"
+                          title="Click to copy"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="flex-1">{txHash.slice(0, 8)}...{txHash.slice(-8)}</span>
+                            <Icon name="copy" size={12} strokeWidth={2} className="opacity-50 group-hover:opacity-100" />
+                          </div>
                         </div>
                         <a
                           href={`${baseUrl}${txHash}`}

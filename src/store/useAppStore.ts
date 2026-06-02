@@ -24,7 +24,10 @@ export const useAppStore = create<AppState>()(
       theme: 'dark',
       network: 'testnet',
 
-      setActiveTab: (tab) => set({ activeTab: tab }),
+      setActiveTab: (tab) => {
+        console.log('[Store] Setting active tab:', tab);
+        set({ activeTab: tab });
+      },
       
       setTheme: (theme) => set({ theme }),
       

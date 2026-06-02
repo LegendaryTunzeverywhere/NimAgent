@@ -270,3 +270,83 @@
   .animate-fade-in {
     animation: fade-in 0.3s ease-out;
   }
+
+
+/* ===== LIGHT THEME ===== */
+.light-theme {
+  color-scheme: light;
+}
+
+.light-theme body {
+  @apply bg-white text-gray-900;
+}
+
+.light-theme .bg-mesh {
+  background-color: #f5f5f7;
+}
+
+.light-theme .bg-grid {
+  opacity: 0.3;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+}
+
+.light-theme .glass {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .glass-strong {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .card-premium {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light-theme .text-white {
+  color: #1a1a1a !important;
+}
+
+.light-theme .text-white\/80 {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+.light-theme .text-white\/70 {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
+.light-theme .text-white\/60 {
+  color: rgba(26, 26, 26, 0.6) !important;
+}
+
+.light-theme .text-white\/50 {
+  color: rgba(26, 26, 26, 0.5) !important;
+}
+
+.light-theme .text-white\/40 {
+  color: rgba(26, 26, 26, 0.4) !important;
+}
+
+.light-theme .text-white\/30 {
+  color: rgba(26, 26, 26, 0.3) !important;
+}
+
+.light-theme .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-theme .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-theme .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.light-theme .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
