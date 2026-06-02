@@ -35,6 +35,7 @@ export default function ChatPage() {
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -69,6 +70,13 @@ export default function ChatPage() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    
+    // Auto-focus input when AI replies (when messages length changes and last message is from AI)
+    if (messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
   }, [messages, loading]);
 
   // Initialize speech recognition
@@ -514,6 +522,7 @@ export default function ChatPage() {
             )}
           </button>
           <input
+            ref={inputRef}
             className="flex-1 bg-transparent text-sm text-white placeholder-white/25 outline-none"
             placeholder="Ask me to send NIM, buy gift cards, pay bills…"
             value={input}
