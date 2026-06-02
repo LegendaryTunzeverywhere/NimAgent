@@ -8,13 +8,13 @@ export async function GET() {
   const hasApiSecret = !!process.env.API_SECRET;
   
   return NextResponse.json({
-    status: 'ok',
+    status: 'ok ✅✅',
     timestamp: new Date().toISOString(),
     env: {
       BACKEND_URL: hasBackendUrl ? 'configured' : 'MISSING',
       API_SECRET: hasApiSecret ? 'configured' : 'MISSING',
       // Show first 8 chars of API secret to verify it's correct
-      API_SECRET_preview: hasApiSecret ? process.env.API_SECRET?.substring(0, 8) + '...' : 'MISSING',
+      API_SECRET_preview: hasApiSecret ? process.env.API_SECRET?.substring(0, 5) + '...' : 'MISSING',
       BACKEND_URL_value: process.env.BACKEND_URL || 'MISSING',
     }
   });

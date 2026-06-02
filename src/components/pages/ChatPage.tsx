@@ -358,13 +358,13 @@ export default function ChatPage() {
             className={`flex gap-3 animate-fade-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'ai' && (
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light">
-                <Icon name="robot" size={17} strokeWidth={2} />
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light">
+                <Icon name="robot" size={15} strokeWidth={2} />
               </div>
             )}
-            <div className={`flex flex-col gap-2 max-w-[78%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col gap-2 max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div
-                className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className={`rounded-2xl px-3 py-2 text-[13px] leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-gold text-background-primary font-semibold'
                     : 'glass text-white/85'
@@ -442,18 +442,18 @@ export default function ChatPage() {
 
         {loading && (
           <div className="flex justify-start gap-3 animate-fade-up">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light animate-breathe">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light animate-breathe">
               <span className="animate-bob inline-flex">
-                <Icon name="robot" size={17} strokeWidth={2} />
+                <Icon name="robot" size={15} strokeWidth={2} />
               </span>
             </div>
-            <div className="glass rounded-2xl px-4 py-3 flex items-center gap-2.5">
-              <span className="flex items-center gap-1.5">
+            <div className="glass rounded-2xl px-3 py-2 flex items-center gap-2">
+              <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-1" />
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-2" />
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-3" />
               </span>
-              <span className="text-xs text-white/45 font-medium">Thinking…</span>
+              <span className="text-[11px] text-white/45 font-medium">Thinking…</span>
             </div>
           </div>
         )}
@@ -462,11 +462,11 @@ export default function ChatPage() {
 
       {/* Bottom Input Area */}
       <div className="shrink-0 pt-3 pb-2">
-        {/* Discover prompts — teach users about NimHub. Shown early in a chat. */}
+        {/* Discover prompts - teach users about NimHub. Shown early in a chat. */}
         {messages.length <= 3 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-2 -mx-4 px-4">
-            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-blue-light whitespace-nowrap flex-shrink-0 self-center pr-1">
-              <Icon name="sparkles" size={12} strokeWidth={2} />
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-brand-blue-light whitespace-nowrap self-center">
+              <Icon name="sparkles" size={11} strokeWidth={2} />
               Discover
             </span>
             {DISCOVER_PROMPTS.map((prompt) => (
@@ -474,31 +474,27 @@ export default function ChatPage() {
                 key={prompt.label}
                 onClick={() => sendMessage(prompt.query)}
                 disabled={loading}
-                className="rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors bg-brand-blue/10 text-brand-blue-light border border-brand-blue/25 hover:bg-brand-blue/20 disabled:opacity-50"
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-colors bg-brand-blue/10 text-brand-blue-light border border-brand-blue/25 hover:bg-brand-blue/20 disabled:opacity-50"
               >
                 {prompt.label}
               </button>
             ))}
-            {/* Trailing spacer so the last chip isn't clipped at the edge */}
-            <span className="w-1 flex-shrink-0" aria-hidden="true" />
           </div>
         )}
 
         {/* Quick action prompts */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 -mx-4 px-4">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt.label}
               onClick={() => sendMessage(prompt.label)}
               disabled={loading}
-              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 disabled:opacity-50"
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 disabled:opacity-50"
             >
-              <Icon name={prompt.icon} size={13} strokeWidth={2} />
+              <Icon name={prompt.icon} size={12} strokeWidth={2} />
               {prompt.label}
             </button>
           ))}
-          {/* Trailing spacer so the last chip isn't clipped at the edge */}
-          <span className="w-1 flex-shrink-0" aria-hidden="true" />
         </div>
 
         {/* Input */}

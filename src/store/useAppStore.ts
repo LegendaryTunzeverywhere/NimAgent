@@ -259,6 +259,7 @@ export const useAppStore = create<AppState>()(
         },
         transactions: state.transactions,
         currentSessionId: state.currentSessionId,
+        activeTab: state.activeTab, // Persist active tab
       }),
     }
   )
