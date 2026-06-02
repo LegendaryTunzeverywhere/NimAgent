@@ -469,16 +469,11 @@ export default function ActionCard({ action }: ActionCardProps) {
           />
           <span className="text-white/50 text-sm font-semibold">NIM</span>
         </div>
-        <div className="flex items-center justify-between">
-          <p className="text-white/30 text-xs">
-            {amountLocked ? 'Server-calculated amount' : 'Enter amount'}
+        {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
+          <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-white/40'} text-right`}>
+            Quote expires in {timeRemaining}s
           </p>
-          {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
-            <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-white/40'}`}>
-              Quote expires in {timeRemaining}s
-            </p>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Price change alert */}
