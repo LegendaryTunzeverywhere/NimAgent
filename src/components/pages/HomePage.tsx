@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { getOrders } from '@/lib/api-client';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
