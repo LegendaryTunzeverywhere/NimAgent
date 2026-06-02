@@ -1,7 +1,7 @@
 -- ============================================
 -- SUPABASE ROW LEVEL SECURITY (RLS) SETUP
 -- ============================================
--- This SQL script enables Row Level Security on all NimHub tables
+-- This SQL script enables Row Level Security on NimHub tables
 -- and creates policies to ensure users can only access their own data.
 --
 -- Run this in your Supabase SQL Editor:
@@ -11,7 +11,7 @@
 -- 4. Paste and run this script
 
 -- ============================================
--- 1. ENABLE RLS ON ALL TABLES
+-- 1. ENABLE RLS ON TABLES
 -- ============================================
 
 -- Transactions table (NIM sends/receives)
@@ -19,12 +19,6 @@ ALTER TABLE IF EXISTS transactions ENABLE ROW LEVEL SECURITY;
 
 -- Orders table (gift cards, airtime, bills)
 ALTER TABLE IF EXISTS orders ENABLE ROW LEVEL SECURITY;
-
--- Chat messages table
-ALTER TABLE IF EXISTS chat_messages ENABLE ROW LEVEL SECURITY;
-
--- Chat sessions table
-ALTER TABLE IF EXISTS chat_sessions ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 2. DROP EXISTING POLICIES (if any)
@@ -35,11 +29,6 @@ DROP POLICY IF EXISTS "Users insert own transactions" ON transactions;
 DROP POLICY IF EXISTS "Users see own orders" ON orders;
 DROP POLICY IF EXISTS "Users insert own orders" ON orders;
 DROP POLICY IF EXISTS "Users update own orders" ON orders;
-DROP POLICY IF EXISTS "Users see own chat messages" ON chat_messages;
-DROP POLICY IF EXISTS "Users insert own chat messages" ON chat_messages;
-DROP POLICY IF EXISTS "Users see own chat sessions" ON chat_sessions;
-DROP POLICY IF EXISTS "Users insert own chat sessions" ON chat_sessions;
-DROP POLICY IF EXISTS "Users delete own chat sessions" ON chat_sessions;
 
 -- ============================================
 -- 3. TRANSACTIONS TABLE POLICIES
@@ -93,55 +82,7 @@ USING (
 );
 
 -- ============================================
--- 5. CHAT MESSAGES TABLE POLICIES
--- ============================================
-
--- Users can see their own chat messages
-CREATE POLICY "Users see own chat messages"
-ON chat_messages
-FOR SELECT
-USING (
-  REPLACE(wallet_address, ' ', '') = REPLACE(current_setting('request.jwt.claims', true)::json->>'wallet_address', ' ', '')
-);
-
--- Users can insert their own chat messages
-CREATE POLICY "Users insert own chat messages"
-ON chat_messages
-FOR INSERT
-WITH CHECK (
-  REPLACE(wallet_address, ' ', '') = REPLACE(current_setting('request.jwt.claims', true)::json->>'wallet_address', ' ', '')
-);
-
--- ============================================
--- 6. CHAT SESSIONS TABLE POLICIES
--- ============================================
-
--- Users can see their own chat sessions
-CREATE POLICY "Users see own chat sessions"
-ON chat_sessions
-FOR SELECT
-USING (
-  REPLACE(wallet_address, ' ', '') = REPLACE(current_setting('request.jwt.claims', true)::json->>'wallet_address', ' ', '')
-);
-
--- Users can insert their own chat sessions
-CREATE POLICY "Users insert own chat sessions"
-ON chat_sessions
-FOR INSERT
-WITH CHECK (
-  REPLACE(wallet_address, ' ', '') = REPLACE(current_setting('request.jwt.claims', true)::json->>'wallet_address', ' ', '')
-);
-
--- Users can delete their own chat sessions
-CREATE POLICY "Users delete own chat sessions"
-ON chat_sessions
-FOR DELETE
-USING (
-  REPLACE(wallet_address, ' ', '') = REPLACE(current_setting('request.jwt.claims', true)::json->>'wallet_address', ' ', '')
-);
-
--- ============================================
--- 7. VERIFY RLS IS ENABLED
+-- 5. VERIFY RLS IS ENABLED
 -- ============================================
 
 -- Run this to verify all tables have RLS enabled:
@@ -151,20 +92,18 @@ SELECT
   rowsecurity
 FROM pg_tables
 WHERE schemaname = 'public'
-  AND tablename IN ('transactions', 'orders', 'chat_messages', 'chat_sessions');
+  AND tablename IN ('transactions', 'orders');
 
 -- Expected output: All should show rowsecurity = true
 
 -- ============================================
--- 8. TEST RLS POLICIES
+-- 6. TEST RLS POLICIES
 -- ============================================
 
 -- Test with a sample wallet address:
 -- SET request.jwt.claims TO '{"wallet_address": "NQ75UB042A5UPCUR7VNRF73JTP2CQ9UDYB16"}';
 -- SELECT * FROM transactions;
 -- SELECT * FROM orders;
--- SELECT * FROM chat_messages;
--- SELECT * FROM chat_sessions;
 
 -- You should only see rows for that wallet address.
 
@@ -174,8 +113,9 @@ WHERE schemaname = 'public'
 -- 1. This uses JWT claims to identify users by wallet_address
 -- 2. All addresses are normalized (spaces removed) for comparison
 -- 3. Transactions show if user is sender OR receiver
--- 4. All other tables filter by wallet_address ownership
+-- 4. Orders filter by wallet_address ownership
 -- 5. RLS policies are enforced at the database level - even if your app
 --    has a bug, users cannot access other users' data
 -- 6. For API key auth (server-side), you may need to set the JWT claim
 --    in your backend before querying
+-- 7. Chat messages/sessions are not included as those tables don't exist yet
