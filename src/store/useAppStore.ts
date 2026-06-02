@@ -21,8 +21,14 @@ export const useAppStore = create<AppState>()(
       messages: [],
       activeTab: 'home',
       currentSessionId: null,
+      theme: 'dark',
+      network: 'testnet',
 
       setActiveTab: (tab) => set({ activeTab: tab }),
+      
+      setTheme: (theme) => set({ theme }),
+      
+      setNetwork: (network) => set({ network }),
 
       connectWallet: async () => {
         set((state) => ({
@@ -260,6 +266,8 @@ export const useAppStore = create<AppState>()(
         transactions: state.transactions,
         currentSessionId: state.currentSessionId,
         activeTab: state.activeTab, // Persist active tab
+        theme: state.theme, // Persist theme preference
+        network: state.network, // Persist network preference
       }),
     }
   )

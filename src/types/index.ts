@@ -81,7 +81,11 @@ export interface AppState {
   messages: Message[];
   activeTab: 'home' | 'chat' | 'history';
   currentSessionId: string | null;
+  theme: 'dark' | 'light';
+  network: 'testnet' | 'mainnet';
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
+  setTheme: (theme: 'dark' | 'light') => void;
+  setNetwork: (network: 'testnet' | 'mainnet') => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   fetchBalance: () => Promise<void>;
