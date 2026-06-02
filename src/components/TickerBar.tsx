@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function TickerBar() {
-  const { wallet, connectWallet } = useAppStore();
+  const { wallet } = useAppStore();
   const [nimPrice, setNimPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
   const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
@@ -34,20 +34,12 @@ export default function TickerBar() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleTickerClick = (e: React.MouseEvent) => {
-    // If wallet not connected and user clicks, trigger connection
-    if (!wallet.connected && !wallet.loading) {
-      e.preventDefault();
-      connectWallet();
-    }
-  };
-
   const items = [
     nimPrice ? `NIM  $${nimPrice.toFixed(4)}  ${priceChange && priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2)}%` : 'NIM  LOADING...',
     'AI AGENT  ACTIVE',
     wallet.connected && wallet.address 
       ? `${wallet.address.slice(0, 4)} ${wallet.address.slice(5, 9)} ${wallet.address.slice(10, 14)} ••• CONNECTED`
-      : 'WALLET  NOT CONNECTED  [TAP TO CONNECT]',
+      : 'WALLET  NOT CONNECTED',
     `NETWORK  ${network.toUpperCase()}`,
     nimPrice ? `NIM  $${nimPrice.toFixed(4)}  ${priceChange && priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2)}%` : 'NIM  LOADING...',
     'POWERED BY NIMIQ',
@@ -56,14 +48,7 @@ export default function TickerBar() {
   const text = items.join('   ·   ');
 
   return (
-    <div 
-      className={`relative overflow-hidden w-full bg-gold/[0.07] border-b border-gold/15 py-1.5 ${
-        !wallet.connected ? 'cursor-pointer hover:bg-gold/[0.12] transition-colors' : ''
-      }`}
-      onClick={handleTickerClick}
-      role={!wallet.connected ? 'button' : undefined}
-      aria-label={!wallet.connected ? 'Connect wallet' : undefined}
-    >
+    <div className="relative overflow-hidden w-full bg-gold/[0.07] border-b border-gold/15 py-1.5">
       {/* Edge fades */}
       <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-r from-background-primary to-transparent" />
       <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-l from-background-primary to-transparent" />
