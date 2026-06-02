@@ -97,7 +97,35 @@ export default function HistoryPage() {
       // Add regular transactions (send/receive)
       if (transactionsRes.ok) {
         const transData = await transactionsRes.json();
-        allTransactions = transData.transactions || [];
+        const rawTransactions = transData.transactions || [];
+        
+        // Determine transaction type based on wallet address
+        const processedTransactions = rawTransactions.map((tx: any) => {
+          // Clean addresses for comparison (remove spaces)
+          const cleanWalletAddr = wallet.address?.replace(/\s/g, '').toLowerCase();
+          const cleanFromAddr = tx.from_address?.replace(/\s/g, '').toLowerCase();
+          const cleanToAddr = tx.to_address?.replace(/\s/g, '').toLowerCase();
+          
+          // Determine if it's a send or receive
+          let type = tx.type;
+          if (!type || type === 'transaction') {
+            // If type is not set or generic, determine from addresses
+            if (cleanFromAddr === cleanWalletAddr) {
+              type = 'send';
+            } else if (cleanToAddr === cleanWalletAddr) {
+              type = 'receive';
+            } else {
+              type = 'send'; // Default to send if unclear
+            }
+          }
+          
+          return {
+            ...tx,
+            type,
+          };
+        });
+        
+        allTransactions = processedTransactions;
       }
       
       // Add orders (gift cards, airtime, bills) as transactions
@@ -121,6 +149,9 @@ export default function HistoryPage() {
       allTransactions.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
+      
+      console.log('[HistoryPage] Fetched transactions:', allTransactions.length);
+      console.log('[HistoryPage] Transaction types:', allTransactions.map(t => t.type));
       
       setTransactions(allTransactions);
       // Don't reset expandedTx - preserve the expanded state
