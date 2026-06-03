@@ -203,6 +203,23 @@ export default function ActionCard({ action }: ActionCardProps) {
   }
 
   const executeAction = async () => {
+    // Prevent retry if card is already failed or completed
+    if (failed) {
+      addMessage({
+        role: 'ai',
+        content: '❌ This transaction has failed and is locked.\n\nPlease start a new request instead of retrying. If your payment was deducted, our team will process your refund within 24 hours.',
+      });
+      return;
+    }
+    
+    if (success) {
+      addMessage({
+        role: 'ai',
+        content: '✅ This transaction is already complete. No need to retry.',
+      });
+      return;
+    }
+    
     if (!wallet.address) {
       addMessage({
         role: 'ai',
@@ -371,7 +388,25 @@ export default function ActionCard({ action }: ActionCardProps) {
             });
           }
         } else {
-          throw new Error(result.error || 'Order fulfillment failed');
+          // Backend returned failure - check if it's a locked/failed order
+          if (result.locked || result.refundNeeded) {
+            // This is a failed order that's locked - don't retry
+            setFailed(true);
+            setAmountLocked(true);
+            
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                failed: true
+              });
+            }
+            
+            addMessage({
+              role: 'ai',
+              content: `❌ Order Failed (Locked)\n\n${result.message || result.error}\n\nYour transaction hash: ${hash}\n\n⚠️ Do not retry - a refund will be processed within 24 hours.`,
+            });
+          } else {
+            throw new Error(result.error || 'Order fulfillment failed');
+          }
         }
       }
     } catch (error: any) {
@@ -389,15 +424,39 @@ export default function ActionCard({ action }: ActionCardProps) {
       }
       
       // Provide more specific error messages
-      let errorMessage = 'Payment failed: ';
-      if (error.message?.includes('User closed')) {
-        errorMessage += 'You cancelled the transaction.';
-      } else if (error.message?.includes('timeout')) {
-        errorMessage += 'The wallet took too long to respond. Please try again.';
-      } else if (error.message?.includes('popup')) {
-        errorMessage += 'Popup was blocked. Please allow popups for this site and try again.';
-      } else {
-        errorMessage += error.message || 'Something went wrong. Please try again.';
+      let errorMessage = '';
+      
+      // Handle quote expiry specifically
+      if (error.message?.includes('Quote has expired')) {
+        errorMessage = '⏱️ Quote Expired\n\nThe price quote expired before payment was completed. Please refresh the quote and try again with updated pricing.';
+      }
+      // Handle user cancellation
+      else if (error.message?.includes('User closed') || error.message?.includes('cancelled')) {
+        errorMessage = '❌ Transaction Cancelled\n\nYou cancelled the transaction. No funds were deducted.';
+        // Don't mark as failed for user cancellation
+        setFailed(false);
+        setAmountLocked(false);
+        if (messageIndex >= 0) {
+          await updateActionState(messageIndex, {
+            failed: false
+          });
+        }
+      }
+      // Handle timeout
+      else if (error.message?.includes('timeout')) {
+        errorMessage = '⏱️ Timeout\n\nThe wallet took too long to respond. Please try again.';
+      }
+      // Handle popup blocked
+      else if (error.message?.includes('popup')) {
+        errorMessage = '🚫 Popup Blocked\n\nPlease allow popups for this site and try again.';
+      }
+      // Handle locked order from backend
+      else if (error.message?.includes('locked') || error.message?.includes('already failed')) {
+        errorMessage = `❌ Order Locked\n\n${error.message}\n\n⚠️ This transaction is locked. Do not retry. If your payment was deducted, a refund will be processed within 24 hours.`;
+      }
+      // Generic error
+      else {
+        errorMessage = `❌ Payment Failed\n\n${error.message || 'Something went wrong. Please try again.'}\n\nIf funds were deducted, our team will investigate and process a refund if needed.`;
       }
       
       addMessage({
