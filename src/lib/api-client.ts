@@ -16,6 +16,16 @@ const API_URL = '/api'; // BFF proxy endpoint (same-origin)
 import type { ActionCard } from '@/types';
 
 /**
+ * FIX 4 FRONTEND: Validate NIM address format client-side
+ * Prevents sending invalid addresses to backend
+ */
+function isValidNimAddress(address: string): boolean {
+  if (typeof address !== 'string') return false;
+  const cleaned = address.replace(/\s/g, '').toUpperCase();
+  return /^NQ[0-9A-Z]{34}$/.test(cleaned);
+}
+
+/**
  * Get headers for API requests
  * No API key needed - handled by BFF layer on server
  */
@@ -159,6 +169,11 @@ export async function createOrder(data: {
  * Get order history for a wallet
  */
 export async function getOrders(walletAddress: string): Promise<Order[]> {
+  // FIX 4 FRONTEND: Validate address before API call
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
   const res = await fetch(`${API_URL}/orders?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
@@ -201,6 +216,11 @@ export async function saveChatMessage(data: {
   content: string;
   action?: ActionCard;
 }): Promise<void> {
+  // FIX 4 FRONTEND: Validate address before API call
+  if (!isValidNimAddress(data.walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
   const res = await fetch(`${API_URL}/chat/history`, {
     method: 'POST',
     headers: getHeaders(),
@@ -216,6 +236,11 @@ export async function saveChatMessage(data: {
  * Get chat history for a session
  */
 export async function getChatHistory(sessionId: string, walletAddress: string): Promise<any[]> {
+  // FIX 4 FRONTEND: Validate address before API call
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
@@ -232,6 +257,11 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
  * Get all chat sessions for a wallet
  */
 export async function getChatSessions(walletAddress: string): Promise<any[]> {
+  // FIX 4 FRONTEND: Validate address before API call
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
   const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: getHeaders(),
   });
@@ -248,6 +278,11 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
  * Delete a chat session
  */
 export async function deleteChatSession(sessionId: string, walletAddress: string): Promise<void> {
+  // FIX 4 FRONTEND: Validate address before API call
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     method: 'DELETE',
     headers: getHeaders(),

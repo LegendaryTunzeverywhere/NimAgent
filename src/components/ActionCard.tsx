@@ -336,14 +336,56 @@ export default function ActionCard({ action }: ActionCardProps) {
         });
 
         // Fulfill order (backend verifies the on-chain payment first)
-        const result = await createOrder({
-          type: action.type,
-          txHash: hash,
-          amountLuna,
-          details: { ...action, recipientEmail: email || undefined },
-          walletAddress: wallet.address,
-          quoteId: quoteId || undefined,
-        });
+        // FIX 2 FRONTEND: Handle confirmation requirement - retry if payment not yet confirmed
+        let result;
+        let retryCount = 0;
+        const maxRetries = 4; // Up to 4 retries (0 initial + 3 retries = ~2 minutes max)
+        
+        while (retryCount <= maxRetries) {
+          try {
+            result = await createOrder({
+              type: action.type,
+              txHash: hash,
+              amountLuna,
+              details: { ...action, recipientEmail: email || undefined },
+              walletAddress: wallet.address,
+              quoteId: quoteId || undefined,
+            });
+            
+            // Success! Break out of retry loop
+            break;
+          } catch (err: any) {
+            // Check if error is due to insufficient confirmations
+            const isConfirmationError = err.message?.includes('not yet confirmed') || 
+                                       err.message?.includes('confirmation');
+            
+            if (isConfirmationError && retryCount < maxRetries) {
+              retryCount++;
+              const waitTime = 20000; // Wait 20 seconds between retries
+              
+              console.log(`[Confirmation Wait] Attempt ${retryCount}/${maxRetries} - waiting ${waitTime/1000}s for confirmation`);
+              
+              // Update user with waiting message
+              if (retryCount === 1) {
+                addMessage({
+                  role: 'ai',
+                  content: '⏳ Waiting for blockchain confirmation... This usually takes 30-60 seconds. Please wait.',
+                });
+              }
+              
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+              // Not a confirmation error, or max retries reached - rethrow
+              throw err;
+            }
+          }
+        }
+        
+        // If we exhausted retries without success
+        if (!result) {
+          throw new Error('Payment confirmation timeout. Your payment is on-chain but order processing failed. Our team will investigate.');
+        }
 
         if (result.success) {
           setSuccess(true);
