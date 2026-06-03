@@ -227,7 +227,9 @@ export const useAppStore = create<AppState>()(
 
       startNewSession: () => {
         const newSessionId = generateSessionId();
+        // Set both new session ID and clear messages atomically
         set({ currentSessionId: newSessionId, messages: [] });
+        console.log('[Store] Created new session:', newSessionId);
       },
 
       addMessage: async (message) => {
@@ -256,6 +258,7 @@ export const useAppStore = create<AppState>()(
       },
 
       clearMessages: () => {
+        console.log('[Store] Clearing all messages');
         set({ messages: [] });
       },
 
