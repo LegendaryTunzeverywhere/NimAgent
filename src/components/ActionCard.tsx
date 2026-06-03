@@ -27,6 +27,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   const { wallet, addMessage } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [failed, setFailed] = useState(false); // Track failures
   const [amount, setAmount] = useState(action.amountLuna ? (action.amountLuna / 100000).toFixed(2) : '');
   const [email, setEmail] = useState('');
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   // popup isn't blocked by a network request inside the click handler.
   const isOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
   const [prevalidationError, setPrevalidationError] = useState<string | null>(null);
-  // LOCK IMMEDIATELY for orders to prevent editing during validation
+  // LOCK IMMEDIATELY for orders to prevent editing during validation, and lock after transaction completes
   const [amountLocked, setAmountLocked] = useState(isOrder);
   const [quoteId, setQuoteId] = useState<string | null>(null);
   
@@ -48,7 +49,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
   // Refresh quote function
   const refreshQuote = async () => {
-    if (!isOrder || success || loading) return;
+    if (!isOrder || success || failed || loading) return;
     
     setRefreshing(true);
     setPriceChanged(false);
@@ -105,7 +106,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
   // Countdown timer for quote expiry
   useEffect(() => {
-    if (!isOrder || !quoteExpiry || success || loading) return;
+    if (!isOrder || !quoteExpiry || success || failed || loading) return;
     
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((quoteExpiry - Date.now()) / 1000));
@@ -124,7 +125,7 @@ export default function ActionCard({ action }: ActionCardProps) {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [quoteExpiry, success, loading, isOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quoteExpiry, success, failed, loading, isOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warm up the Hub and pre-validate orders as soon as the card mounts.
   // This keeps the eventual checkout() call inside the user's click gesture
@@ -252,6 +253,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
         setSuccess(true);
         setTxHash(hash);
+        setAmountLocked(true); // Lock after successful transaction
         const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
         const explorerUrl = network === 'mainnet' 
           ? `https://nimiq.watch/#${hash}`
@@ -315,6 +317,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         if (result.success) {
           setSuccess(true);
           setTxHash(hash);
+          setAmountLocked(true); // Lock after successful transaction
           const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
           const explorerUrl = network === 'mainnet' 
             ? `https://nimiq.watch/#${hash}`
@@ -350,6 +353,10 @@ export default function ActionCard({ action }: ActionCardProps) {
       }
     } catch (error: any) {
       console.error('Action execution error:', error);
+      
+      // Mark as failed and lock the card
+      setFailed(true);
+      setAmountLocked(true);
       
       // Provide more specific error messages
       let errorMessage = 'Payment failed: ';
@@ -471,7 +478,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             </button>
           )}
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 ${amountLocked ? 'opacity-75' : 'focus-within:border-gold/50'}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border ${failed ? 'border-error/50' : 'border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-gold/50'}`}>
           <input
             type="number"
             value={amount}
@@ -479,7 +486,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             min="0.01"
             step="0.01"
             placeholder="0.00"
-            disabled={loading || success || amountLocked}
+            disabled={loading || success || failed || amountLocked}
             readOnly={amountLocked}
             className="flex-1 bg-transparent text-white text-sm outline-none disabled:cursor-not-allowed"
           />
@@ -519,19 +526,27 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Button */}
       <button
         onClick={executeAction}
-        disabled={loading || success || !amount || parseFloat(amount) <= 0 || !!prevalidationError}
+        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError}
         className={`w-full py-3 rounded-xl font-semibold transition-all ${
           success
             ? 'bg-green-500/20 text-green-400 cursor-default'
+            : failed
+            ? 'bg-error/20 text-error cursor-default'
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >
-        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : 'Confirm & Pay'}
+        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : 'Confirm & Pay'}
       </button>
       
       {success && txHash && (
         <p className="text-xs text-success text-center">
           Transaction recorded. Check History tab to view details.
+        </p>
+      )}
+      
+      {failed && (
+        <p className="text-xs text-error text-center">
+          Transaction failed. Card is now locked. Please start a new request.
         </p>
       )}
     </div>
