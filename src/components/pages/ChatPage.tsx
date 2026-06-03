@@ -238,9 +238,16 @@ export default function ChatPage() {
 
       // If deleted current session, start a fresh one
       if (sessionId === currentSessionId) {
-        startNewSession();
         clearMessages();
-        setHasInitialized(false);
+        startNewSession();
+        
+        // Add welcome message
+        setTimeout(() => {
+          addMessage({
+            role: 'ai',
+            content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
+          });
+        }, 100);
       }
     } catch (error) {
       console.error('Failed to delete session:', error);
@@ -275,10 +282,18 @@ export default function ChatPage() {
           </button>
           <button
             onClick={() => {
-              startNewSession();
+              // Clear current session completely
               clearMessages();
-              setHasInitialized(false);
+              startNewSession();
               setShowSessions(false);
+              
+              // Add welcome message immediately
+              setTimeout(() => {
+                addMessage({
+                  role: 'ai',
+                  content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
+                });
+              }, 100);
             }}
             className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors"
           >
