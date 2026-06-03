@@ -218,7 +218,15 @@ export async function saveChatMessage(data: {
 }): Promise<void> {
   // FIX 4 FRONTEND: Validate address before API call
   if (!isValidNimAddress(data.walletAddress)) {
+    console.error('[API Client] Invalid wallet address format:', data.walletAddress.slice(0, 10));
     throw new Error('Invalid NIM wallet address format');
+  }
+  
+  // Validate sessionId format (UUID v4)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!data.sessionId || !uuidRegex.test(data.sessionId)) {
+    console.error('[API Client] Invalid sessionId format:', data.sessionId?.slice(0, 20));
+    throw new Error('Invalid session ID format');
   }
   
   const res = await fetch(`${API_URL}/chat/history`, {
@@ -228,7 +236,9 @@ export async function saveChatMessage(data: {
   });
   
   if (!res.ok) {
-    console.error('Failed to save chat message');
+    const errorBody = await res.json().catch(() => ({ error: 'Unknown error' }));
+    console.error('[API Client] Failed to save chat message:', res.status, errorBody);
+    throw new Error(errorBody.error || 'Failed to save chat message');
   }
 }
 

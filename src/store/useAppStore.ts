@@ -261,9 +261,24 @@ export const useAppStore = create<AppState>()(
               content: message.content,
               action: message.action,
             });
-          } catch (error) {
-            console.error('Failed to save message to database:', error);
+          } catch (error: any) {
+            console.error('Failed to save chat message:', error);
+            // Log details for debugging
+            console.debug('[Store] Save attempt details:', {
+              hasWalletAddress: !!wallet.address,
+              walletAddress: wallet.address?.slice(0, 10) + '...',
+              hasSessionId: !!currentSessionId,
+              sessionId: currentSessionId?.slice(0, 20) + '...',
+              role: message.role,
+              contentLength: message.content?.length,
+              hasAction: !!message.action,
+            });
           }
+        } else {
+          console.debug('[Store] Skipping chat save - wallet or session not ready:', {
+            hasWallet: !!wallet.address,
+            hasSession: !!currentSessionId,
+          });
         }
       },
 
