@@ -198,19 +198,26 @@ export default function ChatPage() {
     if (!wallet.address) return;
     
     try {
-      const { getChatHistory } = await import('@/lib/api-client');
-      const messages = await getChatHistory(sessionId, wallet.address);
+      console.log('[ChatPage] Loading session:', sessionId);
       
-      clearMessages();
-      messages.forEach((msg: any) => {
-        addMessage({
+      // Prevent re-initialization while loading
+      setHasInitialized(true);
+      
+      const { getChatHistory } = await import('@/lib/api-client');
+      const messagesFromDB = await getChatHistory(sessionId, wallet.address);
+      
+      // Set session ID and messages atomically to prevent race conditions
+      useAppStore.setState({ 
+        currentSessionId: sessionId,
+        messages: messagesFromDB.map((msg: any) => ({
           role: msg.role,
           content: msg.content,
           action: msg.action,
           timestamp: new Date(msg.created_at).getTime(),
-        });
+        }))
       });
       
+      console.log('[ChatPage] Loaded', messagesFromDB.length, 'messages from session:', sessionId);
       setShowSessions(false);
     } catch (error) {
       console.error('Failed to load session:', error);
