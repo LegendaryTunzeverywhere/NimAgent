@@ -116,6 +116,27 @@ export async function POST(
       body: JSON.stringify(body),
     });
 
+    // Log non-2xx responses before parsing
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[BFF] Backend POST error:', response.status, text.slice(0, 500));
+      // Try to parse as JSON, fallback to text error
+      try {
+        const errorData = JSON.parse(text);
+        return NextResponse.json(errorData, {
+          status: response.status,
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        });
+      } catch {
+        return NextResponse.json(
+          { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
+          { status: response.status }
+        );
+      }
+    }
+
     const data = await response.json();
 
     return NextResponse.json(data, {
