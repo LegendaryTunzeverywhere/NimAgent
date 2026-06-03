@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppState, Transaction, Message, Balance } from '@/types';
+import type { AppState, Transaction, Message, Balance, ActionCard } from '@/types';
 
 // Generate a unique session ID
 function generateSessionId(): string {
@@ -257,7 +257,7 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      updateActionState: async (messageIndex: number, actionUpdates: Partial<ActionCardType>) => {
+      updateActionState: async (messageIndex: number, actionUpdates: Partial<ActionCard>) => {
         const { wallet, currentSessionId, messages } = get();
         
         // Update the message in local state
@@ -271,12 +271,13 @@ export const useAppStore = create<AppState>()(
         
         console.log(`[Store] Updated action state for message ${messageIndex}:`, actionUpdates);
         
-        // If we have the updated message, save it to database
-        if (wallet.address && currentSessionId && messages[messageIndex]) {
+        // If we have the updated message with an action, save it to database
+        const message = messages[messageIndex];
+        if (wallet.address && currentSessionId && message?.action) {
           try {
             const updatedMessage = {
-              ...messages[messageIndex],
-              action: { ...messages[messageIndex].action, ...actionUpdates }
+              ...message,
+              action: { ...message.action, ...actionUpdates }
             };
             
             const { saveChatMessage } = await import('@/lib/api-client');
