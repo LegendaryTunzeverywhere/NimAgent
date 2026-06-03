@@ -239,7 +239,7 @@ NimHub implements **enterprise-grade cryptographic security** with 13+ layers of
 ✅ **API Authentication** - Secret key required for all API calls (NEW)  
 ✅ **On-Chain Verification** - All payments verified on Nimiq blockchain  
 ✅ **Server-Side Pricing** - Client cannot manipulate amounts  
-✅ **10% Volatility Buffer** - Protects against price fluctuations  
+✅ **5% Order Markup** - Covers volatility protection and service fee  
 ✅ **Replay Protection** - Each transaction can only be used once  
 ✅ **UI Amount Lock** - Payment amounts locked immediately (no race conditions)  
 ✅ **AI Anti-Manipulation** - AI cannot be tricked into lowering prices  

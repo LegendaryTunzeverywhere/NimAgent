@@ -214,7 +214,12 @@ export default function ActionCard({ action }: ActionCardProps) {
       return;
     }
 
-    const amountLuna = Math.round(nimAmount * 100000);
+    // For orders (gift-card, airtime, bill), use the validated amountLuna from the backend
+    // which includes the 5% markup (volatility buffer + service fee). For simple sends, calculate from user input.
+    const amountLuna = (action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill')
+      ? (action.amountLuna || Math.round(nimAmount * 100000))
+      : Math.round(nimAmount * 100000);
+    
     setLoading(true);
 
     try {
@@ -271,6 +276,17 @@ export default function ActionCard({ action }: ActionCardProps) {
         // Trigger the wallet popup FIRST, directly from the click gesture, so
         // the browser doesn't block it. Order validation already ran on mount.
         const serviceAddress = process.env.NEXT_PUBLIC_SERVICE_ADDRESS || action.recipient || 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000';
+        
+        console.log('[ActionCard] Processing order:', {
+          type: action.type,
+          serviceAddress,
+          amountLuna,
+          actionAmountLuna: action.amountLuna,
+          nimAmount,
+          fiatAmount: action.fiatAmount,
+          currency: action.currency,
+        });
+        
         const hash = await requestPayment(
           serviceAddress,
           amountLuna,
