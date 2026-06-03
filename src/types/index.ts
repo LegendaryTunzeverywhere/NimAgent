@@ -57,6 +57,10 @@ export interface ActionCard {
   toCoin?: string;
   amount?: string;
   recipientEmail?: string;
+  // Payment status fields (persisted)
+  completed?: boolean;
+  failed?: boolean;
+  txHash?: string;
 }
 
 export interface QuickAction {

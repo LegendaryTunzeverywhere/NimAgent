@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 
+// Mark this route as dynamic (not statically generated)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * Health check endpoint to verify environment variables
  * SECURITY: Only returns boolean flags, never actual secrets or URLs

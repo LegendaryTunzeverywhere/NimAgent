@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Mark this route as dynamic (not statically generated)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * BFF (Backend-for-Frontend) Proxy Layer
  * 

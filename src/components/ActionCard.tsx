@@ -24,13 +24,15 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage } = useAppStore();
+  const { wallet, addMessage, messages } = useAppStore();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [failed, setFailed] = useState(false); // Track failures
+  
+  // Initialize state from persisted action data
+  const [success, setSuccess] = useState(action.completed || false);
+  const [failed, setFailed] = useState(action.failed || false);
   const [amount, setAmount] = useState(action.amountLuna ? (action.amountLuna / 100000).toFixed(2) : '');
   const [email, setEmail] = useState('');
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(action.txHash || null);
 
   // Pre-validation state — done BEFORE the user clicks Pay so the wallet
   // popup isn't blocked by a network request inside the click handler.
@@ -254,6 +256,11 @@ export default function ActionCard({ action }: ActionCardProps) {
         setSuccess(true);
         setTxHash(hash);
         setAmountLocked(true); // Lock after successful transaction
+        
+        // Update action in store to persist completion state
+        action.completed = true;
+        action.txHash = hash;
+        
         const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
         const explorerUrl = network === 'mainnet' 
           ? `https://nimiq.watch/#${hash}`
@@ -318,6 +325,11 @@ export default function ActionCard({ action }: ActionCardProps) {
           setSuccess(true);
           setTxHash(hash);
           setAmountLocked(true); // Lock after successful transaction
+          
+          // Update action in store to persist completion state
+          action.completed = true;
+          action.txHash = hash;
+          
           const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
           const explorerUrl = network === 'mainnet' 
             ? `https://nimiq.watch/#${hash}`
@@ -357,6 +369,9 @@ export default function ActionCard({ action }: ActionCardProps) {
       // Mark as failed and lock the card
       setFailed(true);
       setAmountLocked(true);
+      
+      // Update action in store to persist failed state
+      action.failed = true;
       
       // Provide more specific error messages
       let errorMessage = 'Payment failed: ';

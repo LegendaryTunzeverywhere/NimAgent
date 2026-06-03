@@ -158,39 +158,70 @@ export const useAppStore = create<AppState>()(
       },
 
       loadOrCreateSession: async () => {
-        const { wallet, currentSessionId } = get();
+        const { wallet, currentSessionId, messages } = get();
         if (!wallet.address) return;
+
+        // If we have both a sessionId and messages in local storage, don't reload
+        if (currentSessionId && messages.length > 0) {
+          console.log('[Store] Using cached session:', currentSessionId);
+          return;
+        }
 
         try {
           const { getChatSessions, getChatHistory } = await import('@/lib/api-client');
           
+          // If we have a sessionId but no messages, try to load from that session
+          if (currentSessionId) {
+            try {
+              const sessionMessages = await getChatHistory(currentSessionId, wallet.address);
+              if (sessionMessages.length > 0) {
+                set({
+                  messages: sessionMessages.map(m => ({
+                    role: m.role,
+                    content: m.content,
+                    action: m.action,
+                    timestamp: new Date(m.created_at).getTime(),
+                  })),
+                });
+                console.log('[Store] Loaded existing session:', currentSessionId);
+                return;
+              }
+            } catch (err) {
+              console.warn('[Store] Failed to load session, will load latest or create new');
+            }
+          }
+          
           // Get all sessions for this wallet
           const sessions = await getChatSessions(wallet.address);
           
-          if (sessions.length > 0 && !currentSessionId) {
+          if (sessions.length > 0) {
             // Load the most recent session
             const latestSession = sessions[0];
-            const messages = await getChatHistory(latestSession.sessionId, wallet.address);
+            const sessionMessages = await getChatHistory(latestSession.sessionId, wallet.address);
             
             set({
               currentSessionId: latestSession.sessionId,
-              messages: messages.map(m => ({
+              messages: sessionMessages.map(m => ({
                 role: m.role,
                 content: m.content,
                 action: m.action,
                 timestamp: new Date(m.created_at).getTime(),
               })),
             });
-          } else if (!currentSessionId) {
-            // Create new session
+            console.log('[Store] Loaded latest session:', latestSession.sessionId);
+          } else {
+            // Create new session only if no sessions exist
             const newSessionId = generateSessionId();
             set({ currentSessionId: newSessionId, messages: [] });
+            console.log('[Store] Created new session:', newSessionId);
           }
         } catch (error) {
           console.error('Failed to load chat session:', error);
-          // Create new session on error
-          const newSessionId = generateSessionId();
-          set({ currentSessionId: newSessionId, messages: [] });
+          // Keep existing session if load fails
+          if (!currentSessionId) {
+            const newSessionId = generateSessionId();
+            set({ currentSessionId: newSessionId, messages: [] });
+          }
         }
       },
 
@@ -294,6 +325,7 @@ export const useAppStore = create<AppState>()(
           connected: state.wallet.connected,
         },
         transactions: state.transactions,
+        messages: state.messages, // Persist messages to keep action card states
         currentSessionId: state.currentSessionId,
         activeTab: state.activeTab, // Persist active tab
         theme: state.theme, // Persist theme preference

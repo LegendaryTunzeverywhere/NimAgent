@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Mark this route as dynamic (not statically generated)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * NIM Price API Route
  * Multi-tier fallback system for reliable price data:
