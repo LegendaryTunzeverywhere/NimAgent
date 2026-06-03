@@ -24,8 +24,11 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage, messages } = useAppStore();
+  const { wallet, addMessage, messages, updateActionState } = useAppStore();
   const [loading, setLoading] = useState(false);
+  
+  // Find the index of this message in the messages array
+  const messageIndex = messages.findIndex(msg => msg.action === action);
   
   // Initialize state from persisted action data
   const [success, setSuccess] = useState(action.completed || false);
@@ -258,8 +261,12 @@ export default function ActionCard({ action }: ActionCardProps) {
         setAmountLocked(true); // Lock after successful transaction
         
         // Update action in store to persist completion state
-        action.completed = true;
-        action.txHash = hash;
+        if (messageIndex >= 0) {
+          await updateActionState(messageIndex, {
+            completed: true,
+            txHash: hash
+          });
+        }
         
         const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
         const explorerUrl = network === 'mainnet' 
@@ -327,8 +334,12 @@ export default function ActionCard({ action }: ActionCardProps) {
           setAmountLocked(true); // Lock after successful transaction
           
           // Update action in store to persist completion state
-          action.completed = true;
-          action.txHash = hash;
+          if (messageIndex >= 0) {
+            await updateActionState(messageIndex, {
+              completed: true,
+              txHash: hash
+            });
+          }
           
           const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
           const explorerUrl = network === 'mainnet' 
@@ -371,7 +382,11 @@ export default function ActionCard({ action }: ActionCardProps) {
       setAmountLocked(true);
       
       // Update action in store to persist failed state
-      action.failed = true;
+      if (messageIndex >= 0) {
+        await updateActionState(messageIndex, {
+          failed: true
+        });
+      }
       
       // Provide more specific error messages
       let errorMessage = 'Payment failed: ';

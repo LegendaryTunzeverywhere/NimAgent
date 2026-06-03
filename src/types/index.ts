@@ -96,6 +96,7 @@ export interface AppState {
   loadOrCreateSession: () => Promise<void>;
   startNewSession: () => void;
   addMessage: (message: Message) => Promise<void>;
+  updateActionState: (messageIndex: number, actionUpdates: Partial<ActionCard>) => Promise<void>;
   clearMessages: () => void;
   sendMessageToAI: (content: string, walletAddress?: string) => Promise<void>;
   addTransaction: (transaction: Transaction) => void;

@@ -283,28 +283,36 @@ export default function ChatPage() {
           </button>
           <button
             onClick={async () => {
-              console.log('[New Chat] Button clicked');
-              console.log('[New Chat] Current messages before clear:', useAppStore.getState().messages.length);
+              console.log('[New Chat] Starting new chat session');
               
-              // Close sessions dropdown
+              // Close sessions dropdown first
               setShowSessions(false);
               
-              // Start completely fresh session (clears messages + new ID)
+              // Get current message count for debugging
+              console.log('[New Chat] Messages before clear:', useAppStore.getState().messages.length);
+              
+              // Start new session (clears messages and sets new ID atomically)
               startNewSession();
               
-              // Verify messages are cleared
-              console.log('[New Chat] Messages after startNewSession:', useAppStore.getState().messages.length);
+              // Immediately verify messages are cleared
+              const messagesAfterClear = useAppStore.getState().messages;
+              console.log('[New Chat] Messages after startNewSession:', messagesAfterClear.length);
               
-              // Wait for store to update
-              await new Promise(resolve => setTimeout(resolve, 50));
+              // If messages weren't cleared, force clear them
+              if (messagesAfterClear.length > 0) {
+                console.warn('[New Chat] Messages not cleared, forcing clear');
+                clearMessages();
+              }
               
-              // Add welcome message to the new empty session
+              // Add welcome message to the fresh session
               await addMessage({
                 role: 'ai',
                 content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
               });
               
-              console.log('[New Chat] Final messages count:', useAppStore.getState().messages.length);
+              // Final verification
+              const finalMessageCount = useAppStore.getState().messages.length;
+              console.log('[New Chat] Final message count (should be 1):', finalMessageCount);
             }}
             className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors"
           >

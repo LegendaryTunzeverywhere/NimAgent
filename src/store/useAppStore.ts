@@ -229,7 +229,7 @@ export const useAppStore = create<AppState>()(
         const newSessionId = generateSessionId();
         // Set both new session ID and clear messages atomically
         set({ currentSessionId: newSessionId, messages: [] });
-        console.log('[Store] Created new session:', newSessionId);
+        console.log('[Store] Started new session:', newSessionId, '- Messages cleared');
       },
 
       addMessage: async (message) => {
@@ -253,6 +253,43 @@ export const useAppStore = create<AppState>()(
             });
           } catch (error) {
             console.error('Failed to save message to database:', error);
+          }
+        }
+      },
+
+      updateActionState: async (messageIndex: number, actionUpdates: Partial<ActionCardType>) => {
+        const { wallet, currentSessionId, messages } = get();
+        
+        // Update the message in local state
+        set((state) => ({
+          messages: state.messages.map((msg, idx) => 
+            idx === messageIndex && msg.action 
+              ? { ...msg, action: { ...msg.action, ...actionUpdates } }
+              : msg
+          ),
+        }));
+        
+        console.log(`[Store] Updated action state for message ${messageIndex}:`, actionUpdates);
+        
+        // If we have the updated message, save it to database
+        if (wallet.address && currentSessionId && messages[messageIndex]) {
+          try {
+            const updatedMessage = {
+              ...messages[messageIndex],
+              action: { ...messages[messageIndex].action, ...actionUpdates }
+            };
+            
+            const { saveChatMessage } = await import('@/lib/api-client');
+            await saveChatMessage({
+              walletAddress: wallet.address,
+              sessionId: currentSessionId,
+              role: updatedMessage.role,
+              content: updatedMessage.content,
+              action: updatedMessage.action,
+            });
+            console.log(`[Store] Saved updated action state to database`);
+          } catch (error) {
+            console.error('Failed to save updated action state:', error);
           }
         }
       },
