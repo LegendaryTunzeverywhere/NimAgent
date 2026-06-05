@@ -147,11 +147,12 @@ export async function stakeNIM(validatorAddress: string, amountLuna: number): Pr
 
   const hub = await getHub();
 
+  // CRITICAL: recipient must be the validator address, not burn address
   const result = await hub.checkout({
     appName: 'NimHub',
-    recipient: 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000', // staking contract address
+    recipient: validatorAddress, // Send to validator, not burn address!
     value: amountLuna,
-    extraData: `stake:${validatorAddress}`,
+    extraData: 'stake', // Mark as staking transaction
     fee: 0,
   });
 
@@ -162,15 +163,19 @@ export async function stakeNIM(validatorAddress: string, amountLuna: number): Pr
  * Begin unstaking — moves stake to inactive state.
  * User must wait ~1 epoch before they can withdraw.
  * CRITICAL: Must be called synchronously inside a click handler.
+ * 
+ * @param validatorAddress - The validator address to unstake from
+ * @param amountLuna - Amount to unstake in Luna (0 = unstake all)
  */
-export async function unstakeNIM(amountLuna: number): Promise<string> {
+export async function unstakeNIM(validatorAddress: string, amountLuna: number = 0): Promise<string> {
   const hub = await getHub();
 
+  // Send back to the validator to signal unstaking
   const result = await hub.checkout({
     appName: 'NimHub',
-    recipient: 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000',
-    value: 0,
-    extraData: `deactivate:${amountLuna}`,
+    recipient: validatorAddress, // Send to validator with unstake signal
+    value: 0, // No value transfer for unstaking
+    extraData: amountLuna > 0 ? `unstake:${amountLuna}` : 'unstake:all',
     fee: 0,
   });
 

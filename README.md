@@ -53,7 +53,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-nimpay-next/
+nimhub-next/
 ├── src/
 │   ├── app/                    # Next.js app directory
 │   ├── components/             # React components
@@ -120,7 +120,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_API_SECRET=<paste_generated_key>
 NEXT_PUBLIC_NIMIQ_NETWORK=testnet
 NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq-testnet.com
-NEXT_PUBLIC_SERVICE_ADDRESS=NQ07 0000 0000 0000 0000 0000 0000 0000 0000
+NEXT_PUBLIC_SERVICE_ADDRESS=NQ07 
 ```
 
 3. **Backend Environment (n_server/server/.env)**:
@@ -142,7 +142,7 @@ RELOADLY_CLIENT_SECRET=your_client_secret
 RELOADLY_SANDBOX=true
 
 # Service Wallet
-SERVICE_WALLET_ADDRESS=NQ07 0000 0000 0000 0000 0000 0000 0000 0000
+SERVICE_WALLET_ADDRESS=NQ07 
 FRONTEND_URL=http://localhost:3001
 ```
 
