@@ -14,8 +14,8 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'NimHub — AI-Powered Nimiq Payments',
-  description: 'Send NIM, split bills, buy gift cards, recharge airtime, pay bills, and swap crypto all powered by AI.',
+  title: 'NimHub: AI-Powered Nimiq Payments',
+  description: 'Send NIM, split bills, buy gift cards, recharge airtime, pay bills, and swap crypto, all powered by AI.',
   applicationName: 'NimHub',
   keywords: ['Nimiq', 'NIM', 'crypto payments', 'AI payments', 'gift cards', 'airtime', 'bill payments', 'crypto swap'],
   authors: [{ name: 'NimHub' }],
@@ -26,14 +26,14 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   openGraph: {
-    title: 'NimHub — AI-Powered Nimiq Payments',
-    description: 'Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto — all powered by AI.',
+    title: 'NimHub: AI-Powered Nimiq Payments',
+    description: 'Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto, all powered by AI.',
     siteName: 'NimHub',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NimHub — AI-Powered Nimiq Payments',
+    title: 'NimHub: AI-Powered Nimiq Payments',
     description: 'Your AI-powered Nimiq payment hub.',
   },
 };
@@ -62,7 +62,10 @@ export default function RootLayout({
         <div className="bg-mesh" aria-hidden="true" />
         <div className="bg-grid" aria-hidden="true" />
         {children}
-      </body>
+      {/* impeccable-live-start */}
+<script src="http://localhost:8400/live.js"></script>
+{/* impeccable-live-end */}
+</body>
     </html>
   );
 }

@@ -7,11 +7,11 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const { theme } = useAppStore();
 
   useEffect(() => {
-    // Apply theme to document
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-theme');
+    const html = document.documentElement;
+    if (theme === 'dark') {
+      html.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('light-theme');
+      html.classList.remove('dark');
     }
   }, [theme]);
 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
@@ -263,6 +263,18 @@ export default function HomePage() {
       return;
     }
 
+    // Handle Cash Out - opens swap interface with message about selling NIM
+    if (actionType === 'Buy NIM') {
+      addMessage({
+        role: 'ai',
+        content: 'Ready to buy NIM with your local currency! 💳\n\nYou can purchase NIM using a credit/debit card or bank transfer. Simple KYC verification required. Just tell me how much you want to buy and in which currency (USD, EUR, etc.).',
+        action: {
+          type: 'buy-nim',
+        }
+      });
+      return;
+    }
+
     // Send message to AI and get response for other actions
     setTimeout(async () => {
       let message = '';
@@ -289,6 +301,7 @@ export default function HomePage() {
     { icon: 'qr-code', label: 'Generate QR', action: () => handleQuickAction('Generate QR') },
     { icon: 'qr-scan', label: 'Scan QR', action: () => handleQuickAction('Scan QR') },
     { icon: 'swap', label: 'Crypto Swap', action: () => handleQuickAction('Crypto Swap') },
+    { icon: 'wallet', label: 'Buy NIM', action: () => handleQuickAction('Buy NIM') },
     { icon: 'gift-card', label: 'Gift Cards', action: () => handleQuickAction('Gift Cards') },
     { icon: 'airtime', label: 'Airtime', action: () => handleQuickAction('Airtime') },
     { icon: 'bill', label: 'Pay Bills', action: () => handleQuickAction('Pay Bills') },
@@ -301,6 +314,7 @@ export default function HomePage() {
     'Generate QR': '#F5A623',
     'Scan QR': '#F5A623',
     'Crypto Swap': '#F5A623',
+    'Buy NIM': '#2B6BD6', // Blue like other commerce services
     'Gift Cards': '#2B6BD6',
     'Airtime': '#2B6BD6',
     'Pay Bills': '#2B6BD6',
@@ -309,24 +323,24 @@ export default function HomePage() {
   const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 space-y-5 pb-8">
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
-      <div className="animate-fade-up card-premium rounded-3xl p-6 relative overflow-hidden">
+      <div className="animate-fade-up bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
         <div className="relative">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center text-gold">
+              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-200 dark:border-gold/25 flex items-center justify-center text-amber-600 dark:text-gold">
                 <Icon name="wallet" size={15} />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-white/40">
                 Total Balance
               </span>
             </div>
             {wallet.connected && (
               <button
                 onClick={disconnectWallet}
-                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-white/5 text-white/50 border border-white/10 hover:bg-error/15 hover:text-error hover:border-error/25 transition-colors"
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50 border border-gray-200 dark:border-white/10 hover:bg-red-50 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-200 dark:hover:border-error/25 transition-colors"
                 title="Disconnect Wallet"
               >
                 <Icon name="disconnect" size={12} strokeWidth={2.2} />
@@ -337,18 +351,18 @@ export default function HomePage() {
 
           {wallet.balance ? (
             <>
-              <div className="mb-1 flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white tracking-tighter tabular-nums">
+              <div className="mb-2 flex items-baseline gap-2">
+                <span className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter tabular-nums">
                   {wallet.balance.nim.balanceFormatted}
                 </span>
-                <span className="text-lg font-bold text-gradient-gold">NIM</span>
+                <span className="text-lg font-bold text-amber-600 dark:text-gold">NIM</span>
               </div>
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-sm text-white/40 font-mono">
+              <div className="flex items-center gap-2 mb-8">
+                <span className="text-sm text-gray-500 dark:text-white/40 font-mono">
                   ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
-                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-success bg-success/10' : 'text-error bg-error/10'}`}>
+                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-green-600 dark:text-success bg-green-50 dark:bg-success/10' : 'text-red-600 dark:text-error bg-red-50 dark:bg-error/10'}`}>
                     {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                   </span>
                 )}
@@ -366,14 +380,14 @@ export default function HomePage() {
 
           <div className="flex gap-3">
             <button
-              className="btn-gold flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2"
+              className="btn-gold flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-amber-600 dark:bg-gold text-white hover:bg-amber-700 dark:hover:bg-gold/90"
               onClick={() => setActiveTab('chat')}
             >
               <Icon name="chat" size={16} strokeWidth={2.2} />
               Start AI Chat
             </button>
             <button
-              className="flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 glass text-gold border border-gold/30 hover:bg-gold/10 transition-all"
+              className="flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-white/5 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/30 hover:bg-amber-50 dark:hover:bg-gold/10 transition-all"
               onClick={() => setActiveTab('history')}
             >
               <Icon name="history" size={16} strokeWidth={2.2} />
@@ -382,7 +396,7 @@ export default function HomePage() {
           </div>
 
           {wallet.error && (
-            <p className="text-xs text-error mt-3 text-center">{wallet.error}</p>
+            <p className="text-xs text-red-600 dark:text-error mt-3 text-center">{wallet.error}</p>
           )}
         </div>
       </div>
@@ -390,24 +404,24 @@ export default function HomePage() {
 
       {/* Stats Cards */}
       {wallet.connected && (
-        <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1">
-          <div className="card-premium rounded-2xl p-4 text-center">
-            <p className="text-[10px] text-white/40 mb-1 uppercase tracking-wider">NIM Price</p>
-            <p className="text-lg font-bold text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
+        <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1 -mt-2">
+          <div className="card-premium rounded-2xl p-5 text-center">
+            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">NIM Price</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
             <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
               {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
             </p>
           </div>
-          <div className="card-premium rounded-2xl p-4 text-center">
-            <p className="text-[10px] text-white/40 mb-1 uppercase tracking-wider">Sent Today</p>
-            <p className="text-lg font-bold text-white tabular-nums">{sentToday.toFixed(0)}</p>
-            <p className="text-xs text-white/30 mt-1">
+          <div className="card-premium rounded-2xl p-5 text-center">
+            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">Sent Today</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
+            <p className="text-xs text-gray-400 dark:text-white/30 mt-1">
               ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
             </p>
           </div>
-          <div className="card-premium rounded-2xl p-4 text-center">
-            <p className="text-[10px] text-white/40 mb-1 uppercase tracking-wider">Network</p>
-            <p className="text-lg font-bold text-white capitalize">{network}</p>
+          <div className="card-premium rounded-2xl p-5 text-center">
+            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">Network</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white capitalize">{network}</p>
             <p className="text-xs text-success mt-1 flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" /> Live
             </p>
@@ -417,19 +431,19 @@ export default function HomePage() {
 
       {/* Quick Actions */}
       {wallet.connected && (
-        <div className="animate-fade-up-delay-2">
+        <div className="animate-fade-up-delay-2 pt-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest">
               Quick Actions
             </h2>
             <button
-              className="text-xs text-gold hover:text-gold-bright transition-colors font-semibold"
+              className="text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors font-semibold"
               onClick={() => setActiveTab('chat')}
             >
               See all
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-3">
             {quickActions.map((action) => {
               const accent = actionAccents[action.label] || '#F5A623';
               return (
@@ -449,7 +463,7 @@ export default function HomePage() {
                   >
                     <Icon name={action.icon} size={20} />
                   </span>
-                  <span className="text-[10px] font-semibold text-white/60 text-center leading-tight px-1">
+                  <span className="text-[10px] font-semibold text-gray-600 dark:text-white/60 text-center leading-tight px-1">
                     {action.label}
                   </span>
                 </button>
@@ -470,14 +484,14 @@ export default function HomePage() {
               <Icon name="robot" size={24} strokeWidth={1.9} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-white flex items-center gap-2">
+              <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 Your AI Payment Agent
                 <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-blue/20 text-brand-blue-light border border-brand-blue/30">
                   AI
                 </span>
               </p>
-              <p className="text-xs text-white/40 mt-0.5">
-                Ask me anything "send NIM, pay bills, refill Airtime"
+              <p className="text-xs text-gray-500 dark:text-white/40 mt-0.5">
+                Send NIM, buy gift cards, refill airtime, and pay bills
               </p>
             </div>
             <svg
@@ -485,7 +499,7 @@ export default function HomePage() {
               height="18"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="rgba(167,139,250,0.7)"
+              stroke="#5B8FE6"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -501,11 +515,11 @@ export default function HomePage() {
       {wallet.connected && (
         <div className="animate-fade-up-delay-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest">
               Recent Activity
             </h2>
             <button 
-              className="text-xs text-gold hover:text-gold-bright transition-colors"
+              className="text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors"
               onClick={() => setActiveTab('history')}
             >
               View all
@@ -532,8 +546,8 @@ export default function HomePage() {
                       <Icon name={txIconFor(tx)} size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{tx.label}</p>
-                      <p className="text-xs text-white/40">{tx.time}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{tx.label}</p>
+                      <p className="text-xs text-gray-500 dark:text-white/40">{tx.time}</p>
                     </div>
                     <p className="text-sm font-bold flex-shrink-0" style={{ color: txColor }}>{tx.amount} NIM</p>
                     <svg
@@ -541,11 +555,11 @@ export default function HomePage() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="rgba(255,255,255,0.3)"
+                      stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={`transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
+                      className={`text-gray-400 dark:text-white/30 transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
@@ -553,30 +567,30 @@ export default function HomePage() {
                   
                   {/* Expanded Details */}
                   {expandedTx === tx.id.toString() && (
-                    <div className="px-4 pb-4 pt-2 border-t border-white/5 space-y-2 animate-fade-up">
+                    <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Type:</span>
-                        <span className="text-xs text-white/70 capitalize">{tx.category}</span>
+                        <span className="text-xs text-gray-500 dark:text-white/40">Type:</span>
+                        <span className="text-xs text-gray-700 dark:text-white/70 capitalize">{tx.category}</span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Amount:</span>
-                        <span className="text-xs text-white/70 font-mono">{tx.amount} NIM</span>
+                        <span className="text-xs text-gray-500 dark:text-white/40">Amount:</span>
+                        <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.amount} NIM</span>
                       </div>
                       {tx.usd && (
                         <div className="flex justify-between items-center gap-2">
-                          <span className="text-xs text-white/40">USD Value:</span>
-                          <span className="text-xs text-white/70 font-mono">{tx.usd}</span>
+                          <span className="text-xs text-gray-500 dark:text-white/40">USD Value:</span>
+                          <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.usd}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Status:</span>
+                        <span className="text-xs text-gray-500 dark:text-white/40">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">{tx.status}</span>
                       </div>
                       {tx.hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-white/40">TX Hash:</span>
-                            <span className="text-xs text-white/70 font-mono text-right break-all">
+                            <span className="text-xs text-gray-500 dark:text-white/40">TX Hash:</span>
+                            <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
                               {tx.hash}
                             </span>
                           </div>
@@ -589,7 +603,7 @@ export default function HomePage() {
                                 : 'https://test.nimiq.watch/#';
                               window.open(`${baseUrl}${tx.hash}`, '_blank');
                             }}
-                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
+                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
                           </button>
@@ -604,8 +618,8 @@ export default function HomePage() {
           ) : (
             <div className="card-premium rounded-2xl p-8 text-center">
               <div className="text-3xl mb-2 opacity-50">📊</div>
-              <p className="text-sm text-white/40">No recent transactions</p>
-              <p className="text-xs text-white/30 mt-1">Start by sending NIM or making a payment</p>
+              <p className="text-sm text-gray-600 dark:text-white/40">No recent transactions</p>
+              <p className="text-xs text-gray-400 dark:text-white/30 mt-1">Start by sending NIM or making a payment</p>
             </div>
           )}
         </div>
@@ -618,24 +632,24 @@ export default function HomePage() {
             <div className="flex justify-center mb-4">
               <Logo size={64} glow />
             </div>
-            <h2 className="text-2xl font-black text-white mb-2">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
               Welcome to Nim<span className="text-gradient-gold">Hub</span>
             </h2>
-            <p className="text-sm text-white/55 mb-6 max-w-xs mx-auto leading-relaxed">
-              Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto - all in one chat.
+            <p className="text-sm text-gray-600 dark:text-white/55 mb-6 max-w-xs mx-auto leading-relaxed">
+              Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto, all in one chat.
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
               {[
                 { icon: 'send' as IconName, label: 'Feeless Transfers', color: '#F5A623', action: () => handleConnect() },
                 { icon: 'robot' as IconName, label: 'AI Assistant', color: '#2B6BD6', action: () => handleConnect() },
-                { icon: 'gift-card' as IconName, label: 'Gift Cards', color: '#2B6BD6', action: () => handleConnect() },
+                { icon: 'wallet' as IconName, label: 'Cash Out', color: '#2B6BD6', action: () => handleConnect() },
                 { icon: 'swap' as IconName, label: 'Crypto Swap', color: '#F5A623', action: () => handleConnect() },
               ].map((feature) => (
                 <button
                   key={feature.label}
                   onClick={feature.action}
-                  className="flex items-center gap-2.5 rounded-xl p-3 bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all active:scale-95"
+                  className="flex items-center gap-2.5 rounded-xl p-3 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] transition-all active:scale-95"
                 >
                   <span
                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -643,7 +657,7 @@ export default function HomePage() {
                   >
                     <Icon name={feature.icon} size={16} />
                   </span>
-                  <span className="text-xs font-semibold text-white/70">{feature.label}</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-white/70">{feature.label}</span>
                 </button>
               ))}
             </div>

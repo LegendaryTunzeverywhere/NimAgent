@@ -11,14 +11,14 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="glass-strong sticky top-0 z-30 flex items-center justify-between px-5 py-3 border-b border-white/[0.07]">
+      <nav className="glass-strong sticky top-0 z-30 flex items-center justify-between px-5 py-3 border-b border-black/[0.07] dark:border-white/[0.07]">
         <div className="flex items-center gap-2.5">
           <Logo size={34} glow />
           <div className="flex flex-col leading-none">
-            <span className="font-extrabold text-white text-[17px] tracking-tight">
-              Nim<span className="text-gradient-gold">Hub</span>
+            <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
+              Nim<span className="text-amber-700 dark:text-gold">Hub</span>
             </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/30 mt-0.5">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-white/30 mt-0.5">
               AI Payments
             </span>
           </div>
@@ -26,15 +26,15 @@ export default function Navigation() {
 
         <div className="flex items-center gap-2">
           {wallet.connected && wallet.address && (
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold bg-success/10 text-success border border-success/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" />
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold bg-emerald-50 dark:bg-success/10 text-emerald-700 dark:text-success border border-emerald-200 dark:border-success/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-success inline-block animate-live" />
               <span className="font-mono">{wallet.address.slice(0, 4)}…{wallet.address.slice(-4)}</span>
             </div>
           )}
 
           <button
             onClick={() => setShowSettings(true)}
-            className="glass rounded-full p-2 text-white/50 hover:text-gold hover:border-gold/30 transition-colors"
+            className="glass rounded-full p-2 text-gray-500 dark:text-white/50 hover:text-amber-700 dark:hover:text-gold hover:border-amber-300 dark:hover:border-gold/30 transition-colors"
             aria-label="Settings"
           >
             <svg

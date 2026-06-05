@@ -57,21 +57,21 @@ export default function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 dark:bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className={`relative w-full ${maxWidth} glass-strong rounded-2xl shadow-2xl animate-modal-in`}>
+      <div className={`relative w-full ${maxWidth} bg-white dark:bg-[rgba(20,22,34,0.98)] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl animate-modal-in backdrop-blur-xl`}>
         {(title || subtitle) && (
-          <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 border-b border-white/[0.06]">
+          <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 border-b border-gray-200 dark:border-white/[0.06]">
             <div>
-              {title && <h3 className="text-base font-bold text-white">{title}</h3>}
-              {subtitle && <p className="text-xs text-white/45 mt-0.5">{subtitle}</p>}
+              {title && <h3 className="text-base font-bold text-gray-900 dark:text-white">{title}</h3>}
+              {subtitle && <p className="text-xs text-gray-500 dark:text-white/45 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
               aria-label="Close"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { chatWithAgent } from '@/lib/api-client';
 import ActionCard from '@/components/ActionCard';
@@ -30,7 +30,12 @@ export default function ChatPage() {
   const [isListening, setIsListening] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
-  const [sessions, setSessions] = useState<any[]>([]);
+interface ChatSession {
+  sessionId: string;
+  lastMessage: string;
+  lastActivity: string;
+}
+const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -49,7 +54,7 @@ export default function ChatPage() {
         if (currentMessages.length === 0) {
           addMessage({
             role: 'ai',
-            content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
+            content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code: just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
           });
         }
         setHasInitialized(true);
@@ -79,56 +84,7 @@ export default function ChatPage() {
     }
   }, [messages, loading]);
 
-  // Initialize speech recognition
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = false;
-        recognitionRef.current.lang = 'en-US';
-
-        recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInput(transcript);
-          setIsListening(false);
-          // Automatically send the transcribed text to AI
-          setTimeout(() => {
-            sendMessage(transcript);
-          }, 100);
-        };
-
-        recognitionRef.current.onerror = () => {
-          setIsListening(false);
-        };
-
-        recognitionRef.current.onend = () => {
-          setIsListening(false);
-        };
-      }
-    }
-  }, []);
-
-  const toggleVoiceInput = () => {
-    if (!recognitionRef.current) {
-      addMessage({
-        role: 'ai',
-        content: 'Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.',
-      });
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  };
-
-  const sendMessage = async (text?: string) => {
+  const sendMessage = useCallback(async (text?: string) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
 
@@ -176,6 +132,55 @@ export default function ChatPage() {
       console.error('Chat error:', error);
     } finally {
       setLoading(false);
+    }
+  }, [input, loading, addMessage, sendMessageToAI, wallet.address]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(transcript);
+          setIsListening(false);
+          // Automatically send the transcribed text to AI
+          setTimeout(() => {
+            sendMessage(transcript);
+          }, 100);
+        };
+
+        recognitionRef.current.onerror = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+  }, [sendMessage]);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      addMessage({
+        role: 'ai',
+        content: 'Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.',
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
     }
   };
 
@@ -268,9 +273,9 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] max-w-2xl mx-auto w-full px-4">
       {/* Header with New Chat and History buttons */}
-      <div className="flex items-center justify-between py-3 border-b border-white/5 shrink-0">
-        <h2 className="text-sm font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
-          <Icon name="robot" size={16} strokeWidth={2} className="text-brand-blue-light" />
+      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-white/5 shrink-0">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+          <Icon name="robot" size={16} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light" />
           AI Chat
         </h2>
         <div className="flex gap-2">
@@ -284,7 +289,7 @@ export default function ChatPage() {
               }
             }}
             disabled={!wallet.connected}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-white/[0.04] text-white/70 border border-white/10 hover:bg-white/[0.08] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon name="history" size={13} strokeWidth={2.2} /> History
           </button>
@@ -314,14 +319,14 @@ export default function ChatPage() {
               // Add welcome message to the fresh session
               await addMessage({
                 role: 'ai',
-                content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
+                content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code: just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
               });
               
               // Final verification
               const finalMessageCount = useAppStore.getState().messages.length;
               console.log('[New Chat] Final message count (should be 1):', finalMessageCount);
             }}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
           >
             <Icon name="plus" size={13} strokeWidth={2.5} /> New Chat
           </button>
@@ -332,10 +337,10 @@ export default function ChatPage() {
       {showSessions && (
         <div className="glass rounded-2xl p-4 mt-3 max-h-64 overflow-y-auto animate-fade-up">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white/80">Chat Sessions</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-white/80">Chat Sessions</h3>
             <button
               onClick={() => setShowSessions(false)}
-              className="text-white/40 hover:text-white/70 transition-colors"
+              className="text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors"
               aria-label="Close sessions"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -346,8 +351,8 @@ export default function ChatPage() {
           
           {loadingSessions ? (
             <div className="text-center py-4">
-              <div className="w-7 h-7 mx-auto mb-2 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-              <p className="text-xs text-white/40">Loading sessions...</p>
+              <div className="w-7 h-7 mx-auto mb-2 border-2 border-amber-200 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+              <p className="text-xs text-gray-500 dark:text-white/40">Loading sessions...</p>
             </div>
           ) : sessions.length > 0 ? (
             <div className="space-y-2">
@@ -355,14 +360,14 @@ export default function ChatPage() {
                 <div
                   key={session.sessionId}
                   onClick={() => loadSession(session.sessionId)}
-                  className={`p-3 rounded-xl cursor-pointer transition-all hover:bg-white/5 ${
-                    session.sessionId === currentSessionId ? 'bg-gold/10 border border-gold/20' : 'bg-white/[0.02]'
+                  className={`p-3 rounded-xl cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-white/5 ${
+                    session.sessionId === currentSessionId ? 'bg-amber-50 dark:bg-gold/10 border border-amber-200 dark:border-gold/20' : 'bg-gray-50 dark:bg-white/[0.02]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/70 truncate">{session.lastMessage}</p>
-                      <p className="text-xs text-white/40 mt-1">
+                      <p className="text-sm text-gray-700 dark:text-white/70 truncate">{session.lastMessage}</p>
+                      <p className="text-xs text-gray-500 dark:text-white/40 mt-1">
                         {new Date(session.lastActivity).toLocaleString()}
                       </p>
                     </div>
@@ -375,7 +380,7 @@ export default function ChatPage() {
                     </button>
                   </div>
                   {session.sessionId === currentSessionId && (
-                    <p className="text-xs text-gold mt-2 flex items-center gap-1">
+                    <p className="text-xs text-amber-600 dark:text-gold mt-2 flex items-center gap-1">
                       <Icon name="check" size={11} strokeWidth={3} /> Current session
                     </p>
                   )}
@@ -384,8 +389,8 @@ export default function ChatPage() {
             </div>
           ) : (
             <div className="text-center py-4">
-              <p className="text-sm text-white/40">No previous sessions</p>
-              <p className="text-xs text-white/30 mt-1">Start chatting to create a session</p>
+              <p className="text-sm text-gray-600 dark:text-white/40">No previous sessions</p>
+              <p className="text-xs text-gray-400 dark:text-white/30 mt-1">Start chatting to create a session</p>
             </div>
           )}
         </div>
@@ -399,7 +404,7 @@ export default function ChatPage() {
             className={`flex gap-3 animate-fade-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'ai' && (
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light">
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 bg-blue-100 dark:bg-brand-blue/15 border border-blue-200 dark:border-brand-blue/30 text-blue-700 dark:text-brand-blue-light">
                 <Icon name="robot" size={15} strokeWidth={2} />
               </div>
             )}
@@ -407,8 +412,8 @@ export default function ChatPage() {
               <div
                 className={`rounded-2xl px-3 py-2 text-[13px] leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-gold text-background-primary font-semibold'
-                    : 'glass text-white/85'
+                    ? 'bg-amber-600 dark:bg-gold text-white font-semibold'
+                    : 'glass text-gray-900 dark:text-white/85'
                 }`}
               >
                 {/* Format message content - detect and format transaction hashes */}
@@ -444,7 +449,7 @@ export default function ChatPage() {
                           href={`${baseUrl}${txHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold-bright transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors"
                         >
                           <Icon name="explorer" size={13} strokeWidth={2} />
                           <span className="underline">View on Explorer</span>
@@ -469,7 +474,7 @@ export default function ChatPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold-bright transition-colors mt-2"
+                        className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors mt-2"
                       >
                         <Icon name="explorer" size={13} strokeWidth={2} />
                         <span className="underline">View on Explorer</span>
@@ -493,18 +498,18 @@ export default function ChatPage() {
 
         {loading && (
           <div className="flex justify-start gap-3 animate-fade-up">
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light animate-breathe">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-brand-blue/15 border border-blue-200 dark:border-brand-blue/30 text-blue-700 dark:text-brand-blue-light animate-breathe">
               <span className="animate-bob inline-flex">
                 <Icon name="robot" size={15} strokeWidth={2} />
               </span>
             </div>
             <div className="glass rounded-2xl px-3 py-2 flex items-center gap-2">
               <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-1" />
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-2" />
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-blue-light inline-block dot-typing-3" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-1" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-2" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-3" />
               </span>
-              <span className="text-[11px] text-white/45 font-medium">Thinking…</span>
+              <span className="text-[11px] text-gray-500 dark:text-white/45 font-medium">Thinking...</span>
             </div>
           </div>
         )}
@@ -516,7 +521,7 @@ export default function ChatPage() {
         {/* Discover prompts - teach users about NimHub. Shown early in a chat. */}
         {messages.length <= 3 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
-            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-brand-blue-light whitespace-nowrap self-center">
+            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-blue-700 dark:text-brand-blue-light whitespace-nowrap self-center">
               <Icon name="sparkles" size={11} strokeWidth={2} />
               Discover
             </span>
@@ -525,7 +530,7 @@ export default function ChatPage() {
                 key={prompt.label}
                 onClick={() => sendMessage(prompt.query)}
                 disabled={loading}
-                className="rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-colors bg-brand-blue/10 text-brand-blue-light border border-brand-blue/25 hover:bg-brand-blue/20 disabled:opacity-50"
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-colors bg-blue-50 dark:bg-brand-blue/10 text-blue-700 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/25 hover:bg-blue-100 dark:hover:bg-brand-blue/20 disabled:opacity-50"
               >
                 {prompt.label}
               </button>
@@ -540,7 +545,7 @@ export default function ChatPage() {
               key={prompt.label}
               onClick={() => sendMessage(prompt.label)}
               disabled={loading}
-              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 disabled:opacity-50"
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 disabled:opacity-50"
             >
               <Icon name={prompt.icon} size={12} strokeWidth={2} />
               {prompt.label}
@@ -556,7 +561,7 @@ export default function ChatPage() {
             className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening 
                 ? 'bg-error text-white animate-pulse' 
-                : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white/70'
             }`}
             title={isListening ? 'Stop listening' : 'Voice input'}
           >
@@ -570,8 +575,8 @@ export default function ChatPage() {
           </button>
           <input
             ref={inputRef}
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/25 outline-none"
-            placeholder="Ask me to send NIM, buy gift cards, pay bills…"
+            className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 outline-none"
+            placeholder="Ask me to send NIM, buy gift cards, pay bills..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
@@ -580,17 +585,18 @@ export default function ChatPage() {
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50"
-            style={{
-              background: input.trim() && !loading ? '#F5A623' : 'rgba(255,255,255,0.07)',
-            }}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50 ${
+              input.trim() && !loading
+                ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
+                : 'bg-gray-100 dark:bg-white/[0.07] text-gray-300 dark:text-white/25'
+            }`}
           >
             <svg
               width="15"
               height="15"
               viewBox="0 0 24 24"
               fill="none"
-              stroke={input.trim() && !loading ? '#0A0C17' : 'rgba(255,255,255,0.25)'}
+              stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -602,8 +608,8 @@ export default function ChatPage() {
         </div>
 
         {!wallet.connected && (
-          <p className="text-xs text-white/45 text-center mt-3 flex items-center justify-center gap-1.5">
-            <Icon name="wallet" size={12} strokeWidth={2} className="text-gold" />
+          <p className="text-xs text-gray-500 dark:text-white/45 text-center mt-3 flex items-center justify-center gap-1.5">
+            <Icon name="wallet" size={12} strokeWidth={2} className="text-amber-600 dark:text-gold" />
             Connect your wallet for full AI functionality
           </p>
         )}
@@ -626,19 +632,19 @@ export default function ChatPage() {
             <button
               onClick={() => setSessionToDelete(null)}
               disabled={deleting}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={confirmDeleteSession}
               disabled={deleting}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-error/90 text-white hover:bg-error transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 dark:bg-error/90 text-white hover:bg-red-600 dark:hover:bg-error transition-colors disabled:opacity-50 flex items-center gap-1.5"
             >
               {deleting ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Deleting…
+                  Deleting...
                 </>
               ) : (
                 <>
@@ -654,7 +660,7 @@ export default function ChatPage() {
             <Icon name="delete" size={18} strokeWidth={2} />
           </span>
           <p className="text-sm text-white/70 leading-relaxed">
-            You can&apos;t undo this. The messages in this session will be gone for good.
+            This action is permanent. All messages in this session will be deleted.
           </p>
         </div>
       </Modal>

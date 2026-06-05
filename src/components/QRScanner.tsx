@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 import Modal from './Modal';
@@ -22,11 +22,29 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const stopScanning = useCallback(() => {
+    setIsScanning(false);
+    
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, [stream]);
+
   useEffect(() => {
     return () => {
       stopScanning();
     };
-  }, []);
+  }, [stopScanning]);
 
   const startScanning = async () => {
     try {
@@ -58,24 +76,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       console.error('Camera access error:', err);
       setError(err.message || 'Camera access denied');
       setIsScanning(false);
-    }
-  };
-
-  const stopScanning = () => {
-    setIsScanning(false);
-    
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
     }
   };
 

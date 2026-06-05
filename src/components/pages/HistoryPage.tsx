@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon, { type IconName } from '@/components/Icon';
 
@@ -43,39 +43,7 @@ export default function HistoryPage() {
   const [lastFetch, setLastFetch] = useState<number>(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  useEffect(() => {
-    if (wallet.connected && wallet.address) {
-      fetchTransactions(true); // Initial load with loading state
-    }
-  }, [wallet.connected, wallet.address]);
-
-  // Auto-refresh when tab becomes visible or every 10 seconds
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && wallet.connected && wallet.address) {
-        // Only refresh if last fetch was more than 3 seconds ago
-        if (Date.now() - lastFetch > 3000) {
-          fetchTransactions(false); // Silent refresh
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Auto-refresh every 10 seconds when page is visible
-    const interval = setInterval(() => {
-      if (!document.hidden && wallet.connected && wallet.address) {
-        fetchTransactions(false); // Silent refresh
-      }
-    }, 10000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, [wallet.connected, wallet.address, lastFetch]);
-
-  const fetchTransactions = async (showLoading = false) => {
+  const fetchTransactions = useCallback(async (showLoading = false) => {
     if (!wallet.address) return;
     
     if (showLoading) {
@@ -191,7 +159,39 @@ export default function HistoryPage() {
         setLoading(false);
       }
     }
-  };
+  }, [wallet.address, isInitialLoad]);
+
+  useEffect(() => {
+    if (wallet.connected && wallet.address) {
+      fetchTransactions(true); // Initial load with loading state
+    }
+  }, [wallet.connected, wallet.address, fetchTransactions]);
+
+  // Auto-refresh when tab becomes visible or every 10 seconds
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && wallet.connected && wallet.address) {
+        // Only refresh if last fetch was more than 3 seconds ago
+        if (Date.now() - lastFetch > 3000) {
+          fetchTransactions(false); // Silent refresh
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Auto-refresh every 10 seconds when page is visible
+    const interval = setInterval(() => {
+      if (!document.hidden && wallet.connected && wallet.address) {
+        fetchTransactions(false); // Silent refresh
+      }
+    }, 10000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
+    };
+  }, [wallet.connected, wallet.address, lastFetch, fetchTransactions]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (filter === 'All') return true;
@@ -273,15 +273,15 @@ export default function HistoryPage() {
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-lg font-bold text-white flex items-center gap-2">
-          <Icon name="history" size={20} className="text-gold" />
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Icon name="history" size={20} className="text-amber-600 dark:text-gold" />
           Transaction History
         </h1>
         {wallet.connected && (
           <button
             onClick={() => fetchTransactions(true)}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs text-gold hover:text-gold-bright transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors disabled:opacity-50"
           >
             <svg
               width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -306,8 +306,8 @@ export default function HistoryPage() {
             onClick={() => setFilter(filterOption)}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
               filter === filterOption
-                ? 'bg-gold text-background-primary'
-                : 'glass text-white/50 hover:text-white/70'
+                ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
+                : 'glass text-gray-600 dark:text-white/50 hover:text-gray-800 dark:hover:text-white/70'
             }`}
           >
             {filterOption}
@@ -320,8 +320,8 @@ export default function HistoryPage() {
         <>
           {loading ? (
             <div className="card-premium rounded-2xl p-8 text-center">
-              <div className="w-10 h-10 mx-auto mb-3 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-              <p className="text-sm text-white/60">Loading transactions...</p>
+              <div className="w-10 h-10 mx-auto mb-3 border-2 border-amber-200 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+              <p className="text-sm text-gray-600 dark:text-white/60">Loading transactions...</p>
             </div>
           ) : filteredTransactions.length > 0 ? (
             <div className="space-y-2.5">
@@ -329,7 +329,7 @@ export default function HistoryPage() {
                 <div key={tx.id} className="card-premium rounded-2xl overflow-hidden">
                   <div
                     onClick={() => setExpandedTx(expandedTx === tx.id ? null : tx.id)}
-                    className="px-4 py-4 flex items-center gap-3 hover:bg-white/[0.04] transition-all cursor-pointer"
+                    className="px-4 py-4 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all cursor-pointer"
                   >
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -342,11 +342,11 @@ export default function HistoryPage() {
                       <Icon name={TRANSACTION_ICONS[tx.type] || 'wallet'} size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                         {getTransactionLabel(tx)}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-white/30">{formatDate(tx.created_at)}</p>
+                        <p className="text-xs text-gray-400 dark:text-white/30">{formatDate(tx.created_at)}</p>
                         <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-success/12 text-success">
                           <Icon name="check" size={9} strokeWidth={3} /> {tx.status}
                         </span>
@@ -356,13 +356,13 @@ export default function HistoryPage() {
                       <p
                         className="text-sm font-bold"
                         style={{ 
-                          color: tx.type === 'receive' ? '#34D399' : 'rgba(255,255,255,0.7)' 
+                          color: tx.type === 'receive' ? '#34D399' : 'inherit' 
                         }}
                       >
                         {formatAmount(tx.amount_luna, tx.type)}
                       </p>
                       {tx.tx_hash && (
-                        <p className="text-xs text-white/30 mt-0.5 font-mono">
+                        <p className="text-xs text-gray-400 dark:text-white/30 mt-0.5 font-mono">
                           {tx.tx_hash.slice(0, 6)}...
                         </p>
                       )}
@@ -372,30 +372,30 @@ export default function HistoryPage() {
                         name="chevron-down"
                         size={16}
                         strokeWidth={2}
-                        className={`text-white/30 transition-transform ${expandedTx === tx.id ? 'rotate-180' : ''}`}
+                        className={`text-gray-400 dark:text-white/30 transition-transform ${expandedTx === tx.id ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </div>
                   
                   {/* Expanded Details */}
                   {expandedTx === tx.id && (
-                    <div className="px-4 pb-4 pt-2 border-t border-white/5 space-y-2 animate-fade-up">
+                    <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Type:</span>
-                        <span className="text-xs text-white/70 capitalize">{tx.type.replace('-', ' ')}</span>
+                        <span className="text-xs text-gray-500 dark:text-white/40">Type:</span>
+                        <span className="text-xs text-gray-700 dark:text-white/70 capitalize">{tx.type.replace('-', ' ')}</span>
                       </div>
                       {tx.from_address && (
                         <div className="flex justify-between items-start gap-2">
-                          <span className="text-xs text-white/40">From:</span>
-                          <span className="text-xs text-white/70 font-mono text-right break-all">
+                          <span className="text-xs text-gray-500 dark:text-white/40">From:</span>
+                          <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
                             {tx.from_address}
                           </span>
                         </div>
                       )}
                       {tx.to_address && (
                         <div className="flex justify-between items-start gap-2">
-                          <span className="text-xs text-white/40">To:</span>
-                          <span className="text-xs text-white/70 font-mono text-right break-all">
+                          <span className="text-xs text-gray-500 dark:text-white/40">To:</span>
+                          <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
                             {tx.to_address}
                           </span>
                         </div>
@@ -405,14 +405,14 @@ export default function HistoryPage() {
                         <>
                           {tx.details.product && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Product:</span>
-                              <span className="text-xs text-white/70">{tx.details.product}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Product:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70">{tx.details.product}</span>
                             </div>
                           )}
                           {tx.details.recipientEmail && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Sent to:</span>
-                              <span className="text-xs text-white/70">{tx.details.recipientEmail}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Sent to:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70">{tx.details.recipientEmail}</span>
                             </div>
                           )}
                         </>
@@ -421,14 +421,14 @@ export default function HistoryPage() {
                         <>
                           {tx.details.phone && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Phone:</span>
-                              <span className="text-xs text-white/70 font-mono">{tx.details.phone}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Phone:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.details.phone}</span>
                             </div>
                           )}
                           {tx.details.operator && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Operator:</span>
-                              <span className="text-xs text-white/70">{tx.details.operator}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Operator:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70">{tx.details.operator}</span>
                             </div>
                           )}
                         </>
@@ -437,41 +437,41 @@ export default function HistoryPage() {
                         <>
                           {tx.details.service && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Service:</span>
-                              <span className="text-xs text-white/70">{tx.details.service}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Service:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70">{tx.details.service}</span>
                             </div>
                           )}
                           {tx.details.accountNumber && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-white/40">Account:</span>
-                              <span className="text-xs text-white/70 font-mono">{tx.details.accountNumber}</span>
+                              <span className="text-xs text-gray-500 dark:text-white/40">Account:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.details.accountNumber}</span>
                             </div>
                           )}
                         </>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Amount:</span>
-                        <span className="text-xs text-white/70 font-mono">
+                        <span className="text-xs text-gray-500 dark:text-white/40">Amount:</span>
+                        <span className="text-xs text-gray-700 dark:text-white/70 font-mono">
                           {(tx.amount_luna / 100000).toFixed(5)} NIM
                         </span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-white/40">Status:</span>
+                        <span className="text-xs text-gray-500 dark:text-white/40">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">
                           {tx.status}
                         </span>
                       </div>
                       <div className="flex justify-between items-start gap-2">
-                        <span className="text-xs text-white/40">Date & Time:</span>
-                        <span className="text-xs text-white/70">
+                        <span className="text-xs text-gray-500 dark:text-white/40">Date & Time:</span>
+                        <span className="text-xs text-gray-700 dark:text-white/70">
                           {new Date(tx.created_at).toLocaleString()}
                         </span>
                       </div>
                       {tx.tx_hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-white/40">TX Hash:</span>
-                            <span className="text-xs text-white/70 font-mono text-right break-all">
+                            <span className="text-xs text-gray-500 dark:text-white/40">TX Hash:</span>
+                            <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
                               {tx.tx_hash}
                             </span>
                           </div>
@@ -480,7 +480,7 @@ export default function HistoryPage() {
                               e.stopPropagation();
                               openExplorer(tx.tx_hash!);
                             }}
-                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
+                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
                           </button>
@@ -493,11 +493,11 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="card-premium rounded-2xl p-10 text-center">
-              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white/5 flex items-center justify-center text-white/30">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-white/30">
                 <Icon name="history" size={26} />
               </div>
-              <p className="text-sm text-white/60">No transactions yet</p>
-              <p className="text-xs text-white/40 mt-1">
+              <p className="text-sm text-gray-600 dark:text-white/60">No transactions yet</p>
+              <p className="text-xs text-gray-400 dark:text-white/40 mt-1">
                 Your transaction history will appear here
               </p>
             </div>
@@ -507,32 +507,32 @@ export default function HistoryPage() {
           {filteredTransactions.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mt-6">
               <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-white/40 mb-1">Total Sent</p>
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Sent</p>
                 <p className="text-lg font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
-                <p className="text-xs text-white/30">NIM</p>
+                <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-white/40 mb-1">Total Received</p>
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Received</p>
                 <p className="text-lg font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
-                <p className="text-xs text-white/30">NIM</p>
+                <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-white/40 mb-1">Net Change</p>
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Net Change</p>
                 <p className={`text-lg font-bold tabular-nums ${stats.netChange >= 0 ? 'text-success' : 'text-error'}`}>
                   {stats.netChange >= 0 ? '+' : ''}{stats.netChange.toFixed(2)}
                 </p>
-                <p className="text-xs text-white/30">NIM</p>
+                <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
               </div>
             </div>
           )}
         </>
       ) : (
         <div className="card-premium rounded-2xl p-10 text-center">
-          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gold/10 flex items-center justify-center text-gold">
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-50 dark:bg-gold/10 flex items-center justify-center text-amber-600 dark:text-gold">
             <Icon name="wallet" size={26} />
           </div>
-          <p className="text-sm text-white/60 mb-2">Connect your wallet</p>
-          <p className="text-xs text-white/40">
+          <p className="text-sm text-gray-600 dark:text-white/60 mb-2">Connect your wallet</p>
+          <p className="text-xs text-gray-400 dark:text-white/40">
             Connect your wallet to view your transaction history
           </p>
         </div>

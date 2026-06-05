@@ -8,6 +8,7 @@ import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
 import SwapInterface from './SwapInterface';
+import BuyNimInterface from './BuyNimInterface';
 import type { ActionCard as ActionCardType } from '@/types';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -24,7 +25,7 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage, messages, updateActionState } = useAppStore();
+  const { wallet, addMessage, messages, updateActionState, setActiveTab } = useAppStore();
   const [loading, setLoading] = useState(false);
   
   // Find the index of this message in the messages array
@@ -200,6 +201,42 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Handle Crypto Swap - show swap interface
   if (action.type === 'crypto-swap') {
     return <SwapInterface />;
+  }
+
+  // Handle Buy NIM - show Coinify buy interface
+  if (action.type === 'buy-nim') {
+    return <BuyNimInterface />;
+  }
+
+  // Handle Staking - redirect to stake tab
+  if (action.type === 'stake' || action.type === 'unstake') {
+    return (
+      <div className="glass rounded-2xl p-4 max-w-sm border border-[#d97706]/20 dark:border-[#F5A623]/20 bg-gradient-to-br from-[#d97706]/5 to-transparent dark:from-[#F5A623]/5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-[#d97706]/10 dark:bg-[#F5A623]/10 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#d97706] dark:text-[#F5A623]">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">
+              {action.type === 'stake' ? 'Earn Staking Rewards' : 'Manage Staking'}
+            </p>
+            <p className="text-[10px] font-mono text-gray-600 dark:text-[#4A5568]">
+              {action.type === 'stake' ? '~8% APY · NON-CUSTODIAL' : 'UNSTAKE & WITHDRAW'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setActiveTab('stake')}
+          className="w-full py-2.5 px-4 rounded-xl bg-[#d97706] dark:bg-[#F5A623] text-white font-semibold hover:bg-[#b45309] dark:hover:bg-[#FBBF4D] transition-colors"
+        >
+          Go to Stake Tab
+        </button>
+      </div>
+    );
   }
 
   const executeAction = async () => {
@@ -515,35 +552,35 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Details */}
       {action.type === 'send' && (
         <div className="flex justify-between items-center">
-          <span className="text-white/50 text-sm">To</span>
-          <span className="text-white font-mono text-xs">{action.recipient?.substring(0, 14)}...</span>
+          <span className="text-gray-500 dark:text-white/50 text-sm">To</span>
+          <span className="text-gray-900 dark:text-white font-mono text-xs">{action.recipient?.substring(0, 14)}...</span>
         </div>
       )}
 
       {action.type === 'gift-card' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-white/50 text-sm">Product</span>
-            <span className="text-white font-semibold">{action.product}</span>
+            <span className="text-gray-500 dark:text-white/50 text-sm">Product</span>
+            <span className="text-gray-900 dark:text-white font-semibold">{action.product}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-white/50 text-sm">Value</span>
-              <span className="text-white font-semibold">
+              <span className="text-gray-500 dark:text-white/50 text-sm">Value</span>
+              <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-white/50 text-xs">Email (optional)</label>
+            <label className="text-gray-500 dark:text-white/50 text-xs">Email (optional)</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-white/25 outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm placeholder-gray-400 dark:placeholder-white/25 outline-none focus:border-amber-400 dark:focus:border-gold/50"
             />
-            <p className="text-white/30 text-xs">We'll send the gift card code to this email</p>
+            <p className="text-gray-400 dark:text-white/30 text-xs">We'll send the gift card code to this email</p>
           </div>
         </>
       )}
@@ -551,17 +588,17 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'airtime' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-white/50 text-sm">Phone</span>
-            <span className="text-white font-semibold">{action.phone}</span>
+            <span className="text-gray-500 dark:text-white/50 text-sm">Phone</span>
+            <span className="text-gray-900 dark:text-white font-semibold">{action.phone}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/50 text-sm">Operator</span>
-            <span className="text-white font-semibold">{action.operator}</span>
+            <span className="text-gray-500 dark:text-white/50 text-sm">Operator</span>
+            <span className="text-gray-900 dark:text-white font-semibold">{action.operator}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-white/50 text-sm">Amount</span>
-              <span className="text-white font-semibold">
+              <span className="text-gray-500 dark:text-white/50 text-sm">Amount</span>
+              <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
@@ -572,17 +609,17 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'bill' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-white/50 text-sm">Service</span>
-            <span className="text-white font-semibold">{action.service}</span>
+            <span className="text-gray-500 dark:text-white/50 text-sm">Service</span>
+            <span className="text-gray-900 dark:text-white font-semibold">{action.service}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/50 text-sm">Account</span>
-            <span className="text-white font-mono text-xs">{action.accountNumber}</span>
+            <span className="text-gray-500 dark:text-white/50 text-sm">Account</span>
+            <span className="text-gray-900 dark:text-white font-mono text-xs">{action.accountNumber}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-white/50 text-sm">Amount</span>
-              <span className="text-white font-semibold">
+              <span className="text-gray-500 dark:text-white/50 text-sm">Amount</span>
+              <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
@@ -593,12 +630,12 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Amount Input */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-white/50 text-xs">Amount to pay</label>
+          <label className="text-gray-500 dark:text-white/50 text-xs">Amount to pay</label>
           {isOrder && !success && quoteExpiry && (
             <button
               onClick={refreshQuote}
               disabled={refreshing || loading}
-              className="text-xs text-gold/70 hover:text-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="text-xs text-amber-600 dark:text-gold/70 hover:text-amber-700 dark:hover:text-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               title="Refresh quote to get latest NIM price"
             >
               <svg className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -609,7 +646,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             </button>
           )}
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border ${failed ? 'border-error/50' : 'border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-gold/50'}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border ${failed ? 'border-error/50' : 'border-gray-200 dark:border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-amber-400 dark:focus-within:border-gold/50'}`}>
           <input
             type="number"
             value={amount}
@@ -619,12 +656,12 @@ export default function ActionCard({ action }: ActionCardProps) {
             placeholder="0.00"
             disabled={loading || success || failed || amountLocked}
             readOnly={amountLocked}
-            className="flex-1 bg-transparent text-white text-sm outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-gray-900 dark:text-white text-sm outline-none disabled:cursor-not-allowed"
           />
-          <span className="text-white/50 text-sm font-semibold">NIM</span>
+          <span className="text-gray-500 dark:text-white/50 text-sm font-semibold">NIM</span>
         </div>
         {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
-          <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-white/40'} text-right`}>
+          <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-gray-500 dark:text-white/40'} text-right`}>
             Quote expires in {timeRemaining}s
           </p>
         )}
@@ -660,9 +697,9 @@ export default function ActionCard({ action }: ActionCardProps) {
         disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError}
         className={`w-full py-3 rounded-xl font-semibold transition-all ${
           success
-            ? 'bg-green-500/20 text-green-400 cursor-default'
+            ? 'bg-success/10 text-success cursor-default border border-success/20'
             : failed
-            ? 'bg-error/20 text-error cursor-default'
+            ? 'bg-error/10 text-error cursor-default border border-error/20'
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >

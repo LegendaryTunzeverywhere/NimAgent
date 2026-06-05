@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 
@@ -38,29 +38,7 @@ export default function SwapInterface() {
     fetchRates();
   }, []);
 
-  useEffect(() => {
-    if (amount && parseFloat(amount) > 0) {
-      const debounceTimer = setTimeout(() => {
-        fetchQuote();
-      }, 500);
-      return () => clearTimeout(debounceTimer);
-    } else {
-      setQuote(null);
-    }
-  }, [amount, fromCoin, toCoin]);
-
-  const fetchRates = async () => {
-    try {
-      // Use BFF proxy (same-origin request)
-      const response = await fetch(`/api/swap/rates`);
-      const data = await response.json();
-      setRates(data);
-    } catch (error) {
-      console.error('Failed to fetch swap rates:', error);
-    }
-  };
-
-  const fetchQuote = async () => {
+  const fetchQuote = useCallback(async () => {
     if (!amount || parseFloat(amount) <= 0) return;
 
     setQuoteLoading(true);
@@ -87,6 +65,28 @@ export default function SwapInterface() {
       setQuote(null);
     } finally {
       setQuoteLoading(false);
+    }
+  }, [amount, fromCoin]);
+
+  useEffect(() => {
+    if (amount && parseFloat(amount) > 0) {
+      const debounceTimer = setTimeout(() => {
+        fetchQuote();
+      }, 500);
+      return () => clearTimeout(debounceTimer);
+    } else {
+      setQuote(null);
+    }
+  }, [amount, fromCoin, toCoin, fetchQuote]);
+
+  const fetchRates = async () => {
+    try {
+      // Use BFF proxy (same-origin request)
+      const response = await fetch(`/api/swap/rates`);
+      const data = await response.json();
+      setRates(data);
+    } catch (error) {
+      console.error('Failed to fetch swap rates:', error);
     }
   };
 
@@ -291,7 +291,7 @@ export default function SwapInterface() {
       {/* Disclaimer */}
       <div className="text-xs text-white/40 text-center bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
         <p className="mb-1 font-semibold text-white/60">Demo Mode</p>
-        <p>This swap interface shows real rates but doesn&apos;t execute actual swaps. In production, it would integrate with exchange APIs.</p>
+        <p>This swap interface shows real rates but doesn&apos;t execute actual swaps. On mainnet, it would integrate with exchange APIs.</p>
       </div>
     </div>
   );

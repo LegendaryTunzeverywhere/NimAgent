@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
           const change24h = parseFloat(coinData.change) || 0;
 
           // Convert to requested currency if needed
-          let finalPrice = priceUSD;
+          const finalPrice = priceUSD;
           if (currency.toLowerCase() !== 'usd') {
             // If not USD, we'd need to convert, but return USD for now
             // In production, add currency conversion API
@@ -195,8 +195,9 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error: any) {
-    console.error('[NIM-PRICE] Unexpected error:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[NIM-PRICE] Unexpected error:', errorMessage);
     
     // Always return valid data to prevent UI breaks
     return NextResponse.json(
