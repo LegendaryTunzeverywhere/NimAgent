@@ -30,6 +30,11 @@ export default function ChatPage() {
   const [isListening, setIsListening] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
+
+  // Word count tracking
+  const MAX_WORDS = 100;
+  const wordCount = input.trim().split(/\s+/).filter(word => word.length > 0).length;
+  const isOverLimit = wordCount > MAX_WORDS;
 interface ChatSession {
   sessionId: string;
   lastMessage: string;
@@ -554,57 +559,79 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-3 rounded-2xl px-4 py-3 glass">
-          <button
-            onClick={toggleVoiceInput}
-            disabled={loading}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
-              isListening 
-                ? 'bg-error text-white animate-pulse' 
-                : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white/70'
-            }`}
-            title={isListening ? 'Stop listening' : 'Voice input'}
-          >
-            {isListening ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
-            ) : (
-              <Icon name="mic" size={17} strokeWidth={2} />
-            )}
-          </button>
-          <input
-            ref={inputRef}
-            className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 outline-none"
-            placeholder="Ask me to send NIM, buy gift cards, pay bills..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            disabled={loading || isListening}
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || loading}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50 ${
-              input.trim() && !loading
-                ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
-                : 'bg-gray-100 dark:bg-white/[0.07] text-gray-300 dark:text-white/25'
-            }`}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-2xl px-4 py-3 glass">
+            <button
+              onClick={toggleVoiceInput}
+              disabled={loading}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                isListening 
+                  ? 'bg-error text-white animate-pulse' 
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white/70'
+              }`}
+              title={isListening ? 'Stop listening' : 'Voice input'}
             >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
+              {isListening ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+              ) : (
+                <Icon name="mic" size={17} strokeWidth={2} />
+              )}
+            </button>
+            <input
+              ref={inputRef}
+              className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 outline-none"
+              placeholder="Ask me to send NIM, buy gift cards, pay bills..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !isOverLimit && sendMessage()}
+              disabled={loading || isListening}
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || loading || isOverLimit}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50 ${
+                input.trim() && !loading && !isOverLimit
+                  ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
+                  : 'bg-gray-100 dark:bg-white/[0.07] text-gray-300 dark:text-white/25'
+              }`}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Word counter - only show when user is typing */}
+          {input.trim().length > 0 && (
+            <div className="flex items-center justify-end gap-2 px-2">
+              <span className={`text-[10px] font-mono transition-colors ${
+                isOverLimit 
+                  ? 'text-error font-semibold animate-pulse' 
+                  : wordCount > MAX_WORDS * 0.8
+                  ? 'text-warning'
+                  : 'text-gray-400 dark:text-white/40'
+              }`}>
+                {wordCount}/{MAX_WORDS} words
+              </span>
+              {isOverLimit && (
+                <span className="text-[10px] text-error">
+                  • Too long
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {!wallet.connected && (
