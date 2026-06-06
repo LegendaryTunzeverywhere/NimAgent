@@ -61,3 +61,5 @@ Thumbs.db
 
 # Optional build outputs
 /kiro/
+
+/generate-wallet.js
