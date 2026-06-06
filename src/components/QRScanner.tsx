@@ -130,7 +130,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     };
     
     // Parse QR code data
-    const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
     
     if (data.startsWith(`${baseUrl}/pay/`) || data.includes('/pay/')) {
       // NimHub payment link detected
@@ -366,7 +366,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleManualSubmit();
           }}
           rows={3}
-          placeholder="NQ.. address, https://nimhub.vercel.app/pay/..., or nimiq:..."
+          placeholder="NQ.. address, https://nimhub.online/pay/..., or nimiq:..."
           className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm font-mono placeholder-white/25 outline-none focus:border-gold/50 resize-none break-all"
         />
         <p className="text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
