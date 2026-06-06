@@ -56,15 +56,36 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Prevent flash of light mode - apply dark class immediately before render */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const stored = localStorage.getItem('nimhub-storage');
+                  if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.state && data.state.theme === 'dark') {
+                      document.documentElement.classList.add('dark');
+                    }
+                  } else {
+                    // Default to dark mode if no preference saved
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {
+                  // Default to dark mode on error
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen overflow-x-hidden">
         {/* Ambient background — flat base + subtle grid, fixed behind everything */}
         <div className="bg-mesh" aria-hidden="true" />
         <div className="bg-grid" aria-hidden="true" />
         {children}
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js"></script>
-{/* impeccable-live-end */}
 </body>
     </html>
   );
