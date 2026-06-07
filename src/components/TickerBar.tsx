@@ -22,9 +22,6 @@ export default function TickerBar() {
         }
       } catch (error) {
         console.error('Failed to fetch NIM price:', error);
-        // Fallback to mock price if API is unavailable
-        setNimPrice(0.0012);
-        setPriceChange(3.14);
       }
     };
 

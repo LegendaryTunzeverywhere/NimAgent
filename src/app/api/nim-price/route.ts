@@ -8,9 +8,12 @@ export const runtime = 'nodejs';
  * NIM Price API Route
  * Multi-tier fallback system for reliable price data:
  * 1. Railway Backend
- * 2. CoinGecko API
- * 3. CoinMarketCap API
- * 4. Coinranking API
+ * 2. CoinGecko API (provides 24h change)
+ * 3. CoinMarketCap API (provides 24h change)
+ * 4. Coinranking API (provides 24h change)
+ * 
+ * Note: Most crypto APIs only provide 24h price change data.
+ * 4h intervals require historical data endpoints which are rate-limited.
  */
 
 const BACKEND_URL = process.env.BACKEND_URL;
