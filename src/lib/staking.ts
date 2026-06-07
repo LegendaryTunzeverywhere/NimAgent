@@ -268,7 +268,7 @@ export async function stakeNIM(
 
   // Record transaction in history for UI display
   try {
-    await fetch('/api/staking/record', {
+    const response = await fetch('/api/staking/record', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -279,10 +279,17 @@ export async function stakeNIM(
         action: 'stake',
       }),
     });
-    console.log('[Staking] ✓ Transaction recorded in history');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.warn('[Staking] Failed to record transaction (non-fatal):', errorData);
+      console.warn('[Staking] Database may be missing columns. Transaction still succeeded on-chain.');
+    } else {
+      console.log('[Staking] ✓ Transaction recorded in history');
+    }
   } catch (recordError) {
-    console.warn('[Staking] Failed to record transaction:', recordError);
-    // Non-fatal - transaction still succeeded on-chain
+    console.warn('[Staking] Failed to record transaction (non-fatal):', recordError);
+    console.warn('[Staking] Transaction still succeeded on-chain.');
   }
 
   return txHash;
@@ -349,7 +356,7 @@ export async function unstakeNIM(
 
   // Record transaction in history for UI display
   try {
-    await fetch('/api/staking/record', {
+    const response = await fetch('/api/staking/record', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -360,10 +367,17 @@ export async function unstakeNIM(
         action: 'unstake',
       }),
     });
-    console.log('[Staking] ✓ Unstake transaction recorded in history');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.warn('[Staking] Failed to record unstake transaction (non-fatal):', errorData);
+      console.warn('[Staking] Database may be missing columns. Transaction still succeeded on-chain.');
+    } else {
+      console.log('[Staking] ✓ Unstake transaction recorded in history');
+    }
   } catch (recordError) {
-    console.warn('[Staking] Failed to record unstake transaction:', recordError);
-    // Non-fatal - transaction still succeeded on-chain
+    console.warn('[Staking] Failed to record unstake transaction (non-fatal):', recordError);
+    console.warn('[Staking] Transaction still succeeded on-chain.');
   }
 
   return txHash;
