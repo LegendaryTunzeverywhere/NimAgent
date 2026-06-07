@@ -393,26 +393,46 @@ export const useAppStore = create<AppState>()(
             }
             
             // Update contact
-            if (action.type === 'update-contact' && action.nickname) {
+            if (action.type === 'update-contact' && (action.oldNickname || action.nickname)) {
               try {
-                // Find contact by nickname to get ID
-                const found = await findAddressByNickname(walletAddress, action.nickname);
-                if (!found.success || !found.found || !found.address) {
+                // Use oldNickname (new format) or fallback to nickname (old format)
+                const lookupNickname = action.oldNickname || action.nickname;
+                
+                // Type guard: ensure we have a nickname to look up
+                if (!lookupNickname) {
                   await addMessage({
                     role: 'ai',
-                    content: `I couldn't find a contact named '${action.nickname}'. Check the spelling or ask me to show your contact list.`,
+                    content: 'Cannot update contact: no nickname provided.',
                   });
                   return;
                 }
                 
-                await updateSavedAddress(found.address.id, walletAddress, {
-                  nickname: action.newNickname,
-                  category: action.category,
-                  notes: action.notes,
-                });
+                // Find contact by nickname to get ID
+                const found = await findAddressByNickname(walletAddress, lookupNickname);
+                if (!found.success || !found.found || !found.address) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `I couldn't find a contact named '${lookupNickname}'. Check the spelling or ask me to show your contact list.`,
+                  });
+                  return;
+                }
+                
+                // Build update object - only include fields that are provided
+                const updateData: any = {};
+                if (action.nickname && action.nickname !== lookupNickname) {
+                  updateData.nickname = action.nickname;
+                }
+                if (action.category) {
+                  updateData.category = action.category;
+                }
+                if (action.notes !== undefined) {
+                  updateData.notes = action.notes;
+                }
+                
+                await updateSavedAddress(found.address.id, walletAddress, updateData);
                 await addMessage({
                   role: 'ai',
-                  content: response.message || `✅ Updated ${action.nickname} in your contacts!`,
+                  content: response.message || `✅ Updated ${lookupNickname} in your contacts!`,
                 });
                 return;
               } catch (err: any) {

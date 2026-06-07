@@ -43,6 +43,7 @@ export interface ActionCard {
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
+  oldNickname?: string; // For update-contact: the current nickname to find
   newNickname?: string;
   category?: string;
   notes?: string;
