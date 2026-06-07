@@ -269,9 +269,9 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Handle Show Contacts - display saved addresses
   if (action.type === 'show-contacts' || action.type === 'list-contacts') {
     return (
-      <div className="glass rounded-2xl p-4 max-w-sm space-y-3">
+      <div className="glass rounded-2xl p-3 sm:p-4 w-full max-w-full sm:max-w-sm space-y-3">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-brand-blue/10 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-brand-blue-light">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
@@ -279,7 +279,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="font-semibold text-sm text-gray-900 dark:text-white">Saved Contacts</p>
             <p className="text-[10px] text-gray-500 dark:text-white/40 font-mono">
               {loadingContacts ? 'LOADING...' : `${savedContacts.length} CONTACT${savedContacts.length !== 1 ? 'S' : ''}`}
@@ -303,13 +303,13 @@ export default function ActionCard({ action }: ActionCardProps) {
             {savedContacts.map((contact) => (
               <div
                 key={contact.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors group"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                     {contact.nickname}
                   </p>
-                  <p className="text-xs font-mono text-gray-500 dark:text-white/50 truncate">
+                  <p className="text-[11px] sm:text-xs font-mono text-gray-500 dark:text-white/50 break-all">
                     {contact.recipient_address}
                   </p>
                   {contact.usage_count > 0 && (
@@ -328,7 +328,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                     // Also send the AI context so it knows this is a saved contact
                     sendMessageToAI(`Send NIM to ${contact.nickname} at address ${contact.recipient_address}`, wallet.address || undefined);
                   }}
-                  className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors opacity-0 group-hover:opacity-100"
+                  className="w-full sm:w-auto sm:ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   Send
                 </button>
