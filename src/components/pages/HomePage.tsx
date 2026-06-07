@@ -61,7 +61,8 @@ export default function HomePage() {
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          setPriceChange(data.change24h || 3.14);
+          // Use actual change24h from API, don't default to 3.14
+          setPriceChange(data.change24h || 0);
         }
       } catch (error) {
         console.error('Failed to fetch NIM price:', error);

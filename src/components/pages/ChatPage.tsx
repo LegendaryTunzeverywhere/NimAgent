@@ -15,6 +15,59 @@ const QUICK_PROMPTS: { label: string; icon: IconName }[] = [
   { label: 'Show my address', icon: 'qr-code' },
 ];
 
+// All available commands for help modal
+const ALL_COMMANDS = [
+  { category: 'Send & Receive', commands: [
+    'Send 50 NIM to [address]',
+    'Send to Mom (saved contact)',
+    'Show my address',
+    'Scan QR code',
+    'Generate QR code',
+    'Check my balance',
+  ]},
+  { category: 'Saved Contacts', commands: [
+    'Save [address] as Mom',
+    'Send to Coffee Shop',
+    'Show my contacts',
+    'Rename Mom to Mother',
+    'Delete Alice',
+    'Who is Mom?',
+  ]},
+  { category: 'Gift Cards', commands: [
+    'Buy Amazon gift card',
+    'Get $50 Steam card',
+    'Buy iTunes gift card',
+    'Netflix gift card $25',
+  ]},
+  { category: 'Airtime & Data', commands: [
+    'Top up +234... with $10',
+    'Buy 5GB data bundle',
+    'Recharge airtime',
+  ]},
+  { category: 'Bill Payments', commands: [
+    'Pay electricity bill',
+    'Pay DSTV subscription',
+    'Pay internet bill',
+  ]},
+  { category: 'Crypto Swap', commands: [
+    'Swap NIM to BTC',
+    'Convert 100 NIM to Bitcoin',
+    'Exchange BTC for NIM',
+    'Cash out (swap to BTC)',
+  ]},
+  { category: 'Staking', commands: [
+    'Stake my NIM',
+    'Show staking options',
+    'Unstake my NIM',
+    'Which validator is best?',
+  ]},
+  { category: 'Buy NIM', commands: [
+    'Buy NIM with card',
+    'Purchase NIM',
+    'Add funds',
+  ]},
+];
+
 // Conversation starters that teach users what NimHub can do.
 const DISCOVER_PROMPTS: { label: string; query: string }[] = [
   { label: 'What can you do?', query: 'What can you help me with on NimHub?' },
@@ -30,6 +83,7 @@ export default function ChatPage() {
   const [isListening, setIsListening] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Word count tracking
   const MAX_WORDS = 100;
@@ -334,6 +388,12 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
           >
             <Icon name="plus" size={13} strokeWidth={2.5} /> New Chat
+          </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
+          >
+            <Icon name="help" size={13} strokeWidth={2.5} /> Commands
           </button>
         </div>
       </div>
@@ -689,6 +749,66 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           <p className="text-sm text-white/70 leading-relaxed">
             This action is permanent. All messages in this session will be deleted.
           </p>
+        </div>
+      </Modal>
+
+      {/* Help Modal - All Commands */}
+      <Modal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Available Commands"
+        subtitle="Just talk naturally - these are examples of what I can do"
+      >
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4">
+          {ALL_COMMANDS.map((section) => (
+            <div key={section.category} className="space-y-2">
+              <h3 className="text-sm font-bold text-amber-600 dark:text-gold flex items-center gap-2">
+                <span className="w-1 h-4 bg-amber-600 dark:bg-gold rounded-full"></span>
+                {section.category}
+              </h3>
+              <div className="space-y-1.5 pl-3">
+                {section.commands.map((cmd) => (
+                  <button
+                    key={cmd}
+                    onClick={() => {
+                      setShowHelp(false);
+                      setInput(cmd);
+                      setTimeout(() => inputRef.current?.focus(), 100);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs text-gray-700 dark:text-white/70 bg-gray-50 dark:bg-white/[0.02] hover:bg-amber-50 dark:hover:bg-gold/10 hover:text-amber-600 dark:hover:text-gold border border-transparent hover:border-amber-200 dark:hover:border-gold/20 transition-all"
+                  >
+                    "{cmd}"
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Tips */}
+          <div className="mt-6 p-4 rounded-xl bg-blue-50 dark:bg-brand-blue/10 border border-blue-200 dark:border-brand-blue/20">
+            <h4 className="text-sm font-bold text-blue-700 dark:text-brand-blue-light mb-2 flex items-center gap-2">
+              <Icon name="help" size={14} strokeWidth={2.5} />
+              Pro Tips
+            </h4>
+            <ul className="space-y-1.5 text-xs text-blue-600 dark:text-brand-blue-light/80">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 dark:text-brand-blue/60 mt-0.5">•</span>
+                <span>Save addresses as contacts to send easier: "Save NQ18... as Mom"</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 dark:text-brand-blue/60 mt-0.5">•</span>
+                <span>Use voice input by clicking the microphone button</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 dark:text-brand-blue/60 mt-0.5">•</span>
+                <span>Scan QR codes to quickly get wallet addresses</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 dark:text-brand-blue/60 mt-0.5">•</span>
+                <span>Keep messages under 100 words for best results</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </Modal>
     </div>
