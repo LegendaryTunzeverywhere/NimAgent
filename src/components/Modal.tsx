@@ -17,8 +17,10 @@ interface ModalProps {
 /**
  * Accessible, professional modal dialog.
  * - Click backdrop or press Escape to close
- * - Locks body scroll while open
+ * - Locks body scroll while open (with fail-safe recovery)
  * - Flat styling consistent with the app's design system
+ * 
+ * Note: Improved scroll lock handling prevents permanent freeze issues
  */
 export default function Modal({
   open,
@@ -37,12 +39,30 @@ export default function Modal({
     };
     document.addEventListener('keydown', onKey);
 
-    const prevOverflow = document.body.style.overflow;
+    // Store previous overflow values
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    
+    // Lock scroll on both body and html
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
+      
+      // Restore previous overflow values
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      
+      // Safety: ensure scroll is never permanently locked
+      // If no modals are open, force restore scroll
+      setTimeout(() => {
+        const hasOpenModals = document.querySelector('[role="dialog"][aria-modal="true"]');
+        if (!hasOpenModals) {
+          document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
+        }
+      }, 50);
     };
   }, [open, onClose]);
 

@@ -86,6 +86,26 @@ export default function ChatPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Safety: Global escape hatch for scroll lock issues
+  useEffect(() => {
+    const unlockScroll = (e: KeyboardEvent) => {
+      // Press Ctrl+Shift+U to force unlock scroll (emergency escape)
+      if (e.ctrlKey && e.shiftKey && e.key === 'U') {
+        console.log('[Emergency] Forcing scroll unlock');
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        // Close all modals as safety measure
+        setShowOnboarding(false);
+        setShowHelp(false);
+        setShowSessions(false);
+        setSessionToDelete(null);
+      }
+    };
+    
+    document.addEventListener('keydown', unlockScroll);
+    return () => document.removeEventListener('keydown', unlockScroll);
+  }, []);
+
   // Check if user is new (first time visiting)
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('nimhub_onboarding_seen');
