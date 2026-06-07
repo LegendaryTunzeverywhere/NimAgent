@@ -49,38 +49,6 @@ export default function HomePage() {
   const { wallet, connectWallet, disconnectWallet, setActiveTab, sendMessageToAI, fetchBalance, addMessage } = useAppStore();
   const [nimPrice, setNimPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
-  
-  const clearCache = () => {
-    try {
-      // Clear localStorage (except sensitive wallet data)
-      const keysToPreserve = ['nimhub-storage']; // Zustand storage
-      const allKeys = Object.keys(localStorage);
-      
-      allKeys.forEach(key => {
-        if (!keysToPreserve.some(preserve => key.includes(preserve))) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Clear service worker caches
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          names.forEach(name => {
-            caches.delete(name);
-          });
-        });
-      }
-      
-      // Show success message
-      alert('Cache cleared successfully! The page will reload.');
-      
-      // Force reload without cache
-      window.location.reload();
-    } catch (error) {
-      console.error('Failed to clear cache:', error);
-      alert('Failed to clear cache. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R).');
-    }
-  };
   const [sentToday, setSentToday] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
@@ -371,29 +339,14 @@ export default function HomePage() {
               </span>
             </div>
             {wallet.connected && (
-              <div className="flex gap-2">
-                <button
-                  onClick={clearCache}
-                  className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50 border border-gray-200 dark:border-white/10 hover:bg-blue-50 dark:hover:bg-brand-blue/15 hover:text-blue-600 dark:hover:text-brand-blue-light hover:border-blue-200 dark:hover:border-brand-blue/25 transition-colors"
-                  title="Clear Cache & Reload"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 2v6h-6" />
-                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-                    <path d="M3 22v-6h6" />
-                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-                  </svg>
-                  <span className="hidden sm:inline">Clear Cache</span>
-                </button>
-                <button
-                  onClick={disconnectWallet}
-                  className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50 border border-gray-200 dark:border-white/10 hover:bg-red-50 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-200 dark:hover:border-error/25 transition-colors"
-                  title="Disconnect Wallet"
-                >
-                  <Icon name="disconnect" size={12} strokeWidth={2.2} />
-                  Disconnect
-                </button>
-              </div>
+              <button
+                onClick={disconnectWallet}
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50 border border-gray-200 dark:border-white/10 hover:bg-red-50 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-200 dark:hover:border-error/25 transition-colors"
+                title="Disconnect Wallet"
+              >
+                <Icon name="disconnect" size={12} strokeWidth={2.2} />
+                Disconnect
+              </button>
             )}
           </div>
 

@@ -25,7 +25,7 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage, messages, updateActionState, setActiveTab } = useAppStore();
+  const { wallet, addMessage, messages, updateActionState, setActiveTab, sendMessageToAI } = useAppStore();
   
   // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
   const [loading, setLoading] = useState(false);
@@ -320,10 +320,13 @@ export default function ActionCard({ action }: ActionCardProps) {
                 </div>
                 <button
                   onClick={() => {
+                    // Send message with FULL address so AI can immediately create send action
                     addMessage({
                       role: 'user',
-                      content: `Send NIM to ${contact.nickname}`,
+                      content: `Send NIM to ${contact.nickname} (${contact.address})`,
                     });
+                    // Also send the AI context so it knows this is a saved contact
+                    sendMessageToAI(`Send NIM to ${contact.nickname} at address ${contact.address}`, wallet.address);
                   }}
                   className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors opacity-0 group-hover:opacity-100"
                 >

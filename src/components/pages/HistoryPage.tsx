@@ -314,12 +314,12 @@ export default function HistoryPage() {
       </div>
 
       {/* Filter Pills */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
         {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
           <button
             key={filterOption}
             onClick={() => setFilter(filterOption)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
+            className={`rounded-full px-3 sm:px-4 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
               filter === filterOption
                 ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
                 : 'glass text-gray-600 dark:text-white/50 hover:text-gray-800 dark:hover:text-white/70'

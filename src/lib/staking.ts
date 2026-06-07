@@ -12,10 +12,7 @@
 // Nimiq Staking Contract address — hardcoded in protocol
 const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
 
-const RPC_URL = process.env.NEXT_PUBLIC_NIMIQ_RPC_URL || 
-  (process.env.NEXT_PUBLIC_NIMIQ_NETWORK === 'mainnet'
-    ? 'https://rpc.nimiqwatch.com'
-    : 'https://seed1.pos.nimiq-testnet.com:8648');
+const RPC_URL = '/api/nimiq-rpc'; // Use backend proxy to avoid CORS issues
 
 export interface Validator {
   address: string;
