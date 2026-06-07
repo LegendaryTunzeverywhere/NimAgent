@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { stakeNIM, estimateAnnualRewards, prefetchBlockHeight, type Validator } from '@/lib/staking';
+import { stakeNIM, estimateAnnualRewards, type Validator } from '@/lib/staking';
 
 export default function StakeConfirm({ validator, apy, walletAddress, onBack, onSuccess }: {
   validator: Validator;
@@ -13,11 +13,6 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
   const [amountNIM, setAmountNIM] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Prefetch block height when component mounts to avoid delays in click handler
-  useEffect(() => {
-    prefetchBlockHeight();
-  }, []);
 
   const amount = parseFloat(amountNIM) || 0;
   const amountLuna = Math.round(amount * 100000);

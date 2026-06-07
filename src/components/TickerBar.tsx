@@ -18,7 +18,8 @@ export default function TickerBar() {
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          setPriceChange(data.change24h);
+          // Ensure change24h is a number, default to 0 if missing
+          setPriceChange(typeof data.change24h === 'number' ? data.change24h : 0);
         }
       } catch (error) {
         console.error('Failed to fetch NIM price:', error);
@@ -31,18 +32,28 @@ export default function TickerBar() {
     return () => clearInterval(interval);
   }, []);
 
+  const formatPriceChange = (change: number | null) => {
+    if (change === null || change === undefined) return '';
+    const sign = change > 0 ? '+' : '';
+    return ` ${sign}${change.toFixed(2)}% (24h)`;
+  };
+
+  const priceText = nimPrice 
+    ? `NIM $${nimPrice.toFixed(4)}${formatPriceChange(priceChange)}` 
+    : 'NIM LOADING...';
+
   const items = [
-    nimPrice ? `NIM  $${nimPrice.toFixed(4)}  ${priceChange && priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2)}%` : 'NIM  LOADING...',
-    'AI AGENT  ACTIVE',
+    priceText,
+    'AI AGENT ACTIVE',
     wallet.connected && wallet.address 
       ? `${wallet.address.slice(0, 4)} ${wallet.address.slice(5, 9)} ${wallet.address.slice(10, 14)} ••• CONNECTED`
-      : 'WALLET  NOT CONNECTED',
-    `NETWORK  ${network.toUpperCase()}`,
-    nimPrice ? `NIM  $${nimPrice.toFixed(4)}  ${priceChange && priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2)}%` : 'NIM  LOADING...',
+      : 'WALLET NOT CONNECTED',
+    `NETWORK ${network.toUpperCase()}`,
+    priceText,
     'POWERED BY NIMIQ',
   ];
   
-  const text = items.join('   ·   ');
+  const text = items.join(' · ');
 
   return (
     <div className="relative overflow-hidden w-full bg-gold/[0.07] border-b border-gold/15 py-1.5">

@@ -2,31 +2,20 @@
  * NimHub Staking — delegate NIM to validators via Nimiq Hub API
  *
  * CORRECT IMPLEMENTATION:
- * - Staking transactions go TO the Nimiq Staking Contract (NQ77 0000...)
- * - Validator address is encoded in the transaction data
- * - Uses Hub API signStakingTransaction() NOT checkout()
- * - Broadcasts via JSON-RPC sendRawTransaction
+ * - Use Nimiq RPC to create properly formatted staking transactions
+ * - Sign with Hub API's signTransaction()
+ * - Broadcast via JSON-RPC sendRawTransaction
  *
- * Flow:
- * 1. Fetch validators from Nimiq Validators API
- * 2. User picks a validator
- * 3. Prefetch block height (before click handler)
- * 4. Hub API signs the staking transaction
- * 5. Broadcast via JSON-RPC
- * 6. Show staking dashboard with live status
+ * The RPC handles all the binary encoding - no need for @nimiq/core in browser.
  */
 
-// Nimiq Staking Contract address — this is fixed, never changes
-const STAKING_CONTRACT = 'NQ77 0000 0000 0000 0000 0000 0000 0000 0000';
-
-const VALIDATORS_API = process.env.NEXT_PUBLIC_NIMIQ_ENV === 'testnet'
-  ? 'https://validators-api-main.je-cf9.workers.dev'
-  : 'https://validators-api-test.je-cf9.workers.dev';
+// Nimiq Staking Contract address — hardcoded in protocol
+const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
 
 const RPC_URL = process.env.NEXT_PUBLIC_NIMIQ_RPC_URL || 
   (process.env.NEXT_PUBLIC_NIMIQ_NETWORK === 'mainnet'
     ? 'https://rpc.nimiqwatch.com'
-    : 'https://rpc.testnet.nimiqwatch.com');
+    : 'https://seed1.pos.nimiq-testnet.com:8648');
 
 export interface Validator {
   address: string;
@@ -116,98 +105,16 @@ export function estimateAnnualRewards(stakeNIM: number, apy: number, validatorFe
 }
 
 // ─── Hub API Staking Transactions ────────────────────────────────────────────
-// All Hub calls MUST be the first call inside click handlers — no awaits before them.
-
-/**
- * Get Hub API instance synchronously.
- * MUST be called first in any click handler.
- */
-function getHub() {
-  if (typeof window === 'undefined') {
-    throw new Error('Hub API can only be used in browser');
-  }
-  
-  // Use global HubApi loaded from CDN
-  if (!(window as any).HubApi) {
-    throw new Error('Hub API not loaded. Add <script src="https://cdn.jsdelivr.net/npm/@nimiq/hub-api@latest/dist/standalone/HubApi.standalone.umd.js"></script> to your HTML');
-  }
-  
-  // Cache the instance
-  if (!(window as any).__nimhub_staking) {
-    const hubUrl = process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com';
-    (window as any).__nimhub_staking = new (window as any).HubApi(hubUrl);
-  }
-  
-  return (window as any).__nimhub_staking;
-}
-
-/**
- * Get current block height — needed for validityStartHeight in staking transactions
- */
-async function getCurrentBlockHeight(): Promise<number> {
-  const res = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'getBlockNumber',
-      params: [],
-      id: 1,
-    }),
-  });
-  
-  if (!res.ok) throw new Error('Failed to fetch block height');
-  
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  
-  return data.result;
-}
-
-/**
- * Block height cache - prefetch this before user clicks stake button
- * so Hub call can be synchronous
- */
-let cachedBlockHeight: number | null = null;
-let blockHeightTimestamp: number = 0;
-const BLOCK_HEIGHT_CACHE_TTL = 30000; // 30 seconds
-
-/**
- * Prefetch block height in background.
- * Call this when StakePage loads so it's ready when user clicks confirm.
- */
-export async function prefetchBlockHeight() {
-  try {
-    cachedBlockHeight = await getCurrentBlockHeight();
-    blockHeightTimestamp = Date.now();
-    console.log('[Staking] Prefetched block height:', cachedBlockHeight);
-  } catch (error) {
-    console.error('[Staking] Failed to prefetch block height:', error);
-  }
-}
-
-/**
- * Get block height - uses cache if fresh, otherwise fetches
- */
-async function getBlockHeight(): Promise<number> {
-  const now = Date.now();
-  if (cachedBlockHeight && (now - blockHeightTimestamp) < BLOCK_HEIGHT_CACHE_TTL) {
-    return cachedBlockHeight;
-  }
-  return await getCurrentBlockHeight();
-}
 
 /**
  * Stake NIM with a validator - CORRECT IMPLEMENTATION
  * 
- * This sends the transaction TO the Nimiq Staking Contract (NQ77 0000...),
- * NOT to the validator's address. The validator address is encoded in the
- * transaction data field.
+ * Uses Nimiq RPC to create a properly formatted staking transaction,
+ * signs it with Hub API's signTransaction(), and broadcasts it.
  *
- * CRITICAL: getHub() must be called FIRST (synchronously) in click handler.
- * Block height should be prefetched before the click handler fires.
+ * The RPC handles all binary encoding - we don't need @nimiq/core.
  *
- * @param senderAddress - User's wallet address
+ * @param senderAddress - User's wallet address (pays fee)
  * @param validatorAddress - The validator's NIM address to delegate to
  * @param amountLuna - Amount to stake in Luna (min 100,000 = 1 NIM)
  * @returns Transaction hash
@@ -219,168 +126,210 @@ export async function stakeNIM(
 ): Promise<string> {
   if (amountLuna < 100000) throw new Error('Minimum stake is 1 NIM (100,000 Luna)');
 
-  // Get block height (uses cache if available)
-  const blockHeight = await getBlockHeight();
-  
-  // CRITICAL: Hub call must be synchronous - no awaits before this
-  const hub = getHub();
-
-  console.log('[Staking] Creating stake transaction:', {
+  console.log('[Staking] Creating stake transaction via RPC:', {
     sender: senderAddress,
     validator: validatorAddress,
     amount: amountLuna / 100000,
-    blockHeight,
   });
 
-  // Sign staking transaction via Hub API
-  const signedTx = await hub.signStakingTransaction({
-    appName: 'NimHub',
-    sender: senderAddress,
-    delegation: validatorAddress,  // Validator to delegate to
-    value: amountLuna,            // Amount to stake in Luna
-    fee: 0,                       // Feeless
-    validityStartHeight: blockHeight,
-  });
-
-  console.log('[Staking] Transaction signed, broadcasting...');
-
-  // Broadcast via JSON-RPC
-  const broadcastRes = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'sendRawTransaction',
-      params: [signedTx.serializedTx],
-      id: 1,
-    }),
-  });
-
-  const broadcastData = await broadcastRes.json();
-  
-  if (broadcastData.error) {
-    console.error('[Staking] Broadcast error:', broadcastData.error);
-    throw new Error(broadcastData.error.message || 'Failed to broadcast staking transaction');
-  }
-
-  const txHash = broadcastData.result;
-  console.log('[Staking] ✓ Stake transaction broadcast:', txHash);
-
-  // Record transaction in history for UI display
   try {
-    const response = await fetch('/api/staking/record', {
+    // Step 1: Create the staking transaction using RPC
+    // RPC returns a plain object that Hub API can sign directly
+    const createRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        walletAddress: senderAddress,
-        validatorAddress,
-        amountLuna,
-        txHash,
-        action: 'stake',
+        jsonrpc: '2.0',
+        method: 'createNewStakerTransaction',
+        params: {
+          wallet: senderAddress,
+          validator: validatorAddress,
+          value: amountLuna,
+          fee: 0,
+        },
+        id: 1,
       }),
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.warn('[Staking] Failed to record transaction (non-fatal):', errorData);
-      console.warn('[Staking] Database may be missing columns. Transaction still succeeded on-chain.');
-    } else {
-      console.log('[Staking] ✓ Transaction recorded in history');
-    }
-  } catch (recordError) {
-    console.warn('[Staking] Failed to record transaction (non-fatal):', recordError);
-    console.warn('[Staking] Transaction still succeeded on-chain.');
-  }
 
-  return txHash;
+    const createData = await createRes.json();
+    
+    if (createData.error) {
+      console.error('[Staking] RPC create error:', createData.error);
+      throw new Error(createData.error.message || 'Failed to create staking transaction');
+    }
+
+    const transactionObj = createData.result;
+    console.log('[Staking] Transaction object created, requesting signature from Hub...');
+
+    // Step 2: Sign with Hub API - it accepts the plain object from RPC
+    const HubApi = (await import('@nimiq/hub-api')).default;
+    const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
+
+    // Hub API signTransaction accepts the plain transaction object
+    const signResult = await hub.signTransaction({
+      ...transactionObj,
+      appName: 'NimHub',
+    });
+
+    const signedTxHex = signResult.serializedTx || signResult.raw;
+    console.log('[Staking] Transaction signed, broadcasting...');
+
+    // Step 3: Broadcast
+    const broadcastRes = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'sendRawTransaction',
+        params: [signedTxHex],
+        id: 1,
+      }),
+    });
+
+    const broadcastData = await broadcastRes.json();
+    
+    if (broadcastData.error) {
+      console.error('[Staking] Broadcast error:', broadcastData.error);
+      throw new Error(broadcastData.error.message || 'Failed to broadcast staking transaction');
+    }
+
+    const txHash = broadcastData.result;
+    console.log('[Staking] ✓ Stake transaction broadcast:', txHash);
+
+    // Record transaction in history
+    try {
+      const response = await fetch('/api/staking/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: senderAddress,
+          validatorAddress,
+          amountLuna,
+          txHash,
+          action: 'stake',
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('[Staking] ✓ Transaction recorded in history');
+      }
+    } catch (recordError) {
+      console.warn('[Staking] Failed to record transaction (non-fatal)');
+    }
+
+    return txHash;
+  } catch (error: any) {
+    console.error('[Staking] Stake error:', error);
+    throw error;
+  }
 }
 
 /**
- * Begin unstaking — deactivate stake (move to inactive state).
- * User must wait ~1 epoch (~24h) before they can withdraw.
- * 
- * CRITICAL: getHub() must be called FIRST (synchronously) in click handler.
+ * Begin unstaking — retire stake (move to inactive state).
+ * User must wait ~1 epoch before they can withdraw.
  * 
  * @param senderAddress - User's wallet address
- * @param amountLuna - Amount to unstake in Luna (0 = unstake all)
+ * @param amountLuna - Amount to unstake in Luna
  * @returns Transaction hash
  */
 export async function unstakeNIM(
   senderAddress: string,
-  amountLuna: number = 0
+  amountLuna: number
 ): Promise<string> {
-  // Get block height (uses cache if available)
-  const blockHeight = await getBlockHeight();
-  
-  // CRITICAL: Hub call must be synchronous
-  const hub = getHub();
+  if (amountLuna <= 0) throw new Error('Must specify amount to unstake');
 
-  console.log('[Staking] Creating unstake transaction:', {
+  console.log('[Staking] Creating unstake transaction via RPC:', {
     sender: senderAddress,
-    amount: amountLuna > 0 ? amountLuna / 100000 : 'all',
-    blockHeight,
+    amount: amountLuna / 100000,
   });
 
-  // Sign unstaking transaction via Hub API
-  const signedTx = await hub.signStakingTransaction({
-    appName: 'NimHub',
-    sender: senderAddress,
-    deactivateStake: amountLuna || undefined, // Amount to deactivate (undefined = all)
-    fee: 0,
-    validityStartHeight: blockHeight,
-  });
-
-  console.log('[Staking] Unstake transaction signed, broadcasting...');
-
-  // Broadcast via JSON-RPC
-  const broadcastRes = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'sendRawTransaction',
-      params: [signedTx.serializedTx],
-      id: 1,
-    }),
-  });
-
-  const broadcastData = await broadcastRes.json();
-  
-  if (broadcastData.error) {
-    console.error('[Staking] Unstake broadcast error:', broadcastData.error);
-    throw new Error(broadcastData.error.message || 'Failed to broadcast unstaking transaction');
-  }
-
-  const txHash = broadcastData.result;
-  console.log('[Staking] ✓ Unstake transaction broadcast:', txHash);
-
-  // Record transaction in history for UI display
   try {
-    const response = await fetch('/api/staking/record', {
+    // Step 1: Create retire stake transaction using RPC
+    const createRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        walletAddress: senderAddress,
-        validatorAddress: '', // Unstake doesn't need validator address
-        amountLuna,
-        txHash,
-        action: 'unstake',
+        jsonrpc: '2.0',
+        method: 'createRetireStakeTransaction',
+        params: {
+          wallet: senderAddress,
+          value: amountLuna,
+          fee: 0,
+        },
+        id: 1,
       }),
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.warn('[Staking] Failed to record unstake transaction (non-fatal):', errorData);
-      console.warn('[Staking] Database may be missing columns. Transaction still succeeded on-chain.');
-    } else {
-      console.log('[Staking] ✓ Unstake transaction recorded in history');
-    }
-  } catch (recordError) {
-    console.warn('[Staking] Failed to record unstake transaction (non-fatal):', recordError);
-    console.warn('[Staking] Transaction still succeeded on-chain.');
-  }
 
-  return txHash;
+    const createData = await createRes.json();
+    
+    if (createData.error) {
+      console.error('[Staking] RPC create unstake error:', createData.error);
+      throw new Error(createData.error.message || 'Failed to create unstaking transaction');
+    }
+
+    const transactionObj = createData.result;
+    console.log('[Staking] Unstake transaction object created, requesting signature...');
+
+    // Step 2: Sign with Hub API
+    const HubApi = (await import('@nimiq/hub-api')).default;
+    const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
+
+    const signResult = await hub.signTransaction({
+      ...transactionObj,
+      appName: 'NimHub',
+    });
+
+    const signedTxHex = signResult.serializedTx || signResult.raw;
+    console.log('[Staking] Unstake transaction signed, broadcasting...');
+
+    // Step 3: Broadcast
+    const broadcastRes = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'sendRawTransaction',
+        params: [signedTxHex],
+        id: 1,
+      }),
+    });
+
+    const broadcastData = await broadcastRes.json();
+    
+    if (broadcastData.error) {
+      console.error('[Staking] Unstake broadcast error:', broadcastData.error);
+      throw new Error(broadcastData.error.message || 'Failed to broadcast unstaking transaction');
+    }
+
+    const txHash = broadcastData.result;
+    console.log('[Staking] ✓ Unstake transaction broadcast:', txHash);
+
+    // Record transaction in history
+    try {
+      const response = await fetch('/api/staking/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: senderAddress,
+          validatorAddress: '',
+          amountLuna,
+          txHash,
+          action: 'unstake',
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('[Staking] ✓ Unstake recorded in history');
+      }
+    } catch (recordError) {
+      console.warn('[Staking] Failed to record unstake (non-fatal)');
+    }
+
+    return txHash;
+  } catch (error: any) {
+    console.error('[Staking] Unstake error:', error);
+    throw error;
+  }
 }
 
 /**
@@ -400,3 +349,4 @@ export function trustScoreLabel(score: number | undefined | null): { label: stri
   if (safeScore >= 40) return { label: 'Medium', color: '#f59e0b' };
   return { label: 'Low Trust', color: '#FF4B6E' };
 }
+
