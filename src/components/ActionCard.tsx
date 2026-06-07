@@ -310,7 +310,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                     {contact.nickname}
                   </p>
                   <p className="text-xs font-mono text-gray-500 dark:text-white/50 truncate">
-                    {contact.address}
+                    {contact.recipient_address}
                   </p>
                   {contact.usage_count > 0 && (
                     <p className="text-[10px] text-gray-400 dark:text-white/30 mt-0.5">
@@ -323,10 +323,10 @@ export default function ActionCard({ action }: ActionCardProps) {
                     // Send message with FULL address so AI can immediately create send action
                     addMessage({
                       role: 'user',
-                      content: `Send NIM to ${contact.nickname} (${contact.address})`,
+                      content: `Send NIM to ${contact.nickname} (${contact.recipient_address})`,
                     });
                     // Also send the AI context so it knows this is a saved contact
-                    sendMessageToAI(`Send NIM to ${contact.nickname} at address ${contact.address}`, wallet.address || undefined);
+                    sendMessageToAI(`Send NIM to ${contact.nickname} at address ${contact.recipient_address}`, wallet.address || undefined);
                   }}
                   className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors opacity-0 group-hover:opacity-100"
                 >
