@@ -356,10 +356,104 @@ export const useAppStore = create<AppState>()(
 
         try {
           // Import and call chat API
-          const { chatWithAgent } = await import('@/lib/api-client');
+          const { chatWithAgent, saveAddress, updateSavedAddress, deleteSavedAddress, findAddressByNickname } = await import('@/lib/api-client');
           const response = await chatWithAgent(trimmed, history, walletAddress);
           
-          // Add AI response
+          // Handle action execution for non-UI actions (save, update, delete contacts)
+          if (response.action && walletAddress) {
+            const action = response.action;
+            
+            // Save contact
+            if (action.type === 'save-contact' && action.nickname && action.recipientAddress) {
+              try {
+                const validCategories = ['personal', 'merchant', 'friend', 'family', 'other'] as const;
+                const category = validCategories.includes(action.category as any) 
+                  ? (action.category as 'personal' | 'merchant' | 'friend' | 'family' | 'other')
+                  : 'other';
+                
+                await saveAddress({
+                  wallet: walletAddress,
+                  recipientAddress: action.recipientAddress,
+                  nickname: action.nickname,
+                  category,
+                  notes: action.notes || '',
+                });
+                await addMessage({
+                  role: 'ai',
+                  content: response.message || `✅ Saved ${action.nickname} to your contacts!`,
+                });
+                return; // Don't add action card
+              } catch (err: any) {
+                await addMessage({
+                  role: 'ai',
+                  content: `Failed to save contact: ${err.message || 'Unknown error'}`,
+                });
+                return;
+              }
+            }
+            
+            // Update contact
+            if (action.type === 'update-contact' && action.nickname) {
+              try {
+                // Find contact by nickname to get ID
+                const found = await findAddressByNickname(walletAddress, action.nickname);
+                if (!found.success || !found.found || !found.address) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `I couldn't find a contact named '${action.nickname}'. Check the spelling or ask me to show your contact list.`,
+                  });
+                  return;
+                }
+                
+                await updateSavedAddress(found.address.id, walletAddress, {
+                  nickname: action.newNickname,
+                  category: action.category,
+                  notes: action.notes,
+                });
+                await addMessage({
+                  role: 'ai',
+                  content: response.message || `✅ Updated ${action.nickname} in your contacts!`,
+                });
+                return;
+              } catch (err: any) {
+                await addMessage({
+                  role: 'ai',
+                  content: `Failed to update contact: ${err.message || 'Unknown error'}`,
+                });
+                return;
+              }
+            }
+            
+            // Delete contact
+            if (action.type === 'delete-contact' && action.nickname) {
+              try {
+                // Find contact by nickname to get ID
+                const found = await findAddressByNickname(walletAddress, action.nickname);
+                if (!found.success || !found.found || !found.address) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `I couldn't find a contact named '${action.nickname}'. Check the spelling or ask me to show your contact list.`,
+                  });
+                  return;
+                }
+                
+                await deleteSavedAddress(found.address.id, walletAddress);
+                await addMessage({
+                  role: 'ai',
+                  content: response.message || `✅ Removed ${action.nickname} from your contacts!`,
+                });
+                return;
+              } catch (err: any) {
+                await addMessage({
+                  role: 'ai',
+                  content: `Failed to delete contact: ${err.message || 'Unknown error'}`,
+                });
+                return;
+              }
+            }
+          }
+          
+          // Add AI response with action (for UI actions like show-contacts, send, etc.)
           await addMessage({
             role: 'ai',
             content: response.message,

@@ -39,8 +39,14 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'show-contacts' | 'list-contacts';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact';
   recipient?: string;
+  recipientAddress?: string;
+  nickname?: string;
+  newNickname?: string;
+  category?: string;
+  notes?: string;
+  contactId?: number;
   amountLuna?: number;
   fiatAmount?: string;
   currency?: string;

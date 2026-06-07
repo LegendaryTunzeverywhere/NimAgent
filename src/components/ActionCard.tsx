@@ -205,7 +205,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   }, [wallet.address, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter out action types that don't need an action card UI
-  const NON_CARD_ACTIONS = ['save-address', 'save-contact', 'update-contact', 'delete-contact'];
+  const NON_CARD_ACTIONS = ['save-address', 'save-contact', 'update-contact', 'delete-contact', 'lookup-contact'];
   if (NON_CARD_ACTIONS.includes(action.type)) {
     return null; // Don't render anything for these actions
   }
