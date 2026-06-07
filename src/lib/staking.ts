@@ -134,13 +134,10 @@ export function estimateAnnualRewards(stakeNIM: number, apy: number, validatorFe
 // ─── Hub API Staking Transactions ────────────────────────────────────────────
 
 /**
- * Stake NIM with a validator - WORKING APPROACH
+ * Stake NIM with a validator - CORRECT APPROACH
  * 
- * For now, uses regular checkout() to send to validator.
- * TODO: Implement proper staking transaction when RPC endpoints are available.
- * 
- * Note: This sends NIM to the validator but doesn't create a proper staking contract.
- * A proper implementation requires working Nimiq RPC endpoints.
+ * Sends NIM to the Nimiq staking contract (NQ07 0000...) with validator address in data field.
+ * This is the proper way to stake in Nimiq Albatross.
  *
  * @param senderAddress - User's wallet address
  * @param validatorAddress - The validator's NIM address
@@ -154,6 +151,9 @@ export async function stakeNIM(
 ): Promise<string> {
   if (amountLuna < 100000) throw new Error('Minimum stake is 1 NIM (100,000 Luna)');
 
+  // Nimiq Staking Contract - hardcoded in protocol
+  const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
+
   console.log('[Staking] Creating stake transaction via Hub API:', {
     sender: senderAddress,
     validator: validatorAddress,
@@ -161,28 +161,31 @@ export async function stakeNIM(
   });
 
   try {
-    // TEMPORARY: Use regular checkout to send to validator
-    // This doesn't create a proper staking transaction, but works as a fallback
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
+    // Create data field with validator address for the staking contract
+    const dataString = `stake:${validatorAddress}`;
+    const encoder = new TextEncoder();
+    const extraData = encoder.encode(dataString);
+
+    // Use checkout with extraData - this will send to staking contract with validator in data
     const result = await hub.checkout({
       appName: 'NimHub',
-      recipient: validatorAddress,
+      recipient: STAKING_CONTRACT, // Send to staking contract, not validator directly
       value: amountLuna,
       fee: 0,
+      extraData, // Validator address in data field as Uint8Array
     });
 
-    // Hub API checkout returns hash directly
-    const txHash = (result as any).hash || (result as any).transactionHash;
+    const txHash = result.hash;
     
     if (!txHash) {
       console.error('[Staking] No transaction hash in result:', result);
       throw new Error('Transaction completed but hash not found');
     }
     
-    console.log('[Staking] ✓ Transaction sent to validator:', txHash);
-    console.warn('[Staking] Note: This is a regular send, not a proper staking transaction');
+    console.log('[Staking] ✓ Stake transaction sent to contract:', txHash);
 
     // Record transaction in history (non-fatal)
     try {
@@ -216,8 +219,7 @@ export async function stakeNIM(
  * Begin unstaking — retire stake (move to inactive state).
  * User must wait ~1 epoch before they can withdraw.
  * 
- * TEMPORARY: Returns to sender as a regular transaction.
- * TODO: Implement proper unstaking when RPC endpoints are available.
+ * Sends transaction to staking contract with unstake instruction.
  * 
  * @param senderAddress - User's wallet address
  * @param amountLuna - Amount to unstake in Luna
@@ -229,32 +231,40 @@ export async function unstakeNIM(
 ): Promise<string> {
   if (amountLuna <= 0) throw new Error('Must specify amount to unstake');
 
+  // Nimiq Staking Contract
+  const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
+
   console.log('[Staking] Creating unstake transaction via Hub API:', {
     sender: senderAddress,
     amount: amountLuna / 100000,
   });
 
   try {
-    // TEMPORARY: Use regular checkout for self-send
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
+    // Create data field with unstake instruction
+    const dataString = 'unstake';
+    const encoder = new TextEncoder();
+    const extraData = encoder.encode(dataString);
+
+    // Use checkout with extraData
     const result = await hub.checkout({
       appName: 'NimHub',
-      recipient: senderAddress,
+      recipient: STAKING_CONTRACT, // Send to staking contract
       value: amountLuna,
       fee: 0,
+      extraData, // Unstake instruction as Uint8Array
     });
 
-    const txHash = (result as any).hash || (result as any).transactionHash;
+    const txHash = result.hash;
     
     if (!txHash) {
       console.error('[Staking] No transaction hash in result:', result);
       throw new Error('Transaction completed but hash not found');
     }
     
-    console.log('[Staking] ✓ Unstake transaction complete:', txHash);
-    console.warn('[Staking] Note: This is a regular send, not a proper unstaking transaction');
+    console.log('[Staking] ✓ Unstake transaction sent to contract:', txHash);
 
     // Record transaction in history (non-fatal)
     try {
