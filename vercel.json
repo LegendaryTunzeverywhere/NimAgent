@@ -8,7 +8,7 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.coingecko.com https://api.coinmarketcap.com https://api.coinranking.com https://seed1.pos.nimiq-testnet.com:8648 https://seed2.pos.nimiq-testnet.com:8648 https://seed3.pos.nimiq-testnet.com:8648 https://seed4.pos.nimiq-testnet.com:8648 https://rpc.testnet.nimiqwatch.com https://api.nimiq.watch https://test.nimiq.watch https://seed1.pos.nimiq.com:8648 https://seed2.pos.nimiq.com:8648 https://seed3.pos.nimiq.com:8648 https://seed4.pos.nimiq.com:8648; img-src 'self' data: https:;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.coingecko.com https://api.coinmarketcap.com https://api.coinranking.com https://seed1.pos.nimiq-testnet.com:8648 https://seed2.pos.nimiq-testnet.com:8648 https://seed3.pos.nimiq-testnet.com:8648 https://seed4.pos.nimiq-testnet.com:8648 https://rpc.testnet.nimiqwatch.com https://api.nimiq.watch https://test.nimiq.watch https://seed1.pos.nimiq.com:8648 https://seed2.pos.nimiq.com:8648 https://seed3.pos.nimiq.com:8648 https://seed4.pos.nimiq.com:8648; img-src 'self' data: https:; media-src 'self' blob:;"
         }
       ]
     }

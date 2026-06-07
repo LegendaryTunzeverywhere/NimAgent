@@ -361,12 +361,13 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] max-w-2xl mx-auto w-full px-4">
       {/* Header with New Chat and History buttons */}
-      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-white/5 shrink-0">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2">
+      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2 shrink-0">
           <Icon name="robot" size={16} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light" />
-          AI Chat
+          <span className="hidden sm:inline">AI Chat</span>
+          <span className="sm:hidden">Chat</span>
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-end">
           <button
             onClick={() => {
               if (showSessions) {
@@ -377,9 +378,9 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               }
             }}
             disabled={!wallet.connected}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Icon name="history" size={13} strokeWidth={2.2} /> History
+            <Icon name="history" size={13} strokeWidth={2.2} /> <span className="hidden sm:inline">History</span>
           </button>
           <button
             onClick={async () => {
@@ -414,19 +415,19 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               const finalMessageCount = useAppStore.getState().messages.length;
               console.log('[New Chat] Final message count (should be 1):', finalMessageCount);
             }}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
           >
-            <Icon name="plus" size={13} strokeWidth={2.5} /> New Chat
+            <Icon name="plus" size={13} strokeWidth={2.5} /> New
           </button>
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
           >
-            <Icon name="info" size={13} strokeWidth={2.5} /> Commands
+            <Icon name="info" size={13} strokeWidth={2.5} /> <span className="hidden sm:inline">Commands</span>
           </button>
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
           >
             <Icon name="sparkles" size={13} strokeWidth={2.5} /> Guide
           </button>
