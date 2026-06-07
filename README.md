@@ -239,7 +239,7 @@ NimHub implements **enterprise-grade cryptographic security** with 13+ layers of
 ✅ **API Authentication** - Secret key required for all API calls (NEW)  
 ✅ **On-Chain Verification** - All payments verified on Nimiq blockchain  
 ✅ **Server-Side Pricing** - Client cannot manipulate amounts  
-✅ **5% Order Markup** - Covers volatility protection and service fee  
+✅ **0.5% Order Markup** - Covers volatility protection and service fee  
 ✅ **Replay Protection** - Each transaction can only be used once  
 ✅ **UI Amount Lock** - Payment amounts locked immediately (no race conditions)  
 ✅ **AI Anti-Manipulation** - AI cannot be tricked into lowering prices  
@@ -450,6 +450,8 @@ MIT License - see LICENSE file for details
 - **Reloadly** - For gift cards, airtime, and bill payment services
 - **Supabase** - For the database platform
 - **CoinGecko** - For cryptocurrency price data
+- **coinmarketcap** - For cryptocurrency price data
+- **Coinranking** - For cryptocurrency price data
 
 ---
 
