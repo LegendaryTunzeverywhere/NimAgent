@@ -18,7 +18,7 @@ export default function TickerBar() {
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          setPriceChange(data.change24h || 3.14);
+          setPriceChange(data.change24h);
         }
       } catch (error) {
         console.error('Failed to fetch NIM price:', error);
