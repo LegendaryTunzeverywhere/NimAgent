@@ -36,7 +36,9 @@ export type IconName =
   | 'sparkles'
   | 'globe'
   | 'info'
-  | 'alert';
+  | 'alert'
+  | 'lock'
+  | 'unlock';
 
 interface IconProps {
   name: IconName;
@@ -303,6 +305,24 @@ export default function Icon({ name, size = 20, className = '', strokeWidth = 1.
           <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
           <path d="M12 9v4" />
           <path d="M12 17h.01" />
+        </svg>
+      );
+
+    case 'lock':
+      return (
+        <svg {...common}>
+          <rect x="5" y="11" width="14" height="10" rx="2" />
+          <path d="M12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" fill="currentColor" stroke="none" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+      );
+
+    case 'unlock':
+      return (
+        <svg {...common}>
+          <rect x="5" y="11" width="14" height="10" rx="2" />
+          <path d="M12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" fill="currentColor" stroke="none" />
+          <path d="M8 11V7a4 4 0 0 1 7.5-2" />
         </svg>
       );
 

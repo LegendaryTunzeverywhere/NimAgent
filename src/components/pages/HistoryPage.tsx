@@ -23,6 +23,8 @@ const TRANSACTION_ICONS: Record<string, IconName> = {
   airtime: 'airtime',
   bill: 'bill',
   swap: 'swap',
+  stake: 'lock',
+  unstake: 'unlock',
 };
 
 const TRANSACTION_COLORS: Record<string, string> = {
@@ -32,6 +34,8 @@ const TRANSACTION_COLORS: Record<string, string> = {
   airtime: '#2B6BD6',
   bill: '#2B6BD6',
   swap: '#F5A623',
+  stake: '#D4AF37',
+  unstake: '#F59E0B',
 };
 
 export default function HistoryPage() {
@@ -197,6 +201,7 @@ export default function HistoryPage() {
     if (filter === 'All') return true;
     if (filter === 'Sent') return tx.type === 'send';
     if (filter === 'Received') return tx.type === 'receive';
+    if (filter === 'Staking') return tx.type === 'stake' || tx.type === 'unstake';
     if (filter === 'Bills') return tx.type === 'bill';
     if (filter === 'Gift Cards') return tx.type === 'gift-card';
     if (filter === 'Airtime') return tx.type === 'airtime';
@@ -205,7 +210,8 @@ export default function HistoryPage() {
 
   const formatAmount = (luna: number, type: string) => {
     const nim = (luna / 100000).toFixed(2);
-    const sign = type === 'receive' ? '+' : '-';
+    // Receive shows +, stake/unstake show no sign, everything else shows -
+    const sign = type === 'receive' ? '+' : (type === 'stake' || type === 'unstake') ? '' : '-';
     return `${sign}${nim} NIM`;
   };
 
@@ -231,6 +237,15 @@ export default function HistoryPage() {
     }
     if (tx.type === 'receive' && tx.from_address) {
       return `Received from ${tx.from_address.slice(0, 4)}…${tx.from_address.slice(-4)}`;
+    }
+    if (tx.type === 'stake') {
+      if (tx.to_address) {
+        return `Staked with ${tx.to_address.slice(0, 4)}…${tx.to_address.slice(-4)}`;
+      }
+      return 'NIM Staked';
+    }
+    if (tx.type === 'unstake') {
+      return 'NIM Unstaked';
     }
     if (tx.type === 'gift-card') {
       const product = tx.details?.product || 'Gift Card';
@@ -300,7 +315,7 @@ export default function HistoryPage() {
 
       {/* Filter Pills */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {['All', 'Sent', 'Received', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
+        {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
           <button
             key={filterOption}
             onClick={() => setFilter(filterOption)}

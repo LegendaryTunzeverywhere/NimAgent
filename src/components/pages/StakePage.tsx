@@ -5,7 +5,7 @@ import ValidatorCard from '@/components/staking/ValidatorCard';
 import StakingDashboard from '@/components/staking/StakingDashboard';
 import StakeConfirm from '@/components/staking/StakeConfirm';
 import {
-  getValidators, getStakerInfo, getNetworkAPY,
+  getValidators, getStakerInfo, getNetworkAPY, prefetchBlockHeight,
   type Validator, type StakerInfo
 } from '@/lib/staking';
 import { useAppStore } from '@/store/useAppStore';
@@ -27,6 +27,8 @@ export default function StakePage() {
   useEffect(() => {
     setActiveTab('stake');
     loadData(walletAddress);
+    // Prefetch block height in background so it's ready when user clicks stake
+    prefetchBlockHeight();
   }, [walletAddress, setActiveTab]);
 
   async function loadData(address?: string | null) {

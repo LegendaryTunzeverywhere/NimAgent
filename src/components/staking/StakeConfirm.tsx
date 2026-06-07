@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { stakeNIM, estimateAnnualRewards, prewarmStakingHub, type Validator } from '@/lib/staking';
+import { stakeNIM, estimateAnnualRewards, prefetchBlockHeight, type Validator } from '@/lib/staking';
 
 export default function StakeConfirm({ validator, apy, walletAddress, onBack, onSuccess }: {
   validator: Validator;
@@ -14,9 +14,9 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Prewarm Hub API when component mounts to avoid popup blocking
+  // Prefetch block height when component mounts to avoid delays in click handler
   useEffect(() => {
-    prewarmStakingHub();
+    prefetchBlockHeight();
   }, []);
 
   const amount = parseFloat(amountNIM) || 0;
@@ -32,23 +32,8 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
     setError('');
 
     try {
-      const txHash = await stakeNIM(validator.address, amountLuna);
-
-      await fetch('/api/staking/record', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.NEXT_PUBLIC_API_SECRET || '',
-        },
-        body: JSON.stringify({
-          walletAddress,
-          validatorAddress: validator.address,
-          amountLuna,
-          txHash,
-          action: 'stake',
-        }),
-      });
-
+      // stakeNIM automatically records the transaction in history
+      const txHash = await stakeNIM(walletAddress, validator.address, amountLuna);
       onSuccess(txHash);
     } catch (err: any) {
       setError(err.message?.includes('cancel') ? 'Transaction cancelled.' : (err.message || 'Staking failed. Please try again.'));
