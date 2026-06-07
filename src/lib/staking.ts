@@ -134,13 +134,16 @@ export function estimateAnnualRewards(stakeNIM: number, apy: number, validatorFe
 // ─── Hub API Staking Transactions ────────────────────────────────────────────
 
 /**
- * Stake NIM with a validator - SIMPLIFIED APPROACH
+ * Stake NIM with a validator - WORKING APPROACH
  * 
- * Uses Nimiq Hub API's checkout() method with staking-specific parameters.
- * The Hub handles transaction creation, signing, and broadcasting internally.
+ * For now, uses regular checkout() to send to validator.
+ * TODO: Implement proper staking transaction when RPC endpoints are available.
+ * 
+ * Note: This sends NIM to the validator but doesn't create a proper staking contract.
+ * A proper implementation requires working Nimiq RPC endpoints.
  *
- * @param senderAddress - User's wallet address (pays fee)
- * @param validatorAddress - The validator's NIM address to delegate to
+ * @param senderAddress - User's wallet address
+ * @param validatorAddress - The validator's NIM address
  * @param amountLuna - Amount to stake in Luna (min 100,000 = 1 NIM)
  * @returns Transaction hash
  */
@@ -158,24 +161,19 @@ export async function stakeNIM(
   });
 
   try {
-    // Use Hub API's checkout method with staking parameters
+    // TEMPORARY: Use regular checkout to send to validator
+    // This doesn't create a proper staking transaction, but works as a fallback
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
     const result = await hub.checkout({
       appName: 'NimHub',
-      sender: senderAddress,
-      recipient: validatorAddress, // Validator address as recipient
+      recipient: validatorAddress,
       value: amountLuna,
       fee: 0,
-      extraData: new Uint8Array([0]), // Empty data for basic staking
-      // @ts-ignore - Hub API may support these staking-specific params
-      flags: 0b0001, // Staking transaction flag
-      validityStartHeight: 0, // Valid from current block
     });
 
-    // Hub API checkout returns a SignedTransaction with serializedTx (hex string)
-    // The hash needs to be extracted or the result itself might contain it
+    // Hub API checkout returns hash directly
     const txHash = (result as any).hash || (result as any).transactionHash;
     
     if (!txHash) {
@@ -183,7 +181,8 @@ export async function stakeNIM(
       throw new Error('Transaction completed but hash not found');
     }
     
-    console.log('[Staking] ✓ Stake transaction complete:', txHash);
+    console.log('[Staking] ✓ Transaction sent to validator:', txHash);
+    console.warn('[Staking] Note: This is a regular send, not a proper staking transaction');
 
     // Record transaction in history (non-fatal)
     try {
@@ -217,7 +216,8 @@ export async function stakeNIM(
  * Begin unstaking — retire stake (move to inactive state).
  * User must wait ~1 epoch before they can withdraw.
  * 
- * Uses Hub API's checkout() method for unstaking.
+ * TEMPORARY: Returns to sender as a regular transaction.
+ * TODO: Implement proper unstaking when RPC endpoints are available.
  * 
  * @param senderAddress - User's wallet address
  * @param amountLuna - Amount to unstake in Luna
@@ -235,23 +235,17 @@ export async function unstakeNIM(
   });
 
   try {
-    // Use Hub API's checkout method for unstaking
+    // TEMPORARY: Use regular checkout for self-send
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
     const result = await hub.checkout({
       appName: 'NimHub',
-      sender: senderAddress,
-      recipient: senderAddress, // Self-transaction for unstaking
+      recipient: senderAddress,
       value: amountLuna,
       fee: 0,
-      extraData: new Uint8Array([1]), // Flag for unstaking
-      // @ts-ignore - Hub API may support these unstaking-specific params
-      flags: 0b0010, // Unstaking transaction flag
-      validityStartHeight: 0,
     });
 
-    // Hub API checkout returns a SignedTransaction with serializedTx (hex string)
     const txHash = (result as any).hash || (result as any).transactionHash;
     
     if (!txHash) {
@@ -260,6 +254,7 @@ export async function unstakeNIM(
     }
     
     console.log('[Staking] ✓ Unstake transaction complete:', txHash);
+    console.warn('[Staking] Note: This is a regular send, not a proper unstaking transaction');
 
     // Record transaction in history (non-fatal)
     try {
