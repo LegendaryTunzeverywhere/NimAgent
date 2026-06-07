@@ -837,7 +837,17 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         title="Welcome to NimHub AI! 🎉"
         subtitle="Your intelligent crypto assistant"
       >
-        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6">
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6 relative">
+          {/* Scroll indicator - shows when content is scrollable */}
+          <div className="sticky top-0 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-background-primary/80 pointer-events-none z-10 flex items-end justify-center pb-1">
+            <div className="animate-bounce text-amber-600 dark:text-gold opacity-70">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14" />
+                <path d="m19 12-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
           {/* What is NimHub */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
@@ -977,7 +987,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           {/* CTA */}
           <div className="flex gap-3 pt-2">
             <button
-              onClick={() => setShowHelp(true)}
+              onClick={() => {
+                setShowOnboarding(false);
+                setShowHelp(true);
+              }}
               className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
             >
               View All Commands
