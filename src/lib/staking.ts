@@ -2,47 +2,10 @@
  * NimHub Staking — delegate NIM to validators via Nimiq Hub API
  *
  * CORRECT IMPLEMENTATION:
- * - Use Nimiq RPC to create properly formatted staking transactions
- * - RPC methods expect POSITIONAL ARRAY params, not objects
- * - Sign with Hub API's signTransaction()
- * - Broadcast via JSON-RPC sendRawTransaction
+ * - Send to staking contract (NQ77...0001 for testnet)
+ * - Use Hub API checkout() with extraData field
+ * - extraData contains validator address for staking
  */
-
-const RPC_URL = '/api/nimiq-rpc'; // Use backend proxy to avoid CORS issues
-
-/**
- * Get current block height for transaction validity
- * If RPC fails, returns 0 which means "valid from current block"
- */
-async function getBlockHeight(): Promise<number> {
-  try {
-    const res = await fetch(RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'getLatestBlock',
-        params: [],
-        id: 1,
-      }),
-    });
-    
-    const data = await res.json();
-    
-    if (data.error) {
-      console.warn('[Staking] RPC method getLatestBlock failed:', data.error.message);
-      return 0; // Use 0 = valid from current block
-    }
-    
-    // Extract height from response
-    const height = data.result?.number || data.result?.height || 0;
-    console.log('[Staking] Current block height:', height);
-    return height;
-  } catch (error) {
-    console.warn('[Staking] Failed to fetch block height, using 0:', error);
-    return 0; // Fallback: 0 means valid from current block
-  }
-}
 
 export interface Validator {
   address: string;
@@ -136,7 +99,7 @@ export function estimateAnnualRewards(stakeNIM: number, apy: number, validatorFe
 /**
  * Stake NIM with a validator - CORRECT APPROACH
  * 
- * Sends NIM to the Nimiq staking contract (NQ07 0000...) with validator address in data field.
+ * Sends NIM to the Nimiq staking contract (NQ77 0000... for testnet) with validator address in data field.
  * This is the proper way to stake in Nimiq Albatross.
  *
  * @param senderAddress - User's wallet address
@@ -151,8 +114,8 @@ export async function stakeNIM(
 ): Promise<string> {
   if (amountLuna < 100000) throw new Error('Minimum stake is 1 NIM (100,000 Luna)');
 
-  // Nimiq Staking Contract - hardcoded in protocol
-  const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
+  // Nimiq Staking Contract - hardcoded in protocol (testnet)
+  const STAKING_CONTRACT = 'NQ77 0000 0000 0000 0000 0000 0000 0000 0001';
 
   console.log('[Staking] Creating stake transaction via Hub API:', {
     sender: senderAddress,
@@ -231,8 +194,8 @@ export async function unstakeNIM(
 ): Promise<string> {
   if (amountLuna <= 0) throw new Error('Must specify amount to unstake');
 
-  // Nimiq Staking Contract
-  const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
+  // Nimiq Staking Contract (testnet)
+  const STAKING_CONTRACT = 'NQ77 0000 0000 0000 0000 0000 0000 0000 0001';
 
   console.log('[Staking] Creating unstake transaction via Hub API:', {
     sender: senderAddress,
@@ -311,4 +274,3 @@ export function trustScoreLabel(score: number | undefined | null): { label: stri
   if (safeScore >= 40) return { label: 'Medium', color: '#f59e0b' };
   return { label: 'Low Trust', color: '#FF4B6E' };
 }
-
