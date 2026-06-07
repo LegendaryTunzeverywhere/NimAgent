@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     
     // Validate JSON-RPC structure
     if (!body.jsonrpc || !body.method || body.id === undefined) {
+      console.error('[RPC Proxy] Invalid request structure:', body);
       return NextResponse.json(
         { error: 'Invalid JSON-RPC request' },
         { status: 400 }
@@ -31,7 +32,13 @@ export async function POST(request: NextRequest) {
     const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
     const rpcUrl = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS] || RPC_ENDPOINTS.testnet;
 
-    console.log('[RPC Proxy] Forwarding request:', body.method, 'to', network, rpcUrl);
+    console.log('[RPC Proxy] Forwarding request:', {
+      method: body.method,
+      network,
+      rpcUrl,
+      paramsType: Array.isArray(body.params) ? 'array' : typeof body.params,
+      paramsLength: Array.isArray(body.params) ? body.params.length : 'n/a'
+    });
 
     // Forward the request to the Nimiq RPC endpoint with timeout
     const controller = new AbortController();

@@ -12,21 +12,36 @@ const RPC_URL = '/api/nimiq-rpc'; // Use backend proxy to avoid CORS issues
 
 /**
  * Get current block height for transaction validity
+ * If RPC fails, returns 0 which means "valid from current block"
  */
 async function getBlockHeight(): Promise<number> {
-  const res = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'getBlockNumber',
-      params: [],
-      id: 1,
-    }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error('Could not get block height');
-  return data.result;
+  try {
+    const res = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'getLatestBlock',
+        params: [],
+        id: 1,
+      }),
+    });
+    
+    const data = await res.json();
+    
+    if (data.error) {
+      console.warn('[Staking] RPC method getLatestBlock failed:', data.error.message);
+      return 0; // Use 0 = valid from current block
+    }
+    
+    // Extract height from response
+    const height = data.result?.number || data.result?.height || 0;
+    console.log('[Staking] Current block height:', height);
+    return height;
+  } catch (error) {
+    console.warn('[Staking] Failed to fetch block height, using 0:', error);
+    return 0; // Fallback: 0 means valid from current block
+  }
 }
 
 export interface Validator {
