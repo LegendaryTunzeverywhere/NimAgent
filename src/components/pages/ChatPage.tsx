@@ -84,6 +84,15 @@ export default function ChatPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user is new (first time visiting)
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('nimhub_onboarding_seen');
+    if (!hasSeenOnboarding && wallet.connected) {
+      setShowOnboarding(true);
+    }
+  }, [wallet.connected]);
 
   // Word count tracking
   const MAX_WORDS = 100;
@@ -393,7 +402,13 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             onClick={() => setShowHelp(true)}
             className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
           >
-            <Icon name="help" size={13} strokeWidth={2.5} /> Commands
+            <Icon name="info" size={13} strokeWidth={2.5} /> Commands
+          </button>
+          <button
+            onClick={() => setShowOnboarding(true)}
+            className="flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
+          >
+            <Icon name="sparkles" size={13} strokeWidth={2.5} /> Guide
           </button>
         </div>
       </div>
@@ -787,7 +802,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           {/* Tips */}
           <div className="mt-6 p-4 rounded-xl bg-blue-50 dark:bg-brand-blue/10 border border-blue-200 dark:border-brand-blue/20">
             <h4 className="text-sm font-bold text-blue-700 dark:text-brand-blue-light mb-2 flex items-center gap-2">
-              <Icon name="help" size={14} strokeWidth={2.5} />
+              <Icon name="info" size={14} strokeWidth={2.5} />
               Pro Tips
             </h4>
             <ul className="space-y-1.5 text-xs text-blue-600 dark:text-brand-blue-light/80">
