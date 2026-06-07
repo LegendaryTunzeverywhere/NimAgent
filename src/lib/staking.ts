@@ -3,16 +3,31 @@
  *
  * CORRECT IMPLEMENTATION:
  * - Use Nimiq RPC to create properly formatted staking transactions
+ * - RPC methods expect POSITIONAL ARRAY params, not objects
  * - Sign with Hub API's signTransaction()
  * - Broadcast via JSON-RPC sendRawTransaction
- *
- * The RPC handles all the binary encoding - no need for @nimiq/core in browser.
  */
 
-// Nimiq Staking Contract address — hardcoded in protocol
-const STAKING_CONTRACT = 'NQ07 0000 0000 0000 0000 0000 0000 0000 0001';
-
 const RPC_URL = '/api/nimiq-rpc'; // Use backend proxy to avoid CORS issues
+
+/**
+ * Get current block height for transaction validity
+ */
+async function getBlockHeight(): Promise<number> {
+  const res = await fetch(RPC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'getBlockNumber',
+      params: [],
+      id: 1,
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error('Could not get block height');
+  return data.result;
+}
 
 export interface Validator {
   address: string;
@@ -106,10 +121,9 @@ export function estimateAnnualRewards(stakeNIM: number, apy: number, validatorFe
 /**
  * Stake NIM with a validator - CORRECT IMPLEMENTATION
  * 
- * Uses Nimiq RPC to create a properly formatted staking transaction,
- * signs it with Hub API's signTransaction(), and broadcasts it.
- *
- * The RPC handles all binary encoding - we don't need @nimiq/core.
+ * Uses Nimiq RPC with POSITIONAL ARRAY params to create staking transaction.
+ * RPC method: createNewStakerTransaction
+ * Params: [senderAddress, stakerAddress, delegationAddress, value, fee, validityStartHeight]
  *
  * @param senderAddress - User's wallet address (pays fee)
  * @param validatorAddress - The validator's NIM address to delegate to
@@ -130,20 +144,27 @@ export async function stakeNIM(
   });
 
   try {
-    // Step 1: Create the staking transaction using RPC
-    // RPC returns a plain object that Hub API can sign directly
+    // Step 1: Get current block height (needed for validityStartHeight)
+    const blockHeight = await getBlockHeight();
+    console.log('[Staking] Current block height:', blockHeight);
+
+    // Step 2: Create the staking transaction using RPC
+    // CRITICAL: params MUST be a positional array, not an object
+    // [senderAddress, stakerAddress, delegationAddress, value, fee, validityStartHeight]
     const createRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         method: 'createNewStakerTransaction',
-        params: {
-          wallet: senderAddress,
-          validator: validatorAddress,
-          value: amountLuna,
-          fee: 0,
-        },
+        params: [
+          senderAddress,    // sender — wallet that pays the fee
+          senderAddress,    // staker — wallet that stakes (same as sender for self-staking)
+          validatorAddress, // delegation — validator to stake with
+          amountLuna,       // value in Luna
+          0,                // fee — feeless transaction
+          blockHeight,      // validityStartHeight
+        ],
         id: 1,
       }),
     });
@@ -155,23 +176,23 @@ export async function stakeNIM(
       throw new Error(createData.error.message || 'Failed to create staking transaction');
     }
 
-    const transactionObj = createData.result;
-    console.log('[Staking] Transaction object created, requesting signature from Hub...');
+    const rawTx = createData.result;
+    console.log('[Staking] Raw transaction created, requesting signature from Hub...');
 
-    // Step 2: Sign with Hub API - it accepts the plain object from RPC
+    // Step 3: Sign with Hub API - it accepts the raw transaction from RPC
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
-    // Hub API signTransaction accepts the plain transaction object
+    // Hub API signTransaction accepts the transaction object
     const signResult = await hub.signTransaction({
-      ...transactionObj,
       appName: 'NimHub',
+      ...rawTx,
     });
 
     const signedTxHex = signResult.serializedTx || signResult.raw;
     console.log('[Staking] Transaction signed, broadcasting...');
 
-    // Step 3: Broadcast
+    // Step 4: Broadcast
     const broadcastRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -193,7 +214,7 @@ export async function stakeNIM(
     const txHash = broadcastData.result;
     console.log('[Staking] ✓ Stake transaction broadcast:', txHash);
 
-    // Record transaction in history
+    // Record transaction in history (non-fatal)
     try {
       const response = await fetch('/api/staking/record', {
         method: 'POST',
@@ -225,6 +246,9 @@ export async function stakeNIM(
  * Begin unstaking — retire stake (move to inactive state).
  * User must wait ~1 epoch before they can withdraw.
  * 
+ * RPC method: createRetireStakeTransaction
+ * Params: [senderAddress, stakerAddress, value, fee, validityStartHeight]
+ * 
  * @param senderAddress - User's wallet address
  * @param amountLuna - Amount to unstake in Luna
  * @returns Transaction hash
@@ -241,18 +265,26 @@ export async function unstakeNIM(
   });
 
   try {
-    // Step 1: Create retire stake transaction using RPC
+    // Step 1: Get current block height
+    const blockHeight = await getBlockHeight();
+    console.log('[Staking] Current block height:', blockHeight);
+
+    // Step 2: Create retire stake transaction using RPC
+    // CRITICAL: params MUST be a positional array
+    // [senderAddress, stakerAddress, value, fee, validityStartHeight]
     const createRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         method: 'createRetireStakeTransaction',
-        params: {
-          wallet: senderAddress,
-          value: amountLuna,
-          fee: 0,
-        },
+        params: [
+          senderAddress,  // sender — wallet that pays the fee
+          senderAddress,  // staker — wallet that is unstaking (same as sender)
+          amountLuna,     // value in Luna to unstake
+          0,              // fee — feeless transaction
+          blockHeight,    // validityStartHeight
+        ],
         id: 1,
       }),
     });
@@ -264,22 +296,22 @@ export async function unstakeNIM(
       throw new Error(createData.error.message || 'Failed to create unstaking transaction');
     }
 
-    const transactionObj = createData.result;
-    console.log('[Staking] Unstake transaction object created, requesting signature...');
+    const rawTx = createData.result;
+    console.log('[Staking] Unstake transaction created, requesting signature...');
 
-    // Step 2: Sign with Hub API
+    // Step 3: Sign with Hub API
     const HubApi = (await import('@nimiq/hub-api')).default;
     const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
 
     const signResult = await hub.signTransaction({
-      ...transactionObj,
       appName: 'NimHub',
+      ...rawTx,
     });
 
     const signedTxHex = signResult.serializedTx || signResult.raw;
     console.log('[Staking] Unstake transaction signed, broadcasting...');
 
-    // Step 3: Broadcast
+    // Step 4: Broadcast
     const broadcastRes = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -301,7 +333,7 @@ export async function unstakeNIM(
     const txHash = broadcastData.result;
     console.log('[Staking] ✓ Unstake transaction broadcast:', txHash);
 
-    // Record transaction in history
+    // Record transaction in history (non-fatal)
     try {
       const response = await fetch('/api/staking/record', {
         method: 'POST',

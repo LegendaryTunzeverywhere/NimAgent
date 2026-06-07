@@ -11,8 +11,8 @@ export const runtime = 'nodejs';
  */
 
 const RPC_ENDPOINTS = {
-  testnet: 'https://rpc.pos.nimiq-testnet.com',
-  mainnet: 'https://rpc.mainnet.nimiq.network',
+  testnet: 'https://rpc.nimiq-testnet.com',
+  mainnet: 'https://rpc.nimiqwatch.com',
 };
 
 export async function POST(request: NextRequest) {
