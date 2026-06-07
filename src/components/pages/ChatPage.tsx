@@ -501,7 +501,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`flex gap-3 animate-fade-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-3 animate-fade-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}
           >
             {msg.role === 'ai' && (
               <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 bg-blue-100 dark:bg-brand-blue/15 border border-blue-200 dark:border-brand-blue/30 text-blue-700 dark:text-brand-blue-light">
@@ -589,6 +589,66 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                   return null;
                 })}
               </div>
+              
+              {/* Message Action Buttons */}
+              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Copy message */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(msg.content);
+                    // Optional: show toast notification
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                  title="Copy message"
+                >
+                  <Icon name="copy" size={10} strokeWidth={2} />
+                  Copy
+                </button>
+                
+                {/* Reply with context (user messages only) */}
+                {msg.role === 'user' && (
+                  <button
+                    onClick={() => {
+                      setInput(`Regarding "${msg.content.slice(0, 50)}${msg.content.length > 50 ? '...' : ''}": `);
+                      inputRef.current?.focus();
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                    title="Reply with context"
+                  >
+                    <Icon name="chevron-right" size={10} strokeWidth={2} />
+                    Reply
+                  </button>
+                )}
+                
+                {/* Reload (regenerate) - AI messages only */}
+                {msg.role === 'ai' && i === messages.length - 1 && !loading && (
+                  <button
+                    onClick={() => {
+                      // Find the last user message
+                      const userMessages = messages.filter(m => m.role === 'user');
+                      const lastUserMessage = userMessages[userMessages.length - 1];
+                      if (lastUserMessage) {
+                        // Remove the last AI message from store
+                        const newMessages = messages.slice(0, -1);
+                        // Update store (this requires a method in the store)
+                        // For now, we'll just resend the message which will append
+                        sendMessage(lastUserMessage.content);
+                      }
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
+                    title="Regenerate response"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2v6h-6" />
+                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                      <path d="M3 22v-6h6" />
+                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                    </svg>
+                    Reload
+                  </button>
+                )}
+              </div>
+              
               {msg.action && msg.role === 'ai' && (
                 <ActionCard action={msg.action} />
               )}

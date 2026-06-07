@@ -26,17 +26,19 @@ interface ActionCardProps {
 
 export default function ActionCard({ action }: ActionCardProps) {
   const { wallet, addMessage, messages, updateActionState, setActiveTab } = useAppStore();
+  
+  // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
   const [loading, setLoading] = useState(false);
-  
-  // Find the index of this message in the messages array
-  const messageIndex = messages.findIndex(msg => msg.action === action);
-  
-  // Initialize state from persisted action data
   const [success, setSuccess] = useState(action.completed || false);
   const [failed, setFailed] = useState(action.failed || false);
   const [amount, setAmount] = useState(action.amountLuna ? (action.amountLuna / 100000).toFixed(2) : '');
   const [email, setEmail] = useState('');
   const [txHash, setTxHash] = useState<string | null>(action.txHash || null);
+  const [savedContacts, setSavedContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+  
+  // Find the index of this message in the messages array
+  const messageIndex = messages.findIndex(msg => msg.action === action);
 
   // Pre-validation state — done BEFORE the user clicks Pay so the wallet
   // popup isn't blocked by a network request inside the click handler.
@@ -183,6 +185,31 @@ export default function ActionCard({ action }: ActionCardProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch contacts for show-contacts action type
+  useEffect(() => {
+    if ((action.type === 'show-contacts' || action.type === 'list-contacts') && wallet.address && savedContacts.length === 0) {
+      setLoadingContacts(true);
+      import('@/lib/api-client').then(({ getSavedAddresses }) => {
+        getSavedAddresses(wallet.address!)
+          .then(contacts => {
+            setSavedContacts(contacts);
+          })
+          .catch(err => {
+            console.error('[Contacts] Failed to fetch:', err);
+          })
+          .finally(() => {
+            setLoadingContacts(false);
+          });
+      });
+    }
+  }, [wallet.address, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Filter out action types that don't need an action card UI
+  const NON_CARD_ACTIONS = ['save-address', 'save-contact', 'update-contact', 'delete-contact'];
+  if (NON_CARD_ACTIONS.includes(action.type)) {
+    return null; // Don't render anything for these actions
+  }
+
   // Handle QR Code display
   if (action.type === 'qr-code' && action.address) {
     return <QRCodeDisplay address={action.address} />;
@@ -235,6 +262,77 @@ export default function ActionCard({ action }: ActionCardProps) {
         >
           Go to Stake Tab
         </button>
+      </div>
+    );
+  }
+
+  // Handle Show Contacts - display saved addresses
+  if (action.type === 'show-contacts' || action.type === 'list-contacts') {
+    return (
+      <div className="glass rounded-2xl p-4 max-w-sm space-y-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-brand-blue/10 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-brand-blue-light">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">Saved Contacts</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/40 font-mono">
+              {loadingContacts ? 'LOADING...' : `${savedContacts.length} CONTACT${savedContacts.length !== 1 ? 'S' : ''}`}
+            </p>
+          </div>
+        </div>
+
+        {loadingContacts ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-blue-200 dark:border-brand-blue/30 border-t-blue-600 dark:border-t-brand-blue-light rounded-full animate-spin" />
+          </div>
+        ) : savedContacts.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-sm text-gray-500 dark:text-white/50 mb-1">No saved contacts yet</p>
+            <p className="text-xs text-gray-400 dark:text-white/30">
+              Save addresses by saying "Save [address] as [name]"
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hide">
+            {savedContacts.map((contact) => (
+              <div
+                key={contact.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors group"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                    {contact.nickname}
+                  </p>
+                  <p className="text-xs font-mono text-gray-500 dark:text-white/50 truncate">
+                    {contact.address}
+                  </p>
+                  {contact.usage_count > 0 && (
+                    <p className="text-[10px] text-gray-400 dark:text-white/30 mt-0.5">
+                      Used {contact.usage_count} time{contact.usage_count !== 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    addMessage({
+                      role: 'user',
+                      content: `Send NIM to ${contact.nickname}`,
+                    });
+                  }}
+                  className="ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  Send
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
