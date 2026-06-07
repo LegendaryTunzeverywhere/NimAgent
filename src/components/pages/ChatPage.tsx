@@ -794,7 +794,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         title="Available Commands"
         subtitle="Just talk naturally - these are examples of what I can do"
       >
-        <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4">
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4" id="commands-scroll-container">
           {ALL_COMMANDS.map((section) => (
             <div key={section.category} className="space-y-2">
               <h3 className="text-sm font-bold text-amber-600 dark:text-gold flex items-center gap-2">
@@ -845,6 +845,20 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             </ul>
           </div>
         </div>
+
+        {/* Scroll Down Indicator - Floating Button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('commands-scroll-container');
+            if (container) {
+              container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }
+          }}
+          className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 dark:from-brand-blue to-brand-blue-light text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-110 active:scale-95 transition-all z-20 flex items-center justify-center group animate-bounce"
+          aria-label="Scroll to bottom"
+        >
+          <Icon name="chevron-down" size={20} strokeWidth={3} className="group-hover:translate-y-0.5 transition-transform" />
+        </button>
       </Modal>
 
       {/* Onboarding/Welcome Guide Modal */}
@@ -857,17 +871,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         title="Welcome to NimHub AI! 🎉"
         subtitle="Your intelligent crypto assistant"
       >
-        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6 relative">
-          {/* Scroll indicator - shows when content is scrollable */}
-          <div className="sticky top-0 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-background-primary/80 pointer-events-none z-10 flex items-end justify-center pb-1">
-            <div className="animate-bounce text-amber-600 dark:text-gold opacity-70">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14" />
-                <path d="m19 12-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6 relative" id="onboarding-scroll-container">
           {/* What is NimHub */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
@@ -1028,6 +1032,20 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             </button>
           </div>
         </div>
+
+        {/* Scroll Down Indicator - Floating Button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('onboarding-scroll-container');
+            if (container) {
+              container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }
+          }}
+          className="absolute bottom-20 right-6 w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-gold to-gold-bright text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:scale-110 active:scale-95 transition-all z-20 flex items-center justify-center group animate-bounce"
+          aria-label="Scroll to bottom"
+        >
+          <Icon name="chevron-down" size={20} strokeWidth={3} className="group-hover:translate-y-0.5 transition-transform" />
+        </button>
       </Modal>
     </div>
   );
