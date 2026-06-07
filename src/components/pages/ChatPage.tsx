@@ -826,6 +826,176 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           </div>
         </div>
       </Modal>
+
+      {/* Onboarding/Welcome Guide Modal */}
+      <Modal
+        open={showOnboarding}
+        onClose={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('nimhub_onboarding_seen', 'true');
+        }}
+        title="Welcome to NimHub AI! 🎉"
+        subtitle="Your intelligent crypto assistant"
+      >
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6">
+          {/* What is NimHub */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 dark:from-gold to-gold-bright flex items-center justify-center flex-shrink-0">
+                <Icon name="robot" size={20} strokeWidth={2.2} className="text-white" />
+              </span>
+              <div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">AI-Powered Crypto Wallet</h3>
+                <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed">
+                  Chat naturally with AI to manage your crypto. No complex menus or confusing interfaces - just tell me what you want to do!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Features */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-amber-600 dark:text-gold flex items-center gap-2">
+              <span className="w-1 h-4 bg-amber-600 dark:bg-gold rounded-full"></span>
+              What I Can Do For You
+            </h4>
+            <div className="grid gap-3">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                <Icon name="send" size={18} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Send & Receive NIM</p>
+                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Instant, feeless transfers worldwide</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                <Icon name="gift-card" size={18} strokeWidth={2} className="text-amber-600 dark:text-gold flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Buy Gift Cards</p>
+                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Amazon, Steam, iTunes, Netflix & more</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                <Icon name="airtime" size={18} strokeWidth={2} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Mobile Top-ups</p>
+                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Airtime & data bundles globally</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                <Icon name="bill" size={18} strokeWidth={2} className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Pay Bills</p>
+                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Electricity, internet, TV subscriptions</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How to Use */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-blue-600 dark:text-brand-blue-light flex items-center gap-2">
+              <span className="w-1 h-4 bg-blue-600 dark:bg-brand-blue-light rounded-full"></span>
+              How to Use the AI
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
+                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Type naturally:</strong> "Send 50 NIM to Mom" or "Buy a $25 Amazon card"
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
+                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Use quick prompts:</strong> Click the suggestion buttons below the chat
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
+                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Voice input:</strong> Click the microphone button and speak
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">4</span>
+                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Save contacts:</strong> "Save [address] as Mom" for quick sends later
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Example Conversations */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-amber-600 dark:text-gold flex items-center gap-2">
+              <span className="w-1 h-4 bg-amber-600 dark:bg-gold rounded-full"></span>
+              Try These Examples
+            </h4>
+            <div className="space-y-2">
+              {[
+                { q: '"Send 100 NIM to my friend"', a: 'I\'ll guide you through sending NIM' },
+                { q: '"Buy a $50 Steam gift card"', a: 'I\'ll help you purchase it with crypto' },
+                { q: '"Top up +234... with $10"', a: 'I\'ll send airtime to that number' },
+                { q: '"What\'s my balance?"', a: 'I\'ll show your NIM balance and value' },
+              ].map((example, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setShowOnboarding(false);
+                    localStorage.setItem('nimhub_onboarding_seen', 'true');
+                    setInput(example.q.replace(/['"]/g, ''));
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                  className="w-full text-left p-3 rounded-xl bg-amber-50 dark:bg-gold/5 border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/10 transition-all group"
+                >
+                  <p className="text-sm font-semibold text-amber-700 dark:text-gold mb-1 group-hover:text-amber-800 dark:group-hover:text-gold-bright">
+                    {example.q}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-white/50">
+                    → {example.a}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Security & Trust */}
+          <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+            <div className="flex items-start gap-3">
+              <span className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                <Icon name="check" size={16} strokeWidth={2.5} className="text-green-700 dark:text-green-400" />
+              </span>
+              <div>
+                <h4 className="text-sm font-bold text-green-800 dark:text-green-400 mb-1">Secure & Transparent</h4>
+                <p className="text-xs text-green-700 dark:text-green-300/80 leading-relaxed">
+                  Your wallet stays in your control. All transactions are verified on the Nimiq blockchain. AI cannot access your funds without your approval.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+            >
+              View All Commands
+            </button>
+            <button
+              onClick={() => {
+                setShowOnboarding(false);
+                localStorage.setItem('nimhub_onboarding_seen', 'true');
+                setInput('What can you do?');
+                setTimeout(() => inputRef.current?.focus(), 100);
+              }}
+              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-amber-600 dark:from-gold to-gold-bright text-white hover:from-amber-600 hover:to-amber-700 dark:hover:from-gold-bright dark:hover:to-gold transition-all shadow-lg shadow-amber-500/25"
+            >
+              Start Chatting →
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
