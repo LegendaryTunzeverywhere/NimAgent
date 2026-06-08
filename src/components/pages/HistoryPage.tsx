@@ -324,10 +324,45 @@ export default function HistoryPage() {
         )}
       </div>
 
-      {/* Filter Pills */}
-      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
-        {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
-          <button
+      {/* Filter Pills with Scroll Indicators */}
+      <div className="relative">
+        {/* Left scroll indicator */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-white dark:from-background-primary to-transparent flex items-center">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-gray-400 dark:text-white/30 ml-1"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </div>
+        
+        {/* Right scroll indicator */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-l from-white dark:from-background-primary to-transparent flex items-center justify-end">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-gray-400 dark:text-white/30 mr-1 animate-pulse"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
+
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
+          {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
+            <button
             key={filterOption}
             onClick={() => setFilter(filterOption)}
             className={`rounded-full px-3 sm:px-4 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
@@ -339,6 +374,7 @@ export default function HistoryPage() {
             {filterOption}
           </button>
         ))}
+        </div>
       </div>
 
       {/* Transactions List */}

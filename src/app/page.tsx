@@ -73,15 +73,17 @@ export default function Home() {
 
   return (
     <ThemeProvider>
-      <main className="min-h-screen flex flex-col">
+      <main className="min-h-screen flex flex-col overflow-hidden">
         <Suspense fallback={null}>
           <PaymentLinkHandler />
         </Suspense>
 
-        <Navigation />
-        <TickerBar />
+        <div className="fixed top-0 left-0 right-0 z-30">
+          <Navigation />
+          <TickerBar />
+        </div>
 
-        <div className="flex-1 overflow-y-auto pb-28">
+        <div className="flex-1 overflow-y-auto pt-[88px] pb-28">
           {activeTab === 'home' && <HomePage />}
           {activeTab === 'chat' && <ChatPage />}
           {activeTab === 'stake' && <StakePage />}
@@ -89,7 +91,7 @@ export default function Home() {
         </div>
 
         {/* Global Disclaimer Footer */}
-        <div className="fixed bottom-16 left-0 right-0 px-4 pb-2 pointer-events-none">
+        <div className="fixed bottom-16 left-0 right-0 px-4 pb-2 pointer-events-none z-20">
           <div className="max-w-lg mx-auto pointer-events-auto">
             <div className="backdrop-blur-md bg-white/80 dark:bg-[#08090E]/80 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 shadow-lg">
               <p className="text-[10px] text-center text-gray-600 dark:text-white/50 leading-relaxed">

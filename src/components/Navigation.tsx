@@ -11,7 +11,7 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="glass-strong sticky top-0 z-30 flex items-center justify-between px-5 py-3 border-b border-black/[0.07] dark:border-white/[0.07]">
+      <nav className="glass-strong flex items-center justify-between px-5 py-3 border-b border-black/[0.07] dark:border-white/[0.07]">
         <div className="flex items-center gap-2.5">
           <Logo size={34} glow />
           <div className="flex flex-col leading-none">
