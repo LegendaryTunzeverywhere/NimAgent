@@ -387,8 +387,6 @@ export default function ActionCard({ action }: ActionCardProps) {
             })}
           </div>
         )}
-          </div>
-        )}
       </div>
     );
   }
@@ -508,6 +506,21 @@ export default function ActionCard({ action }: ActionCardProps) {
           role: 'ai',
           content: `Payment sent successfully! 🎉\n\nTransaction Hash:\n${hash}\n\nView on explorer:\n${explorerUrl}`,
         });
+
+        // Ask if user wants to save this address (after a short delay)
+        setTimeout(async () => {
+          // Check if this address is already saved
+          const { getSavedAddresses } = await import('@/lib/api-client');
+          const contacts = await getSavedAddresses(wallet.address);
+          const alreadySaved = contacts.some(c => c.recipient_address.replace(/\s/g, '').toUpperCase() === normalizedRecipient.toUpperCase());
+          
+          if (!alreadySaved) {
+            addMessage({
+              role: 'ai',
+              content: `Would you like to save this address for future use?\n\nAddress: ${normalizedRecipient.substring(0, 10)}...${normalizedRecipient.substring(normalizedRecipient.length - 6)}\n\nJust say "Save this as [name]" (e.g., "Save this as Coffee Shop")`,
+            });
+          }
+        }, 1500);
 
       } else if (action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill') {
         // If pre-validation already flagged a problem, stop before the popup.

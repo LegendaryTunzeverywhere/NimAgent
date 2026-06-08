@@ -109,7 +109,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     }
   };
 
-  const handleQRDetected = (data: string) => {
+  const handleQRDetected = async (data: string) => {
     // Show success feedback
     setScanSuccess(true);
     
@@ -127,6 +127,27 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     const formatAddress = (addr: string): string => {
       const normalized = normalizeAddress(addr);
       return normalized.match(/.{1,4}/g)?.join(' ') || normalized;
+    };
+
+    // Helper function to ask about saving address
+    const askToSaveAddress = async (address: string) => {
+      setTimeout(async () => {
+        const { wallet } = useAppStore.getState();
+        if (!wallet.address) return;
+        
+        // Check if this address is already saved
+        const { getSavedAddresses } = await import('@/lib/api-client');
+        const contacts = await getSavedAddresses(wallet.address);
+        const normalized = normalizeAddress(address);
+        const alreadySaved = contacts.some(c => normalizeAddress(c.recipient_address) === normalized);
+        
+        if (!alreadySaved) {
+          addMessage({
+            role: 'ai',
+            content: `Would you like to save this address for future use?\n\nAddress: ${address.substring(0, 10)}...${address.substring(address.length - 6)}\n\nJust say "Save this as [name]" (e.g., "Save this as Friend")`,
+          });
+        }
+      }, 2000);
     };
     
     // Parse QR code data
@@ -159,6 +180,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
           }
         });
+        
+        // Ask if user wants to save this address
+        await askToSaveAddress(formattedAddress);
       } catch (err) {
         addMessage({
           role: 'ai',
@@ -177,6 +201,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           amountLuna: 0,
         }
       });
+      
+      // Ask if user wants to save this address
+      await askToSaveAddress(formattedAddress);
     } else if (data.startsWith('nimiq:')) {
       // Nimiq payment request URI
       try {
@@ -199,6 +226,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
           }
         });
+        
+        // Ask if user wants to save this address
+        await askToSaveAddress(formattedAddress);
       } catch (err) {
         addMessage({
           role: 'ai',
