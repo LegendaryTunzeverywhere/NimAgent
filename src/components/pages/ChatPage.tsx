@@ -347,7 +347,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         // Add welcome message to new session
         await addMessage({
           role: 'ai',
-          content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code — just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
+          content: "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code: just ask in plain language. New here? Tap a suggestion below to explore what's possible.",
         });
       }
     } catch (error) {
@@ -440,12 +440,12 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
 
       {/* Sessions Dropdown - FIXED */}
       {showSessions && (
-        <div className="mx-4 mt-3 glass rounded-2xl p-4 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-20 shadow-xl">
+        <div className="mx-4 mt-3 bg-white dark:bg-[#1a1b23] border-2 border-gray-200 dark:border-white/10 rounded-2xl p-4 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-20 shadow-xl">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-white/80">Chat Sessions</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white/80">Chat Sessions</h3>
             <button
               onClick={() => setShowSessions(false)}
-              className="text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 transition-colors"
+              className="text-gray-600 dark:text-white/40 hover:text-gray-900 dark:hover:text-white/70 transition-colors"
               aria-label="Close sessions"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -456,8 +456,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           
           {loadingSessions ? (
             <div className="text-center py-4">
-              <div className="w-7 h-7 mx-auto mb-2 border-2 border-amber-200 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
-              <p className="text-xs text-gray-500 dark:text-white/40">Loading sessions...</p>
+              <div className="w-7 h-7 mx-auto mb-2 border-2 border-gray-300 dark:border-amber-200 dark:border-gold/30 border-t-gray-600 dark:border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+              <p className="text-xs text-gray-600 dark:text-white/40">Loading sessions...</p>
             </div>
           ) : sessions.length > 0 ? (
             <div className="space-y-2">
@@ -466,26 +466,28 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                   key={session.sessionId}
                   onClick={() => loadSession(session.sessionId)}
                   className={`p-3 rounded-xl cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-white/5 ${
-                    session.sessionId === currentSessionId ? 'bg-amber-50 dark:bg-gold/10 border border-amber-200 dark:border-gold/20' : 'bg-gray-50 dark:bg-white/[0.02]'
+                    session.sessionId === currentSessionId 
+                      ? 'bg-amber-100 dark:bg-gold/10 border-2 border-amber-300 dark:border-gold/20' 
+                      : 'bg-gray-50 dark:bg-white/[0.02] border-2 border-gray-200 dark:border-white/5'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 dark:text-white/70 truncate">{session.lastMessage}</p>
+                      <p className="text-sm text-gray-900 dark:text-white/70 truncate">{session.lastMessage}</p>
                       <p className="text-xs text-gray-500 dark:text-white/40 mt-1">
                         {new Date(session.lastActivity).toLocaleString()}
                       </p>
                     </div>
                     <button
                       onClick={(e) => requestDeleteSession(session.sessionId, e)}
-                      className="text-error/50 hover:text-error transition-colors flex-shrink-0 p-1"
+                      className="text-red-500 dark:text-error/50 hover:text-red-700 dark:hover:text-error transition-colors flex-shrink-0 p-1"
                       title="Delete session"
                     >
                       <Icon name="delete" size={15} strokeWidth={2} />
                     </button>
                   </div>
                   {session.sessionId === currentSessionId && (
-                    <p className="text-xs text-amber-600 dark:text-gold mt-2 flex items-center gap-1">
+                    <p className="text-xs text-amber-700 dark:text-gold mt-2 flex items-center gap-1 font-semibold">
                       <Icon name="check" size={11} strokeWidth={3} /> Current session
                     </p>
                   )}
@@ -494,8 +496,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             </div>
           ) : (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-600 dark:text-white/40">No previous sessions</p>
-              <p className="text-xs text-gray-400 dark:text-white/30 mt-1">Start chatting to create a session</p>
+              <p className="text-sm text-gray-700 dark:text-white/40">No previous sessions</p>
+              <p className="text-xs text-gray-500 dark:text-white/30 mt-1">Start chatting to create a session</p>
             </div>
           )}
         </div>
@@ -610,8 +612,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                   Copy
                 </button>
                 
-                {/* Reply with context (user messages only) */}
-                {msg.role === 'user' && (
+                {/* Reply with context (AI messages only) */}
+                {msg.role === 'ai' && (
                   <button
                     onClick={() => {
                       setInput(`Regarding "${msg.content.slice(0, 50)}${msg.content.length > 50 ? '...' : ''}": `);
@@ -625,23 +627,15 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                   </button>
                 )}
                 
-                {/* Reload (regenerate) - AI messages only */}
-                {msg.role === 'ai' && i === messages.length - 1 && !loading && (
+                {/* Reload (regenerate) - User messages only */}
+                {msg.role === 'user' && i === messages.length - 1 && !loading && (
                   <button
                     onClick={() => {
-                      // Find the last user message
-                      const userMessages = messages.filter(m => m.role === 'user');
-                      const lastUserMessage = userMessages[userMessages.length - 1];
-                      if (lastUserMessage) {
-                        // Remove the last AI message from store
-                        const newMessages = messages.slice(0, -1);
-                        // Update store (this requires a method in the store)
-                        // For now, we'll just resend the message which will append
-                        sendMessage(lastUserMessage.content);
-                      }
+                      // Resend the last user message to regenerate AI response
+                      sendMessage(msg.content);
                     }}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
-                    title="Regenerate response"
+                    title="Resend message"
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 2v6h-6" />

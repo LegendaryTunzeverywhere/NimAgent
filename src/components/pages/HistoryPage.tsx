@@ -291,12 +291,18 @@ export default function HistoryPage() {
   const totalStaked = transactions
     .filter(tx => tx.type === 'stake')
     .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
+  const totalUnstaked = transactions
+    .filter(tx => tx.type === 'unstake')
+    .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
+  const activeStake = totalStaked - totalUnstaked;
   
   const stats = {
     totalSent,
     totalReceived,
     totalStaked,
-    netChange: totalReceived - totalSent - totalStaked,
+    totalUnstaked,
+    activeStake,
+    netChange: totalReceived - totalSent - activeStake, // Net change considers active stake
   };
 
   return (
@@ -605,9 +611,14 @@ export default function HistoryPage() {
                 <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Staked</p>
-                <p className="text-lg font-bold text-amber-600 dark:text-gold tabular-nums">{stats.totalStaked.toFixed(2)}</p>
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Active Stake</p>
+                <p className="text-lg font-bold text-amber-600 dark:text-gold tabular-nums">{stats.activeStake.toFixed(2)}</p>
                 <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
+                {stats.totalUnstaked > 0 && (
+                  <p className="text-[10px] text-gray-400 dark:text-white/30 mt-1">
+                    ({stats.totalStaked.toFixed(2)} staked - {stats.totalUnstaked.toFixed(2)} unstaked)
+                  </p>
+                )}
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
                 <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Net Change</p>

@@ -202,26 +202,55 @@ export default function StakePage() {
               walletAddress={walletAddress!}
               onAddMore={() => setView('validators')}
               onUnstake={async () => {
-                // Guide user to AI chat for unstaking
-                const confirmed = confirm(
-                  '🤖 Unstaking via AI Chat\n\n' +
-                  'To unstake your NIM:\n' +
-                  '1. Go to AI Chat tab\n' +
-                  '2. Say "I want to unstake my NIM"\n' +
-                  '3. Confirm the transaction\n\n' +
-                  'Would you like to go to AI Chat now?'
+                // Show unstake dialog with amount input
+                const amountStr = prompt(
+                  `💰 Unstake Your NIM\n\n` +
+                  `Current staked: ${(stakerInfo.balance / 100000).toLocaleString()} NIM\n\n` +
+                  `Enter amount to unstake (in NIM):`
                 );
                 
-                if (confirmed) {
-                  const { setActiveTab, addMessage, sendMessageToAI } = useAppStore.getState();
-                  setActiveTab('chat');
-                  await new Promise(resolve => setTimeout(resolve, 100)); // Let tab switch
-                  addMessage({
-                    role: 'user',
-                    content: 'I want to unstake my NIM',
-                  });
-                  // Trigger AI response
-                  await sendMessageToAI('I want to unstake my NIM', walletAddress || undefined);
+                if (!amountStr) return; // User cancelled
+                
+                const amount = parseFloat(amountStr);
+                if (isNaN(amount) || amount <= 0) {
+                  alert('❌ Invalid amount');
+                  return;
+                }
+                
+                const amountLuna = Math.round(amount * 100000);
+                
+                // Check if amount exceeds staked balance
+                if (amountLuna > stakerInfo.balance) {
+                  alert(`❌ Cannot unstake ${amount} NIM\n\nYou only have ${(stakerInfo.balance / 100000).toLocaleString()} NIM staked.`);
+                  return;
+                }
+                
+                try {
+                  setLoading(true);
+                  
+                  // Import unstaking function
+                  const { unstakeNIM } = await import('@/lib/staking');
+                  
+                  // Execute unstake transaction
+                  const txHash = await unstakeNIM(walletAddress!, amountLuna);
+                  
+                  alert(
+                    `✅ Unstake Initiated!\n\n` +
+                    `Amount: ${amount} NIM\n` +
+                    `Transaction: ${txHash}\n\n` +
+                    `⏳ Note: Unstaked NIM will be available for withdrawal after ~1 epoch (~24h).`
+                  );
+                  
+                  // Refresh staker info
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 2000);
+                  
+                } catch (error: any) {
+                  console.error('[StakePage] Unstake error:', error);
+                  alert(`❌ Unstake Failed\n\n${error.message || 'Unknown error'}`);
+                } finally {
+                  setLoading(false);
                 }
               }}
             />

@@ -192,10 +192,14 @@ export default function ActionCard({ action }: ActionCardProps) {
       import('@/lib/api-client').then(({ getSavedAddresses }) => {
         getSavedAddresses(wallet.address!)
           .then(contacts => {
+            console.log('[ActionCard] Fetched contacts:', contacts.length);
+            contacts.forEach((c, idx) => {
+              console.log(`[ActionCard] Contact ${idx}: ${c.nickname} -> ${c.recipient_address} (length: ${c.recipient_address?.length || 0})`);
+            });
             setSavedContacts(contacts);
           })
           .catch(err => {
-            console.error('[Contacts] Failed to fetch:', err);
+            console.error('[ActionCard] Failed to fetch contacts:', err);
           })
           .finally(() => {
             setLoadingContacts(false);
@@ -238,10 +242,10 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Handle Staking - redirect to stake tab
   if (action.type === 'stake' || action.type === 'unstake') {
     return (
-      <div className="glass rounded-2xl p-4 max-w-sm border border-[#d97706]/20 dark:border-[#F5A623]/20 bg-gradient-to-br from-[#d97706]/5 to-transparent dark:from-[#F5A623]/5">
+      <div className="bg-white dark:bg-white/[0.035] border-2 border-amber-200 dark:border-[#F5A623]/20 rounded-2xl p-4 max-w-sm bg-gradient-to-br from-amber-50/50 to-transparent dark:from-[#F5A623]/5 backdrop-blur-xl">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-[#d97706]/10 dark:bg-[#F5A623]/10 flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#d97706] dark:text-[#F5A623]">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-[#F5A623]/10 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-700 dark:text-[#F5A623]">
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
               <path d="M2 17l10 5 10-5" />
               <path d="M2 12l10 5 10-5" />
@@ -258,7 +262,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         </div>
         <button
           onClick={() => setActiveTab('stake')}
-          className="w-full py-2.5 px-4 rounded-xl bg-[#d97706] dark:bg-[#F5A623] text-white font-semibold hover:bg-[#b45309] dark:hover:bg-[#FBBF4D] transition-colors"
+          className="w-full py-2.5 px-4 rounded-xl bg-amber-600 dark:bg-[#F5A623] text-white font-semibold hover:bg-amber-700 dark:hover:bg-[#FBBF4D] transition-colors"
         >
           Go to Stake Tab
         </button>
@@ -269,10 +273,10 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Handle Show Contacts - display saved addresses
   if (action.type === 'show-contacts' || action.type === 'list-contacts') {
     return (
-      <div className="glass rounded-2xl p-3 sm:p-4 w-full max-w-full sm:max-w-sm space-y-3">
+      <div className="bg-white dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-3 sm:p-4 w-full max-w-full sm:max-w-sm space-y-3 backdrop-blur-xl">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-brand-blue-light">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-700 dark:text-brand-blue-light">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -281,7 +285,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-sm text-gray-900 dark:text-white">Saved Contacts</p>
-            <p className="text-[10px] text-gray-500 dark:text-white/40 font-mono">
+            <p className="text-[10px] text-gray-600 dark:text-white/40 font-mono">
               {loadingContacts ? 'LOADING...' : `${savedContacts.length} CONTACT${savedContacts.length !== 1 ? 'S' : ''}`}
             </p>
           </div>
@@ -289,37 +293,59 @@ export default function ActionCard({ action }: ActionCardProps) {
 
         {loadingContacts ? (
           <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-blue-200 dark:border-brand-blue/30 border-t-blue-600 dark:border-t-brand-blue-light rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-blue-300 dark:border-brand-blue/30 border-t-blue-700 dark:border-t-brand-blue-light rounded-full animate-spin" />
           </div>
         ) : savedContacts.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-sm text-gray-500 dark:text-white/50 mb-1">No saved contacts yet</p>
-            <p className="text-xs text-gray-400 dark:text-white/30">
+            <p className="text-sm text-gray-600 dark:text-white/50 mb-1">No saved contacts yet</p>
+            <p className="text-xs text-gray-500 dark:text-white/30">
               Save addresses by saying "Save [address] as [name]"
             </p>
           </div>
         ) : (
           <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hide">
-            {savedContacts.map((contact) => (
+            {savedContacts.map((contact) => {
+              // Validate address for display
+              const normalizedAddr = contact.recipient_address?.replace(/\s/g, '').toUpperCase() || '';
+              const isValidAddr = /^NQ[0-9A-Z]{34}$/.test(normalizedAddr); // NQ + 34 chars = 36 total
+              
+              return (
               <div
                 key={contact.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 rounded-lg bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                    {contact.nickname}
-                  </p>
-                  <p className="text-[11px] sm:text-xs font-mono text-gray-500 dark:text-white/50 break-all">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                      {contact.nickname}
+                    </p>
+                    {!isValidAddr && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-medium">
+                        INVALID
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] sm:text-xs font-mono text-gray-600 dark:text-white/50 break-all">
                     {contact.recipient_address}
                   </p>
-                  {contact.usage_count > 0 && (
-                    <p className="text-[10px] text-gray-400 dark:text-white/30 mt-0.5">
-                      Used {contact.usage_count} time{contact.usage_count !== 1 ? 's' : ''}
-                    </p>
-                  )}
+                  <p className="text-[10px] text-gray-500 dark:text-white/30 mt-0.5">
+                    {isValidAddr ? (
+                      contact.usage_count > 0 
+                        ? `Used ${contact.usage_count} time${contact.usage_count !== 1 ? 's' : ''}`
+                        : 'Never used'
+                    ) : (
+                      `⚠️ Invalid address (${normalizedAddr.length} chars, expected 36)`
+                    )}
+                  </p>
                 </div>
                 <button
                   onClick={() => {
+                    console.log('[ActionCard] Send button clicked for contact:', {
+                      nickname: contact.nickname,
+                      address: contact.recipient_address,
+                      normalizedLength: normalizedAddr.length
+                    });
+                    
                     // Validate address before sending
                     if (!contact.recipient_address) {
                       addMessage({
@@ -329,14 +355,16 @@ export default function ActionCard({ action }: ActionCardProps) {
                       return;
                     }
                     
-                    // Normalize address (remove spaces)
-                    const normalizedAddress = contact.recipient_address.replace(/\s/g, '');
+                    // Normalize address (remove spaces, uppercase)
+                    const normalizedAddress = contact.recipient_address.replace(/\s/g, '').toUpperCase();
                     
-                    // Basic validation (NQ addresses are 36-44 chars when formatted)
-                    if (normalizedAddress.length < 36) {
+                    console.log('[ActionCard] Normalized address:', normalizedAddress, 'Length:', normalizedAddress.length);
+                    
+                    // Validate format (NQ + 34 alphanumeric = 36 total)
+                    if (!/^NQ[0-9A-Z]{34}$/.test(normalizedAddress)) {
                       addMessage({
                         role: 'ai',
-                        content: `❌ Error: Contact "${contact.nickname}" has an invalid address format. Please update this contact.`,
+                        content: `❌ Error: Contact "${contact.nickname}" has an invalid address format.\n\nAddress: ${contact.recipient_address}\nNormalized: ${normalizedAddress}\nLength: ${normalizedAddress.length} chars (expected 36)\n\nPlease delete this contact and save it again with a valid Nimiq address.`,
                       });
                       return;
                     }
@@ -349,12 +377,16 @@ export default function ActionCard({ action }: ActionCardProps) {
                     // Also send the AI context so it knows this is a saved contact
                     sendMessageToAI(`Send NIM to ${contact.nickname} at address ${contact.recipient_address}`, wallet.address || undefined);
                   }}
-                  className="w-full sm:w-auto sm:ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                  disabled={!isValidAddr}
+                  className="w-full sm:w-auto sm:ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-700 dark:text-gold border-2 border-amber-300 dark:border-gold/20 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:opacity-0 sm:group-hover:opacity-100"
                 >
-                  Send
+                  {isValidAddr ? 'Send' : 'Invalid'}
                 </button>
               </div>
-            ))}
+            );
+            })}
+          </div>
+        )}
           </div>
         )}
       </div>
@@ -693,11 +725,11 @@ export default function ActionCard({ action }: ActionCardProps) {
   };
 
   return (
-    <div className="glass rounded-2xl p-4 space-y-3 max-w-sm">
+    <div className="bg-white dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 space-y-3 max-w-sm backdrop-blur-xl">
       {/* Action Details */}
       {action.type === 'send' && (
         <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-white/50 text-sm">To</span>
+          <span className="text-gray-600 dark:text-white/50 text-sm font-medium">To</span>
           <span className="text-gray-900 dark:text-white font-mono text-xs">{action.recipient?.substring(0, 14)}...</span>
         </div>
       )}
@@ -705,27 +737,27 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'gift-card' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-white/50 text-sm">Product</span>
+            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Product</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.product}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-500 dark:text-white/50 text-sm">Value</span>
+              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Value</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-gray-500 dark:text-white/50 text-xs">Email (optional)</label>
+            <label className="text-gray-600 dark:text-white/50 text-xs font-medium">Email (optional)</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm placeholder-gray-400 dark:placeholder-white/25 outline-none focus:border-amber-400 dark:focus:border-gold/50"
+              className="w-full px-3 py-2 rounded-lg bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20"
             />
-            <p className="text-gray-400 dark:text-white/30 text-xs">We'll send the gift card code to this email</p>
+            <p className="text-gray-500 dark:text-white/30 text-xs">We'll send the gift card code to this email</p>
           </div>
         </>
       )}
@@ -733,16 +765,16 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'airtime' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-white/50 text-sm">Phone</span>
+            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Phone</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.phone}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-white/50 text-sm">Operator</span>
+            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Operator</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.operator}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-500 dark:text-white/50 text-sm">Amount</span>
+              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Amount</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -754,16 +786,16 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'bill' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-white/50 text-sm">Service</span>
+            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Service</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.service}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-white/50 text-sm">Account</span>
+            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Account</span>
             <span className="text-gray-900 dark:text-white font-mono text-xs">{action.accountNumber}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-500 dark:text-white/50 text-sm">Amount</span>
+              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Amount</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -775,12 +807,12 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Amount Input */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-gray-500 dark:text-white/50 text-xs">Amount to pay</label>
+          <label className="text-gray-600 dark:text-white/50 text-xs font-medium">Amount to pay</label>
           {isOrder && !success && quoteExpiry && (
             <button
               onClick={refreshQuote}
               disabled={refreshing || loading}
-              className="text-xs text-amber-600 dark:text-gold/70 hover:text-amber-700 dark:hover:text-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="text-xs text-amber-700 dark:text-gold/70 hover:text-amber-800 dark:hover:text-gold font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               title="Refresh quote to get latest NIM price"
             >
               <svg className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -791,7 +823,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             </button>
           )}
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border ${failed ? 'border-error/50' : 'border-gray-200 dark:border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-amber-400 dark:focus-within:border-gold/50'}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-white/5 border-2 ${failed ? 'border-red-500 dark:border-error/50' : 'border-gray-200 dark:border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-amber-500 dark:focus-within:border-gold/50 focus-within:ring-2 focus-within:ring-amber-500/20 dark:focus-within:ring-gold/20'}`}>
           <input
             type="number"
             value={amount}
@@ -801,12 +833,12 @@ export default function ActionCard({ action }: ActionCardProps) {
             placeholder="0.00"
             disabled={loading || success || failed || amountLocked}
             readOnly={amountLocked}
-            className="flex-1 bg-transparent text-gray-900 dark:text-white text-sm outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-gray-900 dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/40"
           />
-          <span className="text-gray-500 dark:text-white/50 text-sm font-semibold">NIM</span>
+          <span className="text-gray-700 dark:text-white/50 text-sm font-bold">NIM</span>
         </div>
         {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
-          <p className={`text-xs ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-gray-500 dark:text-white/40'} text-right`}>
+          <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-gray-600 dark:text-white/40'} text-right`}>
             Quote expires in {timeRemaining}s
           </p>
         )}
@@ -814,9 +846,9 @@ export default function ActionCard({ action }: ActionCardProps) {
 
       {/* Price change alert */}
       {priceChanged && !success && isOrder && (
-        <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-2.5">
-          <span className="text-warning mt-0.5">⚠️</span>
-          <p className="text-warning text-xs leading-relaxed">
+        <div className="flex items-start gap-2 rounded-lg bg-orange-100 dark:bg-warning/10 border-2 border-orange-300 dark:border-warning/20 p-2.5">
+          <span className="text-orange-600 dark:text-warning mt-0.5">⚠️</span>
+          <p className="text-orange-700 dark:text-warning text-xs leading-relaxed font-medium">
             {timeRemaining <= 10 && timeRemaining > 0
               ? `Quote expiring soon! Click "Refresh" to update the price.`
               : `NIM price updated. Amount changed from ${lastKnownAmount?.toFixed(2) || '?'} to ${amount} NIM.`}

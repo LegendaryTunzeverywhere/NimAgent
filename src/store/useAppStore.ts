@@ -366,6 +366,45 @@ export const useAppStore = create<AppState>()(
             // Save contact
             if (action.type === 'save-contact' && action.nickname && action.recipientAddress) {
               try {
+                // Validate address before saving
+                const cleanAddress = action.recipientAddress.replace(/\s/g, '').toUpperCase();
+                
+                console.log('[Store] Attempting to save contact:', {
+                  nickname: action.nickname,
+                  address: action.recipientAddress,
+                  cleanAddress: cleanAddress,
+                  cleanLength: cleanAddress.length
+                });
+                
+                // Validate address format and length
+                // Nimiq addresses: NQ + 34 alphanumeric = 36 chars total (unformatted)
+                // With spaces: 44 chars (groups of 4 separated by spaces)
+                if (!cleanAddress.startsWith('NQ')) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `❌ Invalid address format. Nimiq addresses must start with "NQ".\n\nProvided: ${action.recipientAddress}`,
+                  });
+                  return;
+                }
+                
+                // Check exact length: must be 36 characters unformatted
+                if (cleanAddress.length !== 36) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `❌ Invalid address length. Nimiq addresses must be exactly 36 characters (without spaces).\n\nProvided address: ${cleanAddress}\nLength: ${cleanAddress.length} characters (expected 36)\n\nPlease provide a complete, valid Nimiq address.`,
+                  });
+                  return;
+                }
+                
+                // Validate format with regex (NQ + 34 alphanumeric)
+                if (!/^NQ[0-9A-Z]{34}$/.test(cleanAddress)) {
+                  await addMessage({
+                    role: 'ai',
+                    content: `❌ Invalid address format. Nimiq addresses must be "NQ" followed by exactly 34 alphanumeric characters.\n\nProvided: ${cleanAddress}`,
+                  });
+                  return;
+                }
+                
                 const validCategories = ['personal', 'merchant', 'friend', 'family', 'other'] as const;
                 const category = validCategories.includes(action.category as any) 
                   ? (action.category as 'personal' | 'merchant' | 'friend' | 'family' | 'other')
@@ -378,12 +417,16 @@ export const useAppStore = create<AppState>()(
                   category,
                   notes: action.notes || '',
                 });
+                
+                console.log('[Store] ✓ Contact saved successfully');
+                
                 await addMessage({
                   role: 'ai',
                   content: response.message || `✅ Saved ${action.nickname} to your contacts!`,
                 });
                 return; // Don't add action card
               } catch (err: any) {
+                console.error('[Store] Failed to save contact:', err);
                 await addMessage({
                   role: 'ai',
                   content: `Failed to save contact: ${err.message || 'Unknown error'}`,
