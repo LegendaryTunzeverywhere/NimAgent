@@ -474,44 +474,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* AI Agent Banner */}
-      {wallet.connected && (
-        <div
-          className="animate-fade-up-delay-3 group rounded-2xl p-5 relative overflow-hidden cursor-pointer card-premium interactive"
-          onClick={() => setActiveTab('chat')}
-        >
-          <div className="flex items-center gap-4 relative">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-brand-blue/15 border border-brand-blue/30 text-brand-blue-light">
-              <Icon name="robot" size={24} strokeWidth={1.9} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                Your AI Payment Agent
-                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-blue/20 text-brand-blue-light border border-brand-blue/30">
-                  AI
-                </span>
-              </p>
-              <p className="text-xs text-gray-500 dark:text-white/40 mt-0.5">
-                Send NIM, buy gift cards, refill airtime, and pay bills
-              </p>
-            </div>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#5B8FE6"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
-        </div>
-      )}
-
       {/* Recent Activity */}
       {wallet.connected && (
         <div className="animate-fade-up-delay-4">
