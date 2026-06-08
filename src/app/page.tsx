@@ -81,7 +81,7 @@ export default function Home() {
         <Navigation />
         <TickerBar />
 
-        <div className={`flex-1 pb-28 ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className={`flex-1 ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'} ${(activeTab === 'chat' || activeTab === 'history') ? 'pb-36' : 'pb-28'}`}>
           {activeTab === 'home' && <HomePage />}
           {activeTab === 'chat' && <ChatPage />}
           {activeTab === 'stake' && <StakePage />}
@@ -90,11 +90,11 @@ export default function Home() {
 
         {/* Global Disclaimer Footer - only show on Chat and History pages */}
         {(activeTab === 'chat' || activeTab === 'history') && (
-          <div className="fixed bottom-[72px] left-0 right-0 px-4 pointer-events-none z-20">
-            <div className="max-w-lg mx-auto pointer-events-auto">
-              <div className="backdrop-blur-md bg-white/90 dark:bg-[#08090E]/90 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 shadow-lg">
-                <p className="text-[9px] text-center text-gray-600 dark:text-white/50">
-                  <strong className="font-semibold">Independent:</strong> Not affiliated with Nimiq Foundation
+          <div className="fixed bottom-20 left-0 right-0 px-6 pointer-events-none z-20">
+            <div className="max-w-md mx-auto pointer-events-auto">
+              <div className="backdrop-blur-md bg-white/95 dark:bg-[#08090E]/95 border border-gray-300 dark:border-white/20 rounded-xl px-3 py-2 shadow-xl">
+                <p className="text-[10px] text-center text-gray-700 dark:text-white/60 leading-relaxed">
+                  <strong className="font-bold">Independent Project:</strong> Not affiliated with Nimiq Foundation
                 </p>
               </div>
             </div>
