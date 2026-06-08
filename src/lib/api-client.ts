@@ -376,6 +376,10 @@ export async function saveAddress(data: {
 /**
  * Update a saved address
  */
+/**
+ * Update a saved address
+ * Backend uses PUT /api/saved-addresses/:id
+ */
 export async function updateSavedAddress(
   id: string,
   wallet: string,
@@ -390,14 +394,17 @@ export async function updateSavedAddress(
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/${id}`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: getHeaders(),
-    body: JSON.stringify({ wallet, ...updates }),
+    body: JSON.stringify({ 
+      wallet, 
+      ...updates
+    }),
   });
   
   if (!res.ok) {
     const errorText = await res.text();
-    let errorMessage = 'Failed to update address';
+    let errorMessage = 'Failed to update contact';
     try {
       const errorJson = JSON.parse(errorText);
       errorMessage = errorJson.error || errorMessage;

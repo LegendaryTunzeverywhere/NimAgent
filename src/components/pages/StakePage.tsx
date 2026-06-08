@@ -41,7 +41,57 @@ export default function StakePage() {
       setApy(networkApy);
 
       if (address) {
+        // Try to get staker info from blockchain
         const staker = await getStakerInfo(address);
+        
+        // If blockchain query fails or returns no balance, check transaction history
+        if (!staker || !staker.activeBalance) {
+          try {
+            // Calculate staked balance from transaction history
+            const txRes = await fetch(`/api/transactions?wallet=${encodeURIComponent(address.replace(/\s/g, ''))}`);
+            if (txRes.ok) {
+              const txData = await txRes.json();
+              const transactions = txData.transactions || [];
+              
+              // Sum all stake transactions, subtract unstakes
+              const totalStaked = transactions
+                .filter((tx: any) => tx.type === 'stake')
+                .reduce((sum: number, tx: any) => sum + (tx.amount_luna || 0), 0);
+              
+              const totalUnstaked = transactions
+                .filter((tx: any) => tx.type === 'unstake')
+                .reduce((sum: number, tx: any) => sum + (tx.amount_luna || 0), 0);
+              
+              const netStaked = totalStaked - totalUnstaked;
+              
+              // If we have staked balance from history, create a synthetic staker info
+              if (netStaked > 0) {
+                const lastStakeTx = transactions
+                  .filter((tx: any) => tx.type === 'stake')
+                  .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                
+                const syntheticStaker = {
+                  address: address,
+                  balance: netStaked,
+                  activeBalance: netStaked,
+                  inactiveBalance: 0,
+                  retiredBalance: 0,
+                  validator: lastStakeTx?.to_address || null,
+                  inactiveFrom: null,
+                };
+                
+                setStakerInfo(syntheticStaker);
+                setView('dashboard');
+                console.log('[StakePage] Using transaction history for stake balance:', netStaked / 100000, 'NIM');
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (historyErr) {
+            console.error('[StakePage] Failed to check transaction history:', historyErr);
+          }
+        }
+        
         setStakerInfo(staker);
         
         // If we were waiting for a stake and now we have one, clear pending state
@@ -151,7 +201,29 @@ export default function StakePage() {
               apy={apy}
               walletAddress={walletAddress!}
               onAddMore={() => setView('validators')}
-              onUnstake={() => {/* handle unstake */}}
+              onUnstake={async () => {
+                // Guide user to AI chat for unstaking
+                const confirmed = confirm(
+                  '🤖 Unstaking via AI Chat\n\n' +
+                  'To unstake your NIM:\n' +
+                  '1. Go to AI Chat tab\n' +
+                  '2. Say "I want to unstake my NIM"\n' +
+                  '3. Confirm the transaction\n\n' +
+                  'Would you like to go to AI Chat now?'
+                );
+                
+                if (confirmed) {
+                  const { setActiveTab, addMessage, sendMessageToAI } = useAppStore.getState();
+                  setActiveTab('chat');
+                  await new Promise(resolve => setTimeout(resolve, 100)); // Let tab switch
+                  addMessage({
+                    role: 'user',
+                    content: 'I want to unstake my NIM',
+                  });
+                  // Trigger AI response
+                  await sendMessageToAI('I want to unstake my NIM', walletAddress || undefined);
+                }
+              }}
             />
           </motion.div>
         )}

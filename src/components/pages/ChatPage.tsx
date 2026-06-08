@@ -440,7 +440,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
 
       {/* Sessions Dropdown - FIXED */}
       {showSessions && (
-        <div className="absolute top-full left-4 right-4 mt-2 glass rounded-2xl p-4 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-20 shadow-xl">
+        <div className="mx-4 mt-3 glass rounded-2xl p-4 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-20 shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-gray-700 dark:text-white/80">Chat Sessions</h3>
             <button

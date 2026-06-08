@@ -200,3 +200,69 @@ export async function DELETE(
     );
   }
 }
+
+/**
+ * Handle PUT requests
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    if (!BACKEND_URL || !API_SECRET) {
+      return NextResponse.json(
+        { error: 'Backend configuration missing' },
+        { status: 500 }
+      );
+    }
+
+    const path = params.path.join('/');
+    const body = await request.json();
+    const url = `${BACKEND_URL}/api/${path}`;
+
+    console.log('[BFF] PUT request to path:', path);
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_SECRET,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[BFF] Backend PUT error:', response.status, text.slice(0, 500));
+      try {
+        const errorData = JSON.parse(text);
+        return NextResponse.json(errorData, {
+          status: response.status,
+          headers: {
+            'Cache-Control': 'no-store, must-revalidate',
+          },
+        });
+      } catch {
+        return NextResponse.json(
+          { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
+          { status: response.status }
+        );
+      }
+    }
+
+    const data = await response.json();
+
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate',
+      },
+    });
+  } catch (error: any) {
+    console.error('[BFF] PUT error:', error.message);
+    return NextResponse.json(
+      { error: 'Failed to put to backend' },
+      { status: 502 }
+    );
+  }
+}

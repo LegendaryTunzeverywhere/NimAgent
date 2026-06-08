@@ -15,9 +15,5 @@ export async function GET() {
   return NextResponse.json({
     status: 'ok ✅✅',
     timestamp: new Date().toISOString(),
-    env: {
-      BACKEND_URL: hasBackendUrl ? 'configured ✓' : 'MISSING ✗',
-      API_SECRET: hasApiSecret ? 'configured ✓' : 'MISSING ✗',
-    }
   });
 }
