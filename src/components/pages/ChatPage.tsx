@@ -359,9 +359,9 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   };
 
   return (
-    <div className="fixed inset-0 top-[104px] bottom-0 max-w-2xl mx-auto w-full flex flex-col">
+    <div className="fixed inset-0 top-[104px] bottom-0 max-w-2xl mx-auto w-full flex flex-col bg-white dark:bg-background-primary">
       {/* Header with New Chat and History buttons - FIXED */}
-      <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2 bg-white dark:bg-background-primary z-10">
+      <div className="relative flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2 bg-white dark:bg-background-primary z-10">
         <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2 shrink-0">
           <Icon name="robot" size={16} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light" />
           <span className="hidden sm:inline">AI Chat</span>
