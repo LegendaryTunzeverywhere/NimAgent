@@ -191,11 +191,13 @@ export async function stakeNIM(
  * 
  * @param senderAddress - User's wallet address
  * @param amountLuna - Amount to unstake in Luna
+ * @param hubInstance - Pre-loaded Hub API instance (required to prevent popup blocking)
  * @returns Transaction hash
  */
 export async function unstakeNIM(
   senderAddress: string,
-  amountLuna: number
+  amountLuna: number,
+  hubInstance?: any
 ): Promise<string> {
   if (amountLuna <= 0) throw new Error('Must specify amount to unstake');
 
@@ -208,8 +210,12 @@ export async function unstakeNIM(
   });
 
   try {
-    const HubApi = (await import('@nimiq/hub-api')).default;
-    const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
+    // Use pre-loaded Hub instance to avoid popup blocking, or fallback to dynamic import
+    let hub = hubInstance;
+    if (!hub) {
+      const HubApi = (await import('@nimiq/hub-api')).default;
+      hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
+    }
 
     // Create data field with unstake instruction
     const dataString = 'unstake';

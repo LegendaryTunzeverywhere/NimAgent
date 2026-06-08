@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ValidatorCard from '@/components/staking/ValidatorCard';
 import StakingDashboard from '@/components/staking/StakingDashboard';
 import StakeConfirm from '@/components/staking/StakeConfirm';
+import Modal from '@/components/Modal';
 import {
   getValidators, getStakerInfo, getNetworkAPY,
   type Validator, type StakerInfo
@@ -21,9 +22,28 @@ export default function StakePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingStake, setPendingStake] = useState(false);
+  const [showUnstakeModal, setShowUnstakeModal] = useState(false);
+  const [unstakeAmount, setUnstakeAmount] = useState('');
+  const [unstaking, setUnstaking] = useState(false);
+  const [hubApi, setHubApi] = useState<any>(null); // Pre-loaded Hub API instance
 
   const { wallet, setActiveTab } = useAppStore();
   const walletAddress = wallet.address;
+
+  // Prewarm Hub API on mount to prevent popup blocking
+  useEffect(() => {
+    async function prewarmHub() {
+      try {
+        const HubApi = (await import('@nimiq/hub-api')).default;
+        const hub = new HubApi(process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com');
+        setHubApi(hub);
+        console.log('[StakePage] Hub API prewarmed');
+      } catch (error) {
+        console.error('[StakePage] Failed to prewarm Hub API:', error);
+      }
+    }
+    prewarmHub();
+  }, []);
 
   useEffect(() => {
     setActiveTab('stake');
@@ -202,56 +222,8 @@ export default function StakePage() {
               walletAddress={walletAddress!}
               onAddMore={() => setView('validators')}
               onUnstake={async () => {
-                // Show unstake dialog with amount input
-                const amountStr = prompt(
-                  `💰 Unstake Your NIM\n\n` +
-                  `Current staked: ${(stakerInfo.balance / 100000).toLocaleString()} NIM\n\n` +
-                  `Enter amount to unstake (in NIM):`
-                );
-                
-                if (!amountStr) return; // User cancelled
-                
-                const amount = parseFloat(amountStr);
-                if (isNaN(amount) || amount <= 0) {
-                  alert('❌ Invalid amount');
-                  return;
-                }
-                
-                const amountLuna = Math.round(amount * 100000);
-                
-                // Check if amount exceeds staked balance
-                if (amountLuna > stakerInfo.balance) {
-                  alert(`❌ Cannot unstake ${amount} NIM\n\nYou only have ${(stakerInfo.balance / 100000).toLocaleString()} NIM staked.`);
-                  return;
-                }
-                
-                try {
-                  setLoading(true);
-                  
-                  // Import unstaking function
-                  const { unstakeNIM } = await import('@/lib/staking');
-                  
-                  // Execute unstake transaction
-                  const txHash = await unstakeNIM(walletAddress!, amountLuna);
-                  
-                  alert(
-                    `✅ Unstake Initiated!\n\n` +
-                    `Amount: ${amount} NIM\n` +
-                    `Transaction: ${txHash}\n\n` +
-                    `⏳ Note: Unstaked NIM will be available for withdrawal after ~1 epoch (~24h).`
-                  );
-                  
-                  // Refresh staker info
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 2000);
-                  
-                } catch (error: any) {
-                  console.error('[StakePage] Unstake error:', error);
-                  alert(`❌ Unstake Failed\n\n${error.message || 'Unknown error'}`);
-                } finally {
-                  setLoading(false);
-                }
+                // Show modal instead of prompt
+                setShowUnstakeModal(true);
               }}
             />
           </motion.div>
@@ -350,6 +322,136 @@ export default function StakePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Unstake Modal */}
+      <Modal
+        open={showUnstakeModal}
+        onClose={() => {
+          setShowUnstakeModal(false);
+          setUnstakeAmount('');
+        }}
+        title="💰 Unstake Your NIM"
+        subtitle={`Current staked: ${stakerInfo ? (stakerInfo.balance / 100000).toLocaleString() : '0'} NIM`}
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setShowUnstakeModal(false);
+                setUnstakeAmount('');
+              }}
+              disabled={unstaking}
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                if (!unstakeAmount || !stakerInfo || !walletAddress) return;
+                
+                const amount = parseFloat(unstakeAmount);
+                if (isNaN(amount) || amount <= 0) {
+                  alert('❌ Invalid amount');
+                  return;
+                }
+                
+                const amountLuna = Math.round(amount * 100000);
+                
+                // Check if amount exceeds staked balance
+                if (amountLuna > stakerInfo.balance) {
+                  alert(`❌ Cannot unstake ${amount} NIM\n\nYou only have ${(stakerInfo.balance / 100000).toLocaleString()} NIM staked.`);
+                  return;
+                }
+                
+                try {
+                  setUnstaking(true);
+                  
+                  // Import unstaking function
+                  const { unstakeNIM } = await import('@/lib/staking');
+                  
+                  // Execute unstake transaction with prewarmed Hub API
+                  const txHash = await unstakeNIM(walletAddress, amountLuna, hubApi);
+                  
+                  setShowUnstakeModal(false);
+                  setUnstakeAmount('');
+                  
+                  // Show success message
+                  alert(
+                    `✅ Unstake Initiated!\n\n` +
+                    `Amount: ${amount} NIM\n` +
+                    `Transaction: ${txHash}\n\n` +
+                    `⏳ Note: Unstaked NIM will be available for withdrawal after ~1 epoch (~24h).`
+                  );
+                  
+                  // Refresh staker info
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 2000);
+                  
+                } catch (error: any) {
+                  console.error('[StakePage] Unstake error:', error);
+                  
+                  // Check if user cancelled
+                  if (error.message?.includes('cancelled') || error.message?.includes('closed')) {
+                    alert('Transaction cancelled');
+                  } else {
+                    alert(`❌ Unstake Failed\n\n${error.message || 'Unknown error'}`);
+                  }
+                } finally {
+                  setUnstaking(false);
+                }
+              }}
+              disabled={!unstakeAmount || unstaking || parseFloat(unstakeAmount || '0') <= 0}
+              className="btn-gold px-6 py-2 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {unstaking ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Unstaking...
+                </>
+              ) : (
+                'Confirm Unstake'
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700 dark:text-white/70">
+              Amount to unstake (NIM)
+            </label>
+            <input
+              type="number"
+              autoFocus
+              value={unstakeAmount}
+              onChange={(e) => setUnstakeAmount(e.target.value)}
+              min="0.00001"
+              step="0.01"
+              placeholder="0.00"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/[0.04] border-2 border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-lg font-mono placeholder-gray-400 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20 transition-all"
+            />
+            {stakerInfo && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500 dark:text-white/40">Available: {(stakerInfo.balance / 100000).toLocaleString()} NIM</span>
+                <button
+                  type="button"
+                  onClick={() => setUnstakeAmount((stakerInfo.balance / 100000).toString())}
+                  className="text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright font-semibold transition-colors"
+                >
+                  Max
+                </button>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-start gap-2 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+            <span className="text-amber-600 dark:text-amber-400 mt-0.5">⏳</span>
+            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              <strong className="font-semibold">Note:</strong> Unstaked NIM will be available for withdrawal after approximately 1 epoch (~24 hours). This is a blockchain requirement for security.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

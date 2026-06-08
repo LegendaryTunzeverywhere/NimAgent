@@ -159,9 +159,29 @@ export default function HomePage() {
           } else {
             // Transaction from transactions table
             const isSent = item.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
-            const typeInfo = isSent 
-              ? { icon: '↗', color: 'error', label: `Sent to ${item.to_address?.slice(0, 8)}...` }
-              : { icon: '↙', color: 'success', label: `Received from ${item.from_address?.slice(0, 8)}...` };
+            
+            // Build label based on transaction type first, then fall back to send/receive
+            let typeInfo: { icon: string; color: string; label: string };
+            if (item.type === 'stake') {
+              typeInfo = { icon: '🔒', color: 'warning', label: 'NIM Staked' };
+            } else if (item.type === 'unstake') {
+              typeInfo = { icon: '🔓', color: 'warning', label: 'NIM Unstaked' };
+            } else if (item.type === 'gift-card') {
+              const product = item.details?.product || 'Gift Card';
+              typeInfo = { icon: '🎁', color: 'error', label: `${product} Purchase` };
+            } else if (item.type === 'airtime') {
+              const phone = item.details?.phone;
+              typeInfo = { icon: '📱', color: 'error', label: phone ? `Airtime to ${phone.slice(-4)}` : 'Airtime Top-up' };
+            } else if (item.type === 'bill') {
+              const service = item.details?.service || 'Bill';
+              typeInfo = { icon: '🧾', color: 'error', label: `${service} Payment` };
+            } else if (isSent) {
+              const shortAddr = item.to_address ? `${item.to_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
+              typeInfo = { icon: '↗', color: 'error', label: `Sent to ${shortAddr}` };
+            } else {
+              const shortAddr = item.from_address ? `${item.from_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
+              typeInfo = { icon: '↙', color: 'success', label: `Received from ${shortAddr}` };
+            }
 
             // Calculate time ago
             const createdAt = new Date(item.created_at);

@@ -384,7 +384,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                 </button>
               </div>
             );
-            })}
+          })}
           </div>
         )}
       </div>
@@ -514,7 +514,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           
           // Check if this address is already saved
           const { getSavedAddresses } = await import('@/lib/api-client');
-          const contacts = await getSavedAddresses(wallet.address);
+          const contacts = await getSavedAddresses(wallet.address || '');
           const alreadySaved = contacts.some(c => c.recipient_address.replace(/\s/g, '').toUpperCase() === normalizedRecipient.toUpperCase());
           
           if (!alreadySaved) {

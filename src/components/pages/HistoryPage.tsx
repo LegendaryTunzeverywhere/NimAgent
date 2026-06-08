@@ -243,20 +243,28 @@ export default function HistoryPage() {
   };
 
   const getTransactionLabel = (tx: Transaction) => {
-    if (tx.type === 'send' && tx.to_address) {
-      return `Sent to ${tx.to_address.slice(0, 4)}…${tx.to_address.slice(-4)}`;
-    }
-    if (tx.type === 'receive' && tx.from_address) {
-      return `Received from ${tx.from_address.slice(0, 4)}…${tx.from_address.slice(-4)}`;
-    }
     if (tx.type === 'stake') {
       if (tx.to_address) {
-        return `Staked with ${tx.to_address.slice(0, 4)}…${tx.to_address.slice(-4)}`;
+        return `Staked with ${tx.to_address.replace(/\s/g, '').slice(0, 4)}…${tx.to_address.replace(/\s/g, '').slice(-4)}`;
       }
       return 'NIM Staked';
     }
     if (tx.type === 'unstake') {
       return 'NIM Unstaked';
+    }
+    if (tx.type === 'send') {
+      if (tx.to_address) {
+        const addr = tx.to_address.replace(/\s/g, '');
+        return `Sent to ${addr.slice(0, 4)}…${addr.slice(-4)}`;
+      }
+      return 'NIM Sent';
+    }
+    if (tx.type === 'receive') {
+      if (tx.from_address) {
+        const addr = tx.from_address.replace(/\s/g, '');
+        return `Received from ${addr.slice(0, 4)}…${addr.slice(-4)}`;
+      }
+      return 'NIM Received';
     }
     if (tx.type === 'gift-card') {
       const product = tx.details?.product || 'Gift Card';
