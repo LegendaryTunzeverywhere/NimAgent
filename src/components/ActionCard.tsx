@@ -509,6 +509,9 @@ export default function ActionCard({ action }: ActionCardProps) {
 
         // Ask if user wants to save this address (after a short delay)
         setTimeout(async () => {
+          // Check if wallet is connected
+          if (!wallet.address) return;
+          
           // Check if this address is already saved
           const { getSavedAddresses } = await import('@/lib/api-client');
           const contacts = await getSavedAddresses(wallet.address);
