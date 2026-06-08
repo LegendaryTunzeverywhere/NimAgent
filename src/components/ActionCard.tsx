@@ -320,6 +320,27 @@ export default function ActionCard({ action }: ActionCardProps) {
                 </div>
                 <button
                   onClick={() => {
+                    // Validate address before sending
+                    if (!contact.recipient_address) {
+                      addMessage({
+                        role: 'ai',
+                        content: `❌ Error: Contact "${contact.nickname}" has no address saved. Please update or delete this contact.`,
+                      });
+                      return;
+                    }
+                    
+                    // Normalize address (remove spaces)
+                    const normalizedAddress = contact.recipient_address.replace(/\s/g, '');
+                    
+                    // Basic validation (NQ addresses are 36-44 chars when formatted)
+                    if (normalizedAddress.length < 36) {
+                      addMessage({
+                        role: 'ai',
+                        content: `❌ Error: Contact "${contact.nickname}" has an invalid address format. Please update this contact.`,
+                      });
+                      return;
+                    }
+                    
                     // Send message with FULL address so AI can immediately create send action
                     addMessage({
                       role: 'user',
@@ -385,15 +406,38 @@ export default function ActionCard({ action }: ActionCardProps) {
 
     try {
       if (action.type === 'send') {
+        // Validate recipient address
+        if (!action.recipient) {
+          addMessage({
+            role: 'ai',
+            content: '❌ Error: No recipient address provided. Please try again with a valid Nimiq address.',
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Normalize address (remove spaces)
+        const normalizedRecipient = action.recipient.replace(/\s/g, '');
+        
+        // Basic validation
+        if (normalizedRecipient.length < 36 || !normalizedRecipient.startsWith('NQ')) {
+          addMessage({
+            role: 'ai',
+            content: '❌ Error: Invalid recipient address format. Nimiq addresses must start with "NQ" and be properly formatted.',
+          });
+          setLoading(false);
+          return;
+        }
+        
         // Send NIM transaction
         console.log('[ActionCard] Initiating send transaction:', {
-          recipient: action.recipient,
+          recipient: normalizedRecipient,
           amountLuna,
           walletAddress: wallet.address
         });
         
         const hash = await requestPayment(
-          action.recipient!,
+          normalizedRecipient,
           amountLuna,
           'NimHub-send',
           'direct',
@@ -405,7 +449,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         await recordTransaction({
           type: 'send',
           fromAddress: wallet.address,
-          toAddress: action.recipient!,
+          toAddress: normalizedRecipient,
           amountLuna,
           txHash: hash,
           status: 'completed',

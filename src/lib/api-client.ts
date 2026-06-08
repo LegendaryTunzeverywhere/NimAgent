@@ -390,17 +390,24 @@ export async function updateSavedAddress(
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: getHeaders(),
     body: JSON.stringify({ wallet, ...updates }),
   });
   
-  const result = await res.json();
-  
   if (!res.ok) {
-    throw new Error(result.error || 'Failed to update address');
+    const errorText = await res.text();
+    let errorMessage = 'Failed to update address';
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.error || errorMessage;
+    } catch {
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
   
+  const result = await res.json();
   return result;
 }
 
