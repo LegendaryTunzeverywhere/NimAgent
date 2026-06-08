@@ -81,7 +81,7 @@ export default function Home() {
         <Navigation />
         <TickerBar />
 
-        <div className="flex-1 overflow-y-auto pb-28">
+        <div className={`flex-1 pb-28 ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {activeTab === 'home' && <HomePage />}
           {activeTab === 'chat' && <ChatPage />}
           {activeTab === 'stake' && <StakePage />}

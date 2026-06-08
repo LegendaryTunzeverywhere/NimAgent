@@ -359,9 +359,9 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] max-w-2xl mx-auto w-full px-4">
-      {/* Header with New Chat and History buttons */}
-      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2">
+    <div className="flex flex-col h-full max-w-2xl mx-auto w-full overflow-hidden">
+      {/* Header with New Chat and History buttons - FIXED */}
+      <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2 bg-white dark:bg-background-primary z-10">
         <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2 shrink-0">
           <Icon name="robot" size={16} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light" />
           <span className="hidden sm:inline">AI Chat</span>
@@ -378,9 +378,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               }
             }}
             disabled={!wallet.connected}
-            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
           >
-            <Icon name="history" size={13} strokeWidth={2.2} /> <span className="hidden sm:inline">History</span>
+            <Icon name="history" size={13} strokeWidth={2.2} className="flex-shrink-0" /> 
+            <span className="max-w-0 group-hover:max-w-[100px] group-active:max-w-[100px] overflow-hidden transition-all duration-300 ease-out whitespace-nowrap">History</span>
           </button>
           <button
             onClick={async () => {
@@ -415,28 +416,31 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               const finalMessageCount = useAppStore.getState().messages.length;
               console.log('[New Chat] Final message count (should be 1):', finalMessageCount);
             }}
-            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
+            className="group flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-all overflow-hidden"
           >
-            <Icon name="plus" size={13} strokeWidth={2.5} /> New
+            <Icon name="plus" size={13} strokeWidth={2.5} className="flex-shrink-0" /> 
+            <span className="max-w-0 group-hover:max-w-[100px] group-active:max-w-[100px] overflow-hidden transition-all duration-300 ease-out whitespace-nowrap">New</span>
           </button>
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-blue-50 dark:bg-brand-blue/10 text-blue-600 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/20 transition-all"
           >
-            <Icon name="info" size={13} strokeWidth={2.5} /> <span className="hidden sm:inline">Commands</span>
+            <Icon name="info" size={13} strokeWidth={2.5} className="flex-shrink-0" /> 
+            <span>Commands</span>
           </button>
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 sm:px-3 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
           >
-            <Icon name="sparkles" size={13} strokeWidth={2.5} /> Guide
+            <Icon name="sparkles" size={13} strokeWidth={2.5} className="flex-shrink-0" /> 
+            <span>Guide</span>
           </button>
         </div>
       </div>
 
-      {/* Sessions Dropdown */}
+      {/* Sessions Dropdown - FIXED */}
       {showSessions && (
-        <div className="glass rounded-2xl p-4 mt-3 max-h-64 overflow-y-auto animate-fade-up">
+        <div className="glass rounded-2xl p-4 mx-4 mt-3 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-10">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-gray-700 dark:text-white/80">Chat Sessions</h3>
             <button
@@ -497,8 +501,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-4 py-5">
+      {/* Messages - SCROLLABLE */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide space-y-4 py-5 px-4 min-h-0">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -677,8 +681,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         <div ref={chatEndRef} />
       </div>
 
-      {/* Bottom Input Area */}
-      <div className="shrink-0 pt-3 pb-2">
+      {/* Bottom Input Area - FIXED */}
+      <div className="shrink-0 pt-3 pb-2 px-4 bg-white dark:bg-background-primary border-t border-gray-200 dark:border-white/5 z-10">
         {/* Discover prompts - teach users about NimHub. Shown early in a chat. */}
         {messages.length <= 3 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
