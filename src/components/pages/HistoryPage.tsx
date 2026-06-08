@@ -94,9 +94,20 @@ export default function HistoryPage() {
             originalType: tx.type
           });
           
-          // Determine if it's a send or receive
+          // Preserve special transaction types (stake, unstake, orders)
+          // Only override if type is null/undefined
           let type = tx.type;
           
+          // Don't override stake/unstake/order types
+          if (type && ['stake', 'unstake', 'gift-card', 'airtime', 'bill'].includes(type)) {
+            console.log('[HistoryPage] Preserving type:', type);
+            return {
+              ...tx,
+              type,
+            };
+          }
+          
+          // For regular transactions without a type, determine if it's send or receive
           // If from_address matches wallet, it's a send
           if (cleanFromAddr && cleanFromAddr === cleanWalletAddr) {
             type = 'send';

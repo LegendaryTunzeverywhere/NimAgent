@@ -152,6 +152,7 @@ export async function stakeNIM(
 
     // Record transaction in history (non-fatal)
     try {
+      console.log('[Staking] Recording transaction in history...');
       const response = await fetch('/api/staking/record', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,10 +166,14 @@ export async function stakeNIM(
       });
       
       if (response.ok) {
-        console.log('[Staking] ✓ Transaction recorded in history');
+        const result = await response.json();
+        console.log('[Staking] ✓ Transaction recorded in history:', result);
+      } else {
+        const errorText = await response.text();
+        console.error('[Staking] Failed to record transaction:', response.status, errorText);
       }
     } catch (recordError) {
-      console.warn('[Staking] Failed to record transaction (non-fatal)');
+      console.error('[Staking] Error recording transaction:', recordError);
     }
 
     return txHash;
@@ -231,6 +236,7 @@ export async function unstakeNIM(
 
     // Record transaction in history (non-fatal)
     try {
+      console.log('[Staking] Recording unstake transaction in history...');
       const response = await fetch('/api/staking/record', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -244,10 +250,14 @@ export async function unstakeNIM(
       });
       
       if (response.ok) {
-        console.log('[Staking] ✓ Unstake recorded in history');
+        const result = await response.json();
+        console.log('[Staking] ✓ Unstake recorded in history:', result);
+      } else {
+        const errorText = await response.text();
+        console.error('[Staking] Failed to record unstake:', response.status, errorText);
       }
     } catch (recordError) {
-      console.warn('[Staking] Failed to record unstake (non-fatal)');
+      console.error('[Staking] Error recording unstake:', recordError);
     }
 
     return txHash;

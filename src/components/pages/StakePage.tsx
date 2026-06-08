@@ -20,6 +20,7 @@ export default function StakePage() {
   const [apy, setApy] = useState<number>(8);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingStake, setPendingStake] = useState(false);
 
   const { wallet, setActiveTab } = useAppStore();
   const walletAddress = wallet.address;
@@ -42,6 +43,12 @@ export default function StakePage() {
       if (address) {
         const staker = await getStakerInfo(address);
         setStakerInfo(staker);
+        
+        // If we were waiting for a stake and now we have one, clear pending state
+        if (pendingStake && staker?.activeBalance) {
+          setPendingStake(false);
+        }
+        
         setView(staker?.activeBalance ? 'dashboard' : 'validators');
       } else {
         setView('validators');
@@ -51,6 +58,37 @@ export default function StakePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleStakeSuccess() {
+    setPendingStake(true);
+    setView('validators');
+    
+    // Immediately reload data
+    await loadData(walletAddress);
+    
+    // Set up polling to check for confirmation every 10 seconds for up to 2 minutes
+    let attempts = 0;
+    const maxAttempts = 12; // 12 * 10s = 2 minutes
+    
+    const pollInterval = setInterval(async () => {
+      attempts++;
+      console.log(`[StakePage] Polling for stake confirmation (attempt ${attempts}/${maxAttempts})`);
+      
+      const staker = await getStakerInfo(walletAddress || '');
+      
+      if (staker?.activeBalance) {
+        console.log('[StakePage] ✓ Stake confirmed on-chain!');
+        setStakerInfo(staker);
+        setPendingStake(false);
+        setView('dashboard');
+        clearInterval(pollInterval);
+      } else if (attempts >= maxAttempts) {
+        console.log('[StakePage] Polling timeout - stake may take longer to confirm');
+        setPendingStake(false);
+        clearInterval(pollInterval);
+      }
+    }, 10000); // Poll every 10 seconds
   }
 
   const filteredValidators = validators.filter(v =>
@@ -77,6 +115,25 @@ export default function StakePage() {
   return (
     <div className="flex flex-col min-h-full">
       <StakeHeader view={view} setView={setView} stakerInfo={stakerInfo} />
+
+      {/* Pending stake banner */}
+      {pendingStake && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-5 mt-4 mb-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full animate-spin" />
+            <div className="flex-1">
+              <p className="text-amber-700 dark:text-amber-400 text-sm font-semibold">Stake transaction pending</p>
+              <p className="text-gray-600 dark:text-white/50 text-xs mt-0.5">
+                Waiting for blockchain confirmation... This usually takes 1-2 minutes.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <AnimatePresence mode="wait">
         {view === 'dashboard' && stakerInfo && (
@@ -152,6 +209,24 @@ export default function StakePage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Staking Disclaimer */}
+            <div className="mt-6 rounded-xl p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+              <div className="flex items-start gap-2.5">
+                <div className="flex-shrink-0 w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center mt-0.5">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                    <strong className="font-semibold">Staking Disclaimer:</strong> Validator performance varies. Research validators before staking. This is an independent community project not affiliated with Nimiq Foundation.
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -169,7 +244,7 @@ export default function StakePage() {
               apy={apy}
               walletAddress={walletAddress}
               onBack={() => setView('validators')}
-              onSuccess={() => loadData(walletAddress)}
+              onSuccess={handleStakeSuccess}
             />
           </motion.div>
         )}

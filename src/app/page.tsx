@@ -88,6 +88,17 @@ export default function Home() {
           {activeTab === 'history' && <HistoryPage />}
         </div>
 
+        {/* Global Disclaimer Footer */}
+        <div className="fixed bottom-16 left-0 right-0 px-4 pb-2 pointer-events-none">
+          <div className="max-w-lg mx-auto pointer-events-auto">
+            <div className="backdrop-blur-md bg-white/80 dark:bg-[#08090E]/80 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 shadow-lg">
+              <p className="text-[10px] text-center text-gray-600 dark:text-white/50 leading-relaxed">
+                <strong className="font-semibold text-gray-700 dark:text-white/60">Independent Project:</strong> Not affiliated with or operated by Nimiq Foundation
+              </p>
+            </div>
+          </div>
+        </div>
+
         <BottomNav />
       </main>
     </ThemeProvider>
