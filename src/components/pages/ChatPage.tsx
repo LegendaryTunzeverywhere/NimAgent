@@ -378,10 +378,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               }
             }}
             disabled={!wallet.connected}
-            className="group flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon name="history" size={13} strokeWidth={2.2} className="flex-shrink-0" /> 
-            <span className="max-w-0 group-hover:max-w-[100px] group-active:max-w-[100px] overflow-hidden transition-all duration-300 ease-out whitespace-nowrap">History</span>
+            <span>History</span>
           </button>
           <button
             onClick={async () => {
@@ -416,10 +416,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               const finalMessageCount = useAppStore.getState().messages.length;
               console.log('[New Chat] Final message count (should be 1):', finalMessageCount);
             }}
-            className="group flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-all overflow-hidden"
+            className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
           >
             <Icon name="plus" size={13} strokeWidth={2.5} className="flex-shrink-0" /> 
-            <span className="max-w-0 group-hover:max-w-[100px] group-active:max-w-[100px] overflow-hidden transition-all duration-300 ease-out whitespace-nowrap">New</span>
+            <span>New</span>
           </button>
           <button
             onClick={() => setShowHelp(true)}
@@ -742,7 +742,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             <input
               ref={inputRef}
               className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 outline-none"
-              placeholder="Ask me to send NIM, buy gift cards, pay bills..."
+              placeholder="Ask me ..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isOverLimit && sendMessage()}

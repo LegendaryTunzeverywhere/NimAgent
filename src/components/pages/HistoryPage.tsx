@@ -288,11 +288,15 @@ export default function HistoryPage() {
   const totalReceived = transactions
     .filter(tx => tx.type === 'receive')
     .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
+  const totalStaked = transactions
+    .filter(tx => tx.type === 'stake')
+    .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
   
   const stats = {
     totalSent,
     totalReceived,
-    netChange: totalReceived - totalSent,
+    totalStaked,
+    netChange: totalReceived - totalSent - totalStaked,
   };
 
   return (
@@ -589,7 +593,7 @@ export default function HistoryPage() {
 
           {/* Stats Summary */}
           {filteredTransactions.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
               <div className="card-premium rounded-2xl p-4 text-center">
                 <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Sent</p>
                 <p className="text-lg font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
@@ -598,6 +602,11 @@ export default function HistoryPage() {
               <div className="card-premium rounded-2xl p-4 text-center">
                 <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Received</p>
                 <p className="text-lg font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
+                <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
+              </div>
+              <div className="card-premium rounded-2xl p-4 text-center">
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">Total Staked</p>
+                <p className="text-lg font-bold text-amber-600 dark:text-gold tabular-nums">{stats.totalStaked.toFixed(2)}</p>
                 <p className="text-xs text-gray-400 dark:text-white/30">NIM</p>
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
