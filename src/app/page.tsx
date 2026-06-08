@@ -78,12 +78,10 @@ export default function Home() {
           <PaymentLinkHandler />
         </Suspense>
 
-        <div className="fixed top-0 left-0 right-0 z-30">
-          <Navigation />
-          <TickerBar />
-        </div>
+        <Navigation />
+        <TickerBar />
 
-        <div className="flex-1 overflow-y-auto pt-[88px] pb-28">
+        <div className="flex-1 overflow-y-auto pb-28">
           {activeTab === 'home' && <HomePage />}
           {activeTab === 'chat' && <ChatPage />}
           {activeTab === 'stake' && <StakePage />}
@@ -92,11 +90,11 @@ export default function Home() {
 
         {/* Global Disclaimer Footer - only show on Chat and History pages */}
         {(activeTab === 'chat' || activeTab === 'history') && (
-          <div className="fixed bottom-[72px] left-0 right-0 px-4 pb-2 pointer-events-none z-20">
+          <div className="fixed bottom-[72px] left-0 right-0 px-4 pointer-events-none z-20">
             <div className="max-w-lg mx-auto pointer-events-auto">
-              <div className="backdrop-blur-md bg-white/90 dark:bg-[#08090E]/90 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 shadow-lg">
-                <p className="text-[10px] text-center text-gray-600 dark:text-white/50 leading-relaxed">
-                  <strong className="font-semibold text-gray-700 dark:text-white/60">Independent Project:</strong> Not affiliated with or operated by Nimiq Foundation
+              <div className="backdrop-blur-md bg-white/90 dark:bg-[#08090E]/90 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 shadow-lg">
+                <p className="text-[9px] text-center text-gray-600 dark:text-white/50">
+                  <strong className="font-semibold">Independent:</strong> Not affiliated with Nimiq Foundation
                 </p>
               </div>
             </div>
