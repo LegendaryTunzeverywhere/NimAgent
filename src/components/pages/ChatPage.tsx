@@ -359,7 +359,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   };
 
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto w-full overflow-hidden">
+    <div className="fixed inset-0 top-[104px] bottom-0 max-w-2xl mx-auto w-full flex flex-col">
       {/* Header with New Chat and History buttons - FIXED */}
       <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2 bg-white dark:bg-background-primary z-10">
         <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2 shrink-0">
@@ -440,7 +440,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
 
       {/* Sessions Dropdown - FIXED */}
       {showSessions && (
-        <div className="glass rounded-2xl p-4 mx-4 mt-3 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-10">
+        <div className="absolute top-full left-4 right-4 mt-2 glass rounded-2xl p-4 max-h-64 overflow-y-auto animate-fade-up shrink-0 z-20 shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-gray-700 dark:text-white/80">Chat Sessions</h3>
             <button
@@ -501,7 +501,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         </div>
       )}
 
-      {/* Messages - SCROLLABLE */}
+      {/* Messages - SCROLLABLE ONLY */}
       <div className="flex-1 overflow-y-auto scrollbar-hide space-y-4 py-5 px-4 min-h-0">
         {messages.map((msg, i) => (
           <div
@@ -681,8 +681,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         <div ref={chatEndRef} />
       </div>
 
-      {/* Bottom Input Area - FIXED */}
-      <div className="shrink-0 pt-3 pb-2 px-4 bg-white dark:bg-background-primary border-t border-gray-200 dark:border-white/5 z-10">
+      {/* Bottom Input Area - FIXED above disclaimer and bottom nav */}
+      <div className="shrink-0 pt-3 pb-3 px-4 bg-white dark:bg-background-primary border-t border-gray-200 dark:border-white/5 z-10 mb-32">
         {/* Discover prompts - teach users about NimHub. Shown early in a chat. */}
         {messages.length <= 3 && (
           <div className="flex flex-wrap gap-1.5 mb-2">

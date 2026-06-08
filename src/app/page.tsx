@@ -78,14 +78,30 @@ export default function Home() {
           <PaymentLinkHandler />
         </Suspense>
 
-        <Navigation />
-        <TickerBar />
+        {/* Fixed Navigation and Ticker */}
+        <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-background-primary">
+          <Navigation />
+          <TickerBar />
+        </div>
 
-        <div className={`flex-1 ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'} ${(activeTab === 'chat' || activeTab === 'history') ? 'pb-36' : 'pb-28'}`}>
-          {activeTab === 'home' && <HomePage />}
+        {/* Main content area with top padding for fixed header */}
+        <div className="flex-1 pt-[104px] relative">
+          {activeTab === 'home' && (
+            <div className="h-full overflow-y-auto pb-28">
+              <HomePage />
+            </div>
+          )}
           {activeTab === 'chat' && <ChatPage />}
-          {activeTab === 'stake' && <StakePage />}
-          {activeTab === 'history' && <HistoryPage />}
+          {activeTab === 'stake' && (
+            <div className="h-full overflow-y-auto pb-28">
+              <StakePage />
+            </div>
+          )}
+          {activeTab === 'history' && (
+            <div className="h-full overflow-y-auto pb-36">
+              <HistoryPage />
+            </div>
+          )}
         </div>
 
         {/* Global Disclaimer Footer - only show on Chat and History pages */}

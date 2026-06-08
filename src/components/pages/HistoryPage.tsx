@@ -325,42 +325,64 @@ export default function HistoryPage() {
       </div>
 
       {/* Filter Pills with Scroll Indicators */}
-      <div className="relative">
-        {/* Left scroll indicator */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-white dark:from-background-primary to-transparent flex items-center">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-gray-400 dark:text-white/30 ml-1"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </div>
+      <div className="relative -mx-4">
+        {/* Left scroll button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('filter-pills-container');
+            if (container) {
+              container.scrollBy({ left: -150, behavior: 'smooth' });
+            }
+          }}
+          className="absolute left-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-r from-white dark:from-background-primary via-white/80 dark:via-background-primary/80 to-transparent flex items-center justify-center hover:from-white dark:hover:from-background-primary transition-all group"
+          aria-label="Scroll left"
+        >
+          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-gray-300 dark:border-white/20 flex items-center justify-center group-hover:bg-gray-50 dark:group-hover:bg-white/15 group-hover:scale-110 transition-all">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-600 dark:text-white/70"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </div>
+        </button>
         
-        {/* Right scroll indicator */}
-        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-l from-white dark:from-background-primary to-transparent flex items-center justify-end">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-gray-400 dark:text-white/30 mr-1 animate-pulse"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </div>
+        {/* Right scroll button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('filter-pills-container');
+            if (container) {
+              container.scrollBy({ left: 150, behavior: 'smooth' });
+            }
+          }}
+          className="absolute right-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-l from-white dark:from-background-primary via-white/80 dark:via-background-primary/80 to-transparent flex items-center justify-center hover:from-white dark:hover:from-background-primary transition-all group"
+          aria-label="Scroll right"
+        >
+          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-amber-300 dark:border-gold/30 flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-gold/15 group-hover:scale-110 transition-all animate-pulse">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-amber-600 dark:text-gold"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </button>
 
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
+        <div id="filter-pills-container" className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 px-4">
           {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
             <button
             key={filterOption}
