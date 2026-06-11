@@ -345,10 +345,12 @@ export const useAppStore = create<AppState>()(
           return;
         }
 
-        // Get history before adding user message
-        const history = messages.slice(-10).map(m => ({
+        // Get history before adding user message — send more turns and include
+        // action metadata so the server can build rich context for the AI.
+        const history = messages.slice(-20).map(m => ({
           role: m.role,
           text: m.content,
+          action: m.action || null, // include resolved actions for context
         }));
 
         // Add user message

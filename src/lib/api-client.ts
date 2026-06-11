@@ -38,6 +38,7 @@ function getHeaders(): HeadersInit {
 export interface ChatMessage {
   role: 'user' | 'ai';
   text: string;
+  action?: ActionCard | null; // include resolved action for context enrichment
 }
 
 export interface ChatResponse {
