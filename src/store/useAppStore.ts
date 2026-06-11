@@ -439,7 +439,8 @@ export const useAppStore = create<AppState>()(
             if (action.type === 'update-contact' && (action.oldNickname || action.nickname)) {
               try {
                 // Use oldNickname (new format) or fallback to nickname (old format)
-                const lookupNickname = action.oldNickname || action.nickname;
+                // Normalize to lowercase for case-insensitive lookup (backend uses ilike)
+                const lookupNickname = (action.oldNickname || action.nickname || '').trim();
                 
                 // Type guard: ensure we have a nickname to look up
                 if (!lookupNickname) {
@@ -490,8 +491,9 @@ export const useAppStore = create<AppState>()(
             // Delete contact
             if (action.type === 'delete-contact' && action.nickname) {
               try {
-                // Find contact by nickname to get ID
-                const found = await findAddressByNickname(walletAddress, action.nickname);
+                // Normalize for case-insensitive lookup
+                const deleteNickname = action.nickname.trim();
+                const found = await findAddressByNickname(walletAddress, deleteNickname);
                 if (!found.success || !found.found || !found.address) {
                   await addMessage({
                     role: 'ai',
