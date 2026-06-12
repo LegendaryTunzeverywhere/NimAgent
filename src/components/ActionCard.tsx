@@ -778,13 +778,20 @@ export default function ActionCard({ action }: ActionCardProps) {
               </span>
             </div>
           )}
-          {/* Show available denominations from catalog */}
+          {/* Show available denominations from catalog — display only, not selectable */}
           {availableAmounts && availableAmounts.length > 0 && !success && (
             <div className="space-y-1">
-              <p className="text-gray-500 dark:text-white/40 text-[10px] font-medium uppercase tracking-wider">Available denominations</p>
+              <p className="text-gray-500 dark:text-white/40 text-[10px] font-medium uppercase tracking-wider">Available amounts</p>
               <div className="flex flex-wrap gap-1.5">
                 {availableAmounts.map(a => (
-                  <span key={a} className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${Number(action.fiatAmount) === a ? 'bg-amber-500 dark:bg-gold text-white dark:text-background-primary' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/60'}`}>
+                  <span
+                    key={a}
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded select-none ${
+                      Number(action.fiatAmount) === a
+                        ? 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold/90 ring-1 ring-amber-300 dark:ring-gold/30'
+                        : 'bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-white/40'
+                    }`}
+                  >
                     {CURRENCY_SYMBOLS[action.currency || 'USD']}{a}
                   </span>
                 ))}
