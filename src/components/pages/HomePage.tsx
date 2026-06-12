@@ -166,6 +166,8 @@ export default function HomePage() {
               typeInfo = { icon: '🔒', color: 'warning', label: 'NIM Staked' };
             } else if (item.type === 'unstake') {
               typeInfo = { icon: '🔓', color: 'warning', label: 'NIM Unstaked' };
+            } else if (item.type === 'withdraw') {
+              typeInfo = { icon: '🔓', color: 'warning', label: 'Stake Withdrawn' };
             } else if (item.type === 'gift-card') {
               const product = item.details?.product || 'Gift Card';
               typeInfo = { icon: '🎁', color: 'error', label: `${product} Purchase` };

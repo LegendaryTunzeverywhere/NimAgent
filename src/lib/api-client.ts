@@ -43,7 +43,7 @@ export interface ChatMessage {
 
 export interface ChatResponse {
   message: string;
-  action?: ActionCard;
+  action?: ActionCard | null;
   data?: any;
 }
 

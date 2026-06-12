@@ -25,6 +25,7 @@ const TRANSACTION_ICONS: Record<string, IconName> = {
   swap: 'swap',
   stake: 'lock',
   unstake: 'unlock',
+  withdraw: 'unlock',
 };
 
 const TRANSACTION_COLORS: Record<string, string> = {
@@ -36,6 +37,7 @@ const TRANSACTION_COLORS: Record<string, string> = {
   swap: '#F5A623',
   stake: '#D4AF37',
   unstake: '#F59E0B',
+  withdraw: '#F59E0B',
 };
 
 export default function HistoryPage() {
@@ -98,8 +100,8 @@ export default function HistoryPage() {
           // Only override if type is null/undefined
           let type = tx.type;
           
-          // Don't override stake/unstake/order types
-          if (type && ['stake', 'unstake', 'gift-card', 'airtime', 'bill'].includes(type)) {
+          // Don't override stake/unstake/withdraw/order types
+          if (type && ['stake', 'unstake', 'withdraw', 'gift-card', 'airtime', 'bill'].includes(type)) {
             console.log('[HistoryPage] Preserving type:', type);
             return {
               ...tx,
@@ -212,7 +214,7 @@ export default function HistoryPage() {
     if (filter === 'All') return true;
     if (filter === 'Sent') return tx.type === 'send';
     if (filter === 'Received') return tx.type === 'receive';
-    if (filter === 'Staking') return tx.type === 'stake' || tx.type === 'unstake';
+    if (filter === 'Staking') return tx.type === 'stake' || tx.type === 'unstake' || tx.type === 'withdraw';
     if (filter === 'Bills') return tx.type === 'bill';
     if (filter === 'Gift Cards') return tx.type === 'gift-card';
     if (filter === 'Airtime') return tx.type === 'airtime';
@@ -221,8 +223,8 @@ export default function HistoryPage() {
 
   const formatAmount = (luna: number, type: string) => {
     const nim = (luna / 100000).toFixed(2);
-    // Receive shows +, stake/unstake show no sign, everything else shows -
-    const sign = type === 'receive' ? '+' : (type === 'stake' || type === 'unstake') ? '' : '-';
+    // Receive shows +, stake/unstake/withdraw show no sign, everything else shows -
+    const sign = type === 'receive' ? '+' : (type === 'stake' || type === 'unstake' || type === 'withdraw') ? '' : '-';
     return `${sign}${nim} NIM`;
   };
 
@@ -251,6 +253,9 @@ export default function HistoryPage() {
     }
     if (tx.type === 'unstake') {
       return 'NIM Unstaked';
+    }
+    if (tx.type === 'withdraw') {
+      return 'Stake Withdrawn';
     }
     if (tx.type === 'send') {
       if (tx.to_address) {
@@ -300,7 +305,7 @@ export default function HistoryPage() {
     .filter(tx => tx.type === 'stake')
     .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
   const totalUnstaked = transactions
-    .filter(tx => tx.type === 'unstake')
+    .filter(tx => tx.type === 'unstake' || tx.type === 'withdraw')
     .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
   const activeStake = totalStaked - totalUnstaked;
   

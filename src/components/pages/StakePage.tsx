@@ -79,7 +79,7 @@ export default function StakePage() {
                 .reduce((sum: number, tx: any) => sum + (tx.amount_luna || 0), 0);
               
               const totalUnstaked = transactions
-                .filter((tx: any) => tx.type === 'unstake')
+                .filter((tx: any) => tx.type === 'unstake' || tx.type === 'withdraw')
                 .reduce((sum: number, tx: any) => sum + (tx.amount_luna || 0), 0);
               
               const netStaked = totalStaked - totalUnstaked;

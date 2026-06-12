@@ -114,8 +114,8 @@ export default function ChatPage() {
     }
   }, [wallet.connected]);
 
-  // Word count tracking
-  const MAX_WORDS = 100;
+  // Word count tracking — keep in sync with server MAX_MESSAGE_WORDS (200)
+  const MAX_WORDS = 200;
   const wordCount = input.trim().split(/\s+/).filter(word => word.length > 0).length;
   const isOverLimit = wordCount > MAX_WORDS;
 interface ChatSession {
@@ -180,41 +180,24 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
     setLoading(true);
 
     try {
-      // Handle QR scan requests directly
-      const lowerMsg = msg.toLowerCase();
-      if (lowerMsg.includes('scan') && (lowerMsg.includes('qr') || lowerMsg.includes('code'))) {
-        addMessage({
-          role: 'user',
-          content: msg,
-        });
+      // Short-circuit only for pure, context-free one-word scan requests.
+      // Anything with extra detail (e.g. "scan this QR for Mom") goes to the AI
+      // so it can follow up in context.
+      const lowerMsg = msg.toLowerCase().trim();
+      const isPureQrScan = /^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lowerMsg);
+      if (isPureQrScan) {
+        addMessage({ role: 'user', content: msg });
         addMessage({
           role: 'ai',
           content: 'Ready to scan! Point your camera at a QR code containing a Nimiq address or payment request. 📷',
-          action: {
-            type: 'qr-scan',
-          }
+          action: { type: 'qr-scan' }
         });
         setLoading(false);
         return;
       }
 
-      // Handle swap requests directly
-      if (lowerMsg.includes('swap') || lowerMsg.includes('exchange') || lowerMsg.includes('trade')) {
-        addMessage({
-          role: 'user',
-          content: msg,
-        });
-        addMessage({
-          role: 'ai',
-          content: 'Welcome to the crypto swap interface! 🔄\n\nExchange NIM for BTC or BTC for NIM with real-time rates. Perfect for diversifying your crypto portfolio!',
-          action: {
-            type: 'crypto-swap',
-          }
-        });
-        setLoading(false);
-        return;
-      }
-
+      // All other messages — including swap, exchange, scan-with-context — go through
+      // the AI so the conversation history is preserved and followed up correctly.
       await sendMessageToAI(msg, wallet.address || undefined);
     } catch (error) {
       console.error('Chat error:', error);
@@ -616,7 +599,11 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                 {msg.role === 'ai' && (
                   <button
                     onClick={() => {
-                      setInput(`Regarding "${msg.content.slice(0, 50)}${msg.content.length > 50 ? '...' : ''}": `);
+                      // Quote the relevant part of the AI's message as context
+                      // so the follow-up feels natural to the AI
+                      const snippet = msg.content.slice(0, 80).replace(/\n/g, ' ').trim();
+                      const suffix = msg.content.length > 80 ? '...' : '';
+                      setInput(`Re: "${snippet}${suffix}" — `);
                       inputRef.current?.focus();
                     }}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
@@ -668,7 +655,9 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-2" />
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-3" />
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-white/45 font-medium">Thinking...</span>
+              <span className="text-[11px] text-gray-500 dark:text-white/45 font-medium">
+                {messages.length > 1 ? 'Following up...' : 'Thinking...'}
+              </span>
             </div>
           </div>
         )}
@@ -899,7 +888,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-400 dark:text-brand-blue/60 mt-0.5">•</span>
-                <span>Keep messages under 100 words for best results</span>
+                <span>Keep messages under 200 words for best results</span>
               </li>
             </ul>
           </div>
