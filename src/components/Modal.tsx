@@ -87,7 +87,7 @@ export default function Modal({
           <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 border-b border-gray-200 dark:border-white/[0.06]">
             <div>
               {title && <h3 className="text-base font-bold text-gray-900 dark:text-white">{title}</h3>}
-              {subtitle && <p className="text-xs text-gray-500 dark:text-white/45 mt-0.5">{subtitle}</p>}
+              {subtitle && <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}

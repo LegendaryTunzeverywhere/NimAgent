@@ -130,6 +130,9 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  // Stable ref so SpeechRecognition onresult always calls the latest sendMessage
+  // without the recognition instance being torn down on every input change.
+  const sendMessageRef = useRef<(text?: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     // Load chat history from database when component mounts
@@ -164,8 +167,11 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     
-    // Auto-focus input when AI replies (when messages length changes and last message is from AI)
-    if (messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading) {
+    // Auto-focus input when AI replies — desktop only.
+    // On mobile, focusing the input triggers the virtual keyboard which
+    // collapses the viewport and pushes the chat off screen.
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+    if (!isMobile && messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
@@ -206,54 +212,80 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
     }
   }, [input, loading, addMessage, sendMessageToAI, wallet.address]);
 
-  // Initialize speech recognition
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = false;
-        recognitionRef.current.lang = 'en-US';
+  // Keep the stable ref current so SpeechRecognition can always call the latest version.
+  useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
-        recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInput(transcript);
-          setIsListening(false);
-          // Automatically send the transcribed text to AI
-          setTimeout(() => {
-            sendMessage(transcript);
-          }, 100);
-        };
+  // Build a fresh SpeechRecognition instance each time.
+  // Mobile Chrome (Android) treats instances as single-use: calling start() on an
+  // already-ended instance throws InvalidStateError. Recreating on every tap fixes this.
+  const startRecognition = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return null;
 
-        recognitionRef.current.onerror = () => {
-          setIsListening(false);
-        };
+    const recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
-        recognitionRef.current.onend = () => {
-          setIsListening(false);
-        };
+    recognition.onresult = (event: any) => {
+      const transcript = (event.results[0][0].transcript || '').trim();
+      if (!transcript) return;
+      setInput(transcript);
+      setIsListening(false);
+      setTimeout(() => { sendMessageRef.current(transcript); }, 100);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.warn('[Voice] error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        addMessage({
+          role: 'ai',
+          content: 'Microphone access was denied. Allow microphone permission in your browser/device settings and try again.',
+        });
+      } else if (event.error === 'network') {
+        addMessage({ role: 'ai', content: 'Voice recognition needs a network connection. Check your connection and try again.' });
       }
-    }
-  }, [sendMessage]);
+      // 'no-speech' is common on mobile — reset silently, no message needed.
+    };
 
-  const toggleVoiceInput = () => {
-    if (!recognitionRef.current) {
+    recognition.onend = () => { setIsListening(false); };
+
+    recognitionRef.current = recognition;
+    return recognition;
+  }, [addMessage]);
+
+  const toggleVoiceInput = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SR = typeof window !== 'undefined'
+      ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      : null;
+
+    if (!SR) {
       addMessage({
         role: 'ai',
-        content: 'Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.',
+        content: 'Voice input is not supported in this browser. Use Chrome on Android/desktop or Safari on iOS.',
       });
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
+    try {
+      const recognition = startRecognition();
+      if (!recognition) return;
+      recognition.start();
       setIsListening(true);
+    } catch (err: any) {
+      console.warn('[Voice] start failed:', err?.message);
+      setIsListening(false);
     }
-  };
+  }, [isListening, addMessage, startRecognition]);
 
   const fetchSessions = async () => {
     if (!wallet.address) return;
@@ -342,7 +374,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
   };
 
   return (
-    <div className="fixed inset-0 top-[104px] bottom-0 max-w-2xl mx-auto w-full flex flex-col bg-white dark:bg-background-primary">
+    <div
+      className="fixed inset-x-0 max-w-2xl mx-auto w-full flex flex-col bg-white dark:bg-background-primary"
+      style={{ top: '60px', bottom: '80px', height: 'calc(100dvh - 140px)' }}
+    >
       {/* Header with New Chat and History buttons - FIXED */}
       <div className="relative flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-white/5 shrink-0 gap-2 bg-white dark:bg-background-primary z-10">
         <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest flex items-center gap-2 shrink-0">
@@ -656,7 +691,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-brand-blue-light inline-block dot-typing-3" />
               </span>
               <span className="text-[11px] text-gray-500 dark:text-white/45 font-medium">
-                {messages.length > 1 ? 'Following up...' : 'Thinking...'}
+                {messages.length > 1 ?  'Thinking...' : 'Following up...'}
               </span>
             </div>
           </div>
@@ -664,8 +699,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
         <div ref={chatEndRef} />
       </div>
 
-      {/* Bottom Input Area - FIXED above disclaimer and bottom nav */}
-      <div className="shrink-0 pt-3 pb-3 px-4 bg-white dark:bg-background-primary border-t border-gray-200 dark:border-white/5 z-10 mb-32">
+      {/* Bottom Input Area - FIXED above bottom nav */}
+      <div className="shrink-0 pt-3 pb-safe px-4 bg-white dark:bg-background-primary border-t border-gray-200 dark:border-white/5 z-10" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         {/* Discover prompts - teach users about NimHub. Shown early in a chat. */}
         {messages.length <= 3 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
@@ -789,6 +824,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             <Icon name="mic" size={12} strokeWidth={2.2} /> Listening... Speak now
           </p>
         )}
+
+        <p className="text-[9px] text-center text-gray-400 dark:text-white/30 mt-2 pb-1">
+          Independent Project · Not affiliated with Nimiq Foundation
+        </p>
       </div>
 
       {/* Delete session confirmation */}
@@ -916,7 +955,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           setShowOnboarding(false);
           localStorage.setItem('nimhub_onboarding_seen', 'true');
         }}
-        title="Welcome to NimHub AI! 🎉"
+        title="Welcome to NimHub AI!"
         subtitle="Your intelligent crypto assistant"
       >
         <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-6 relative" id="onboarding-scroll-container">
@@ -928,8 +967,8 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               </span>
               <div>
                 <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">AI-Powered Crypto Wallet</h3>
-                <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed">
-                  Chat naturally with AI to manage your crypto. No complex menus or confusing interfaces - just tell me what you want to do!
+                <p className="text-sm text-gray-600 dark:text-white/75 leading-relaxed">
+                  Chat naturally with AI to manage your crypto. No complex menus or confusing interfaces — just tell me what you want to do.
                 </p>
               </div>
             </div>
@@ -942,32 +981,32 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
               What I Can Do For You
             </h4>
             <div className="grid gap-3">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10">
                 <Icon name="send" size={18} strokeWidth={2} className="text-blue-600 dark:text-brand-blue-light flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Send & Receive NIM</p>
-                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Instant, feeless transfers worldwide</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Send &amp; Receive NIM</p>
+                  <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">Instant, feeless transfers worldwide</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10">
                 <Icon name="gift-card" size={18} strokeWidth={2} className="text-amber-600 dark:text-gold flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">Buy Gift Cards</p>
-                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Amazon, Steam, iTunes, Netflix & more</p>
+                  <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">Amazon, Steam, iTunes, Netflix &amp; more</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10">
                 <Icon name="airtime" size={18} strokeWidth={2} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">Mobile Top-ups</p>
-                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Airtime & data bundles globally</p>
+                  <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">Airtime &amp; data bundles globally</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10">
                 <Icon name="bill" size={18} strokeWidth={2} className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">Pay Bills</p>
-                  <p className="text-xs text-gray-600 dark:text-white/50 mt-0.5">Electricity, internet, TV subscriptions</p>
+                  <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">Electricity, internet, TV subscriptions</p>
                 </div>
               </div>
             </div>
@@ -982,25 +1021,25 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
-                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                <p className="text-sm text-gray-700 dark:text-white/80 leading-relaxed">
                   <strong className="text-gray-900 dark:text-white">Type naturally:</strong> "Send 50 NIM to Mom" or "Buy a $25 Amazon card"
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
-                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
-                  <strong className="text-gray-900 dark:text-white">Use quick prompts:</strong> Click the suggestion buttons below the chat
+                <p className="text-sm text-gray-700 dark:text-white/80 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Use quick prompts:</strong> Tap the suggestion buttons below the chat
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
-                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
-                  <strong className="text-gray-900 dark:text-white">Voice input:</strong> Click the microphone button and speak
+                <p className="text-sm text-gray-700 dark:text-white/80 leading-relaxed">
+                  <strong className="text-gray-900 dark:text-white">Voice input:</strong> Tap the microphone button and speak
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-brand-blue/20 text-blue-700 dark:text-brand-blue-light flex items-center justify-center flex-shrink-0 text-xs font-bold">4</span>
-                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+                <p className="text-sm text-gray-700 dark:text-white/80 leading-relaxed">
                   <strong className="text-gray-900 dark:text-white">Save contacts:</strong> "Save [address] as Mom" for quick sends later
                 </p>
               </div>
@@ -1015,10 +1054,10 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
             </h4>
             <div className="space-y-2">
               {[
-                { q: '"Send 100 NIM to my friend"', a: 'I\'ll guide you through sending NIM' },
-                { q: '"Buy a $50 Steam gift card"', a: 'I\'ll help you purchase it with crypto' },
-                { q: '"Top up +234... with $10"', a: 'I\'ll send airtime to that number' },
-                { q: '"What\'s my balance?"', a: 'I\'ll show your NIM balance and value' },
+                { q: '"Send 100 NIM to my friend"', a: "I'll guide you through sending NIM" },
+                { q: '"Buy a $50 Steam gift card"', a: "I'll help you purchase it with crypto" },
+                { q: '"Top up +234... with $10"',   a: "I'll send airtime to that number" },
+                { q: '"What\'s my balance?"',        a: "I'll show your NIM balance and value" },
               ].map((example, i) => (
                 <button
                   key={i}
@@ -1028,12 +1067,12 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                     setInput(example.q.replace(/['"]/g, ''));
                     setTimeout(() => inputRef.current?.focus(), 100);
                   }}
-                  className="w-full text-left p-3 rounded-xl bg-amber-50 dark:bg-gold/5 border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/10 transition-all group"
+                  className="w-full text-left p-3 rounded-xl bg-amber-50 dark:bg-gold/8 border border-amber-200 dark:border-gold/25 hover:bg-amber-100 dark:hover:bg-gold/15 transition-all group"
                 >
                   <p className="text-sm font-semibold text-amber-700 dark:text-gold mb-1 group-hover:text-amber-800 dark:group-hover:text-gold-bright">
                     {example.q}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-white/50">
+                  <p className="text-xs text-gray-600 dark:text-white/65">
                     → {example.a}
                   </p>
                 </button>
@@ -1042,14 +1081,14 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
           </div>
 
           {/* Security & Trust */}
-          <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+          <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/25">
             <div className="flex items-start gap-3">
               <span className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/20 flex items-center justify-center flex-shrink-0">
                 <Icon name="check" size={16} strokeWidth={2.5} className="text-green-700 dark:text-green-400" />
               </span>
               <div>
-                <h4 className="text-sm font-bold text-green-800 dark:text-green-400 mb-1">Secure & Transparent</h4>
-                <p className="text-xs text-green-700 dark:text-green-300/80 leading-relaxed">
+                <h4 className="text-sm font-bold text-green-800 dark:text-green-300 mb-1">Secure &amp; Transparent</h4>
+                <p className="text-xs text-green-700 dark:text-green-200/80 leading-relaxed">
                   Your wallet stays in your control. All transactions are verified on the Nimiq blockchain. AI cannot access your funds without your approval.
                 </p>
               </div>
@@ -1063,7 +1102,7 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                 setShowOnboarding(false);
                 setShowHelp(true);
               }}
-              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white border border-gray-200 dark:border-white/15 hover:bg-gray-200 dark:hover:bg-white/15 transition-colors"
             >
               View All Commands
             </button>
@@ -1074,14 +1113,14 @@ const [sessions, setSessions] = useState<ChatSession[]>([]);
                 setInput('What can you do?');
                 setTimeout(() => inputRef.current?.focus(), 100);
               }}
-              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-amber-600 dark:from-gold to-gold-bright text-white hover:from-amber-600 hover:to-amber-700 dark:hover:from-gold-bright dark:hover:to-gold transition-all shadow-lg shadow-amber-500/25"
+              className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-amber-500 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors shadow-lg shadow-amber-500/25"
             >
               Start Chatting →
             </button>
           </div>
         </div>
 
-        {/* Scroll Down Indicator - Floating Button */}
+        {/* Scroll Down Indicator */}
         <button
           onClick={() => {
             const container = document.getElementById('onboarding-scroll-container');

@@ -78,34 +78,34 @@ export default function Home() {
           <PaymentLinkHandler />
         </Suspense>
 
-        {/* Fixed Navigation and Ticker */}
+        {/* Fixed Navigation and Ticker — ticker hidden on chat tab (keyboard-layout sensitive) */}
         <div className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-background-primary">
           <Navigation />
-          <TickerBar />
+          {activeTab !== 'chat' && <TickerBar />}
         </div>
 
-        {/* Main content area with top padding for fixed header */}
-        <div className="flex-1 pt-[104px] relative">
+        {/* Main content area - top padding accounts for fixed nav + ticker (all tabs except chat) */}
+        <div className="flex-1 relative">
           {activeTab === 'home' && (
-            <div className="h-full overflow-y-auto pb-28">
+            <div className="h-full overflow-y-auto pb-28 pt-[104px]">
               <HomePage />
             </div>
           )}
           {activeTab === 'chat' && <ChatPage />}
           {activeTab === 'stake' && (
-            <div className="h-full overflow-y-auto pb-28">
+            <div className="h-full overflow-y-auto pb-28 pt-[104px]">
               <StakePage />
             </div>
           )}
           {activeTab === 'history' && (
-            <div className="h-full overflow-y-auto pb-36">
+            <div className="h-full overflow-y-auto pb-36 pt-[104px]">
               <HistoryPage />
             </div>
           )}
         </div>
 
-        {/* Global Disclaimer Footer - only show on Chat and History pages */}
-        {(activeTab === 'chat' || activeTab === 'history') && (
+        {/* Global Disclaimer Footer - only show on History page (Chat has its own layout) */}
+        {activeTab === 'history' && (
           <div className="fixed bottom-20 left-0 right-0 px-6 pointer-events-none z-20">
             <div className="max-w-md mx-auto pointer-events-auto">
               <div className="backdrop-blur-md bg-white/95 dark:bg-[#08090E]/95 border border-gray-300 dark:border-white/20 rounded-xl px-3 py-2 shadow-xl">
