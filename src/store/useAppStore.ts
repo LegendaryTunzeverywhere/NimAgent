@@ -524,7 +524,7 @@ export const useAppStore = create<AppState>()(
           await addMessage({
             role: 'ai',
             content: response.message,
-            action: response.action,
+            action: response.action ?? undefined,
           });
         } catch (error: any) {
           console.error('Chat error:', error);
