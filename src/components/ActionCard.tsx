@@ -36,6 +36,13 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [txHash, setTxHash] = useState<string | null>(action.txHash || null);
   const [savedContacts, setSavedContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
+  // Catalog-supplied denomination hints — populated from validateOrder response
+  const [availableAmounts, setAvailableAmounts] = useState<number[] | null>(action.availableAmounts || null);
+  const [amountRange, setAmountRange] = useState<{ min: number; max: number; currency: string } | null>(
+    action.minAmount != null && action.maxAmount != null
+      ? { min: action.minAmount, max: action.maxAmount, currency: action.currency || 'USD' }
+      : null
+  );
   
   // Find the index of this message in the messages array
   const messageIndex = messages.findIndex(msg => msg.action === action);
@@ -153,19 +160,24 @@ export default function ActionCard({ action }: ActionCardProps) {
             if (validation.operatorId) action.operatorId = validation.operatorId;
             if (validation.billerId) action.billerId = validation.billerId;
             if (validation.quoteId) setQuoteId(validation.quoteId);
-            // Use the SERVER's authoritative NIM amount (works for all
-            // currencies, not just USD). This is what the user pays and what
-            // the backend re-verifies on-chain, so prefill it here.
             if (typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
               action.amountLuna = validation.amountLuna;
               setAmount((validation.amountLuna / 100000).toFixed(2));
               setLastKnownAmount(validation.amountLuna / 100000);
               
-              // Set initial expiry (60 seconds default)
               const expiryTime = validation.expiresAt 
                 ? new Date(validation.expiresAt).getTime()
                 : Date.now() + 60000;
               setQuoteExpiry(expiryTime);
+            }
+            // Store denomination hints from catalog so the UI can show them
+            if (validation.availableAmounts?.length) setAvailableAmounts(validation.availableAmounts);
+            if (validation.minAmount != null && validation.maxAmount != null) {
+              setAmountRange({
+                min: validation.minAmount,
+                max: validation.maxAmount,
+                currency: (validation.recipientCurrency || validation.localCurrency || action.currency || 'USD').toUpperCase(),
+              });
             }
             setPrevalidationError(null);
           } else {
@@ -240,7 +252,9 @@ export default function ActionCard({ action }: ActionCardProps) {
   }
 
   // Handle Staking - redirect to stake tab
-  if (action.type === 'stake' || action.type === 'unstake') {
+  if (action.type === 'stake' || action.type === 'unstake' || action.type === 'withdraw') {
+    const isWithdraw = action.type === 'withdraw';
+    const isUnstake = action.type === 'unstake';
     return (
       <div className="bg-white dark:bg-white/[0.035] border-2 border-amber-200 dark:border-[#F5A623]/20 rounded-2xl p-4 max-w-sm bg-gradient-to-br from-amber-50/50 to-transparent dark:from-[#F5A623]/5 backdrop-blur-xl">
         <div className="flex items-center gap-3 mb-3">
@@ -253,10 +267,10 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div>
             <p className="font-semibold text-sm text-gray-900 dark:text-white">
-              {action.type === 'stake' ? 'Earn Staking Rewards' : 'Manage Staking'}
+              {isWithdraw ? 'Withdraw Stake' : isUnstake ? 'Manage Staking' : 'Earn Staking Rewards'}
             </p>
             <p className="text-[10px] font-mono text-gray-600 dark:text-[#4A5568]">
-              {action.type === 'stake' ? '~8% APY · NON-CUSTODIAL' : 'UNSTAKE & WITHDRAW'}
+              {isWithdraw ? 'WITHDRAW UNLOCKED NIM' : isUnstake ? 'UNSTAKE & WITHDRAW' : '~8% APY · NON-CUSTODIAL'}
             </p>
           </div>
         </div>
@@ -764,6 +778,24 @@ export default function ActionCard({ action }: ActionCardProps) {
               </span>
             </div>
           )}
+          {/* Show available denominations from catalog */}
+          {availableAmounts && availableAmounts.length > 0 && !success && (
+            <div className="space-y-1">
+              <p className="text-gray-500 dark:text-white/40 text-[10px] font-medium uppercase tracking-wider">Available denominations</p>
+              <div className="flex flex-wrap gap-1.5">
+                {availableAmounts.map(a => (
+                  <span key={a} className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${Number(action.fiatAmount) === a ? 'bg-amber-500 dark:bg-gold text-white dark:text-background-primary' : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white/60'}`}>
+                    {CURRENCY_SYMBOLS[action.currency || 'USD']}{a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {amountRange && !availableAmounts && !success && (
+            <p className="text-gray-500 dark:text-white/40 text-[10px]">
+              Range: {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.min} – {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.max}
+            </p>
+          )}
           <div className="space-y-1">
             <label className="text-gray-600 dark:text-white/50 text-xs font-medium">Email (optional)</label>
             <input
@@ -795,6 +827,11 @@ export default function ActionCard({ action }: ActionCardProps) {
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
+          )}
+          {amountRange && !success && (
+            <p className="text-gray-500 dark:text-white/40 text-[10px]">
+              Valid range: {amountRange.currency} {amountRange.min} – {amountRange.max}
+            </p>
           )}
         </>
       )}

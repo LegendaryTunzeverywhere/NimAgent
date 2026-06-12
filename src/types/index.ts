@@ -39,11 +39,11 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'withdraw' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
-  oldNickname?: string; // For update-contact: the current nickname to find
+  oldNickname?: string;
   newNickname?: string;
   category?: string;
   notes?: string;
@@ -53,6 +53,7 @@ export interface ActionCard {
   currency?: string;
   product?: string;
   productId?: string;
+  country?: string;        // ISO country code — used by gift-card, airtime, bill validation
   phone?: string;
   operator?: string;
   operatorId?: string;
@@ -64,6 +65,10 @@ export interface ActionCard {
   toCoin?: string;
   amount?: string;
   recipientEmail?: string;
+  // Catalog-supplied hints (set by validation, shown as UX context in the card)
+  availableAmounts?: number[];   // FIXED denominations the server confirmed are valid
+  minAmount?: number;            // Lower bound for RANGE products
+  maxAmount?: number;            // Upper bound for RANGE products
   // Payment status fields (persisted)
   completed?: boolean;
   failed?: boolean;
