@@ -16,10 +16,9 @@ const QUICK_PROMPTS: { label: string; icon: IconName; query?: string }[] = [
 ];
 
 const DISCOVER_PROMPTS: { label: string; query: string }[] = [
-  { label: 'What can you do?',       query: 'What can you help me with on NimHub?' },
-  { label: 'About Nimiq',            query: 'Tell me something interesting about Nimiq and NIM.' },
-  { label: 'Feeless transfers?',     query: 'Are NIM transfers really feeless? How does that work?' },
-  { label: 'How gift cards work',    query: 'How do gift card purchases work on NimHub?' },
+  { label: 'What can you do?',    query: 'What can you help me with on NimHub?' },
+  { label: 'About Nimiq',         query: 'Tell me something interesting about Nimiq and NIM.' },
+  { label: 'How gift cards work', query: 'How do gift card purchases work on NimHub?' },
 ];
 
 const ALL_COMMANDS = [
