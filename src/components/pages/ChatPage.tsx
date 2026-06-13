@@ -685,13 +685,13 @@ export default function ChatPage() {
             ))}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-green-100 dark:bg-green-500/12 border border-green-300 dark:border-green-500/25 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-200 dark:bg-green-500/20 flex items-center justify-center flex-shrink-0">
-              <Icon name="check" size={15} strokeWidth={2.5} className="text-green-700 dark:text-green-400" />
+          <div className="p-3.5 rounded-xl bg-green-100 dark:bg-green-500/15 border border-green-300 dark:border-green-500/30 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-green-200 dark:bg-green-500/25 flex items-center justify-center flex-shrink-0">
+              <Icon name="check" size={15} strokeWidth={2.5} className="text-green-700 dark:text-green-300" />
             </div>
             <div>
               <p className="text-sm font-bold text-green-800 dark:text-green-300 mb-0.5">Non-custodial</p>
-              <p className="text-[11px] text-green-700 dark:text-green-200/85 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
+              <p className="text-[11px] text-green-700 dark:text-green-300/90 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
             </div>
           </div>
 
