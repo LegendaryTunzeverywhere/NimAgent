@@ -24,7 +24,7 @@ export default function ValidatorCard({ validator, apy, onSelect }: {
     <motion.div
       whileHover={{ scale: 1.005 }}
       whileTap={{ scale: 0.98 }}
-      className="w-full bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:border-amber-300 dark:hover:border-gold/30 text-left transition-colors duration-150 p-4 rounded-xl cursor-pointer"
+      className="w-full glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:border-amber-300 dark:hover:border-gold/30 text-left transition-colors duration-150 p-4 rounded-xl cursor-pointer"
       onClick={onSelect}
     >
       {/* Top row */}

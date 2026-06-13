@@ -758,7 +758,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 space-y-3 max-w-sm backdrop-blur-xl">
+    <div className="glass dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 space-y-3 max-w-sm">
       {/* Action Details */}
       {action.type === 'send' && (
         <div className="flex justify-between items-center">

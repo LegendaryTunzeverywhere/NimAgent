@@ -22,7 +22,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-6 rounded-xl shadow-sm dark:shadow-none"
+        className="glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-6 rounded-xl shadow-sm dark:shadow-none"
       >
         <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono tracking-widest mb-4">YOUR ACTIVE STAKE</p>
         <div className="text-center mb-6">
@@ -51,7 +51,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
 
       {/* Current validator */}
       {currentValidator && (
-        <div className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-4 rounded-xl">
+        <div className="glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-4 rounded-xl">
           <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mb-3">STAKING WITH</p>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

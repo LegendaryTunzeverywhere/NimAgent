@@ -349,7 +349,7 @@ export default function HomePage() {
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
-      <div className="animate-fade-up bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
+      <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
         <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">

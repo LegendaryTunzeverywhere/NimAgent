@@ -399,8 +399,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 text-gold mb-2">
             <Icon name="qr-scan" size={22} />
           </div>
-          <h3 className="text-white font-semibold">QR Code Scanner</h3>
-          <p className="text-white/50 text-sm mt-0.5">
+          <h3 className="text-gray-900 dark:text-white font-semibold">QR Code Scanner</h3>
+          <p className="text-gray-600 dark:text-white/50 text-sm mt-0.5">
             {isScanning ? 'Point your camera at a QR code' : 'Scan Nimiq addresses or payment requests'}
           </p>
         </div>
@@ -488,14 +488,14 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
           <button
             onClick={() => setManualOpen(true)}
-            className="px-4 py-3 rounded-xl bg-white/[0.04] text-white/60 border border-white/[0.07] font-semibold hover:bg-white/[0.08] hover:text-white/90 transition-colors"
+            className="px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/60 border border-gray-200 dark:border-white/[0.07] font-semibold hover:bg-gray-200 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white/90 transition-colors"
             title="Enter code manually"
           >
             <Icon name="plus" size={18} strokeWidth={2} />
           </button>
         </div>
 
-        <div className="flex items-start gap-2 text-white/40 text-xs">
+        <div className="flex items-start gap-2 text-gray-500 dark:text-white/40 text-xs">
           <span className="text-gold mt-0.5">
             <Icon name="qr-code" size={13} strokeWidth={2} />
           </span>
@@ -513,7 +513,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           <>
             <button
               onClick={() => setManualOpen(false)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
             >
               Cancel
             </button>
@@ -536,9 +536,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           }}
           rows={3}
           placeholder="NQ.. address, https://nimhub.online/pay/..., or nimiq:..."
-          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm font-mono placeholder-white/25 outline-none focus:border-gold/50 resize-none break-all"
+          className="w-full px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-mono placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 resize-none break-all"
         />
-        <p className="text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
+        <p className="text-gray-500 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
       </Modal>
     </>
   );

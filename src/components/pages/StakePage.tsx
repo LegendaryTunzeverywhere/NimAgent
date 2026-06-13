@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ValidatorCard from '@/components/staking/ValidatorCard';
 import StakingDashboard from '@/components/staking/StakingDashboard';
@@ -47,12 +47,7 @@ export default function StakePage() {
     prewarmHub();
   }, []);
 
-  useEffect(() => {
-    setActiveTab('stake');
-    loadData(walletAddress);
-  }, [walletAddress, setActiveTab]);
-
-  async function loadData(address?: string | null) {
+  const loadData = useCallback(async (address?: string | null) => {
     setLoading(true);
     try {
       const [vals, networkApy] = await Promise.all([
@@ -117,9 +112,8 @@ export default function StakePage() {
         setStakerInfo(staker);
         
         // If we were waiting for a stake and now we have one, clear pending state
-        if (pendingStake && staker?.activeBalance) {
-          setPendingStake(false);
-        }
+        // Use functional update to avoid pendingStake dependency
+        setPendingStake((prev) => staker?.activeBalance ? false : prev);
         
         setView(staker?.activeBalance ? 'dashboard' : 'validators');
       } else {
@@ -130,7 +124,12 @@ export default function StakePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    setActiveTab('stake');
+    loadData(walletAddress);
+  }, [walletAddress, setActiveTab, loadData]);
 
   async function handleStakeSuccess() {
     setPendingStake(true);
@@ -258,7 +257,7 @@ export default function StakePage() {
               placeholder="Search validators..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full mb-4 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-600 dark:focus:ring-gold/60 transition-shadow"
+              className="w-full mb-4 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/[0.06] glass dark:bg-white/[0.03] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-600 dark:focus:ring-gold/60 transition-shadow"
             />
 
             <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mb-3">
@@ -548,7 +547,7 @@ function StakeHeader({ view, setView, stakerInfo }: {
                     process.env.NEXT_PUBLIC_NIMIQ_NETWORK === 'testnet';
 
   return (
-    <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-200 dark:border-white/[0.06] sticky top-0 z-40 bg-white/90 dark:bg-[#08090E]/80 backdrop-blur-xl">
+    <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-200 dark:border-white/[0.06] sticky top-0 z-40 glass-strong">
       <div>
         {view === 'confirm' ? (
           <button

@@ -98,7 +98,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
   }
 
   return (
-    <div className="bg-white dark:bg-white/[0.035] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-5 space-y-4 text-center max-w-sm">
+    <div className="glass dark:bg-white/[0.035] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-5 space-y-4 text-center max-w-sm">
 
       {/* ── Mode tabs ─────────────────────────────────────────────────────── */}
       <div className="flex bg-gray-100 dark:bg-white/[0.05] rounded-xl p-1 gap-0.5">
