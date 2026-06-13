@@ -55,6 +55,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
   const startScanning = async () => {
     try {
+      console.log('[QRScanner] Starting scan...');
+      stopScanning(); // Ensure any previous scan is stopped first
       setError(null);
       setScanSuccess(false);
       setIsScanning(true);
@@ -76,10 +78,10 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       // Try back camera first, fall back to any camera.
       let mediaStream: MediaStream | null = null;
       const constraintSets = [
-        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-        { video: { facingMode: { exact: 'environment' } } },
+        { video: { facingMode: 'environment' } },
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
         { video: { facingMode: 'user' } },
-        { video: { width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
         { video: true },
       ];
 
@@ -109,23 +111,48 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       }
 
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+        const videoElement = videoRef.current;
+        videoElement.srcObject = mediaStream;
         // Wait for video to be ready
         await new Promise<void>((resolve, reject) => {
-          if (!videoRef.current) return reject(new Error('Video ref not available'));
-          videoRef.current.onloadedmetadata = () => resolve();
-          videoRef.current.onerror = reject;
+          const handleLoaded = () => {
+            console.log('[QRScanner] Video loaded, ready to play');
+            resolve();
+          };
+          const handleError = (e: Event) => {
+            console.error('[QRScanner] Video error:', e);
+            reject(e);
+          };
+          
+          videoElement.addEventListener('loadedmetadata', handleLoaded, { once: true });
+          videoElement.addEventListener('error', handleError, { once: true });
+          
+          // Timeout in case events don't fire
+          setTimeout(() => {
+            if (videoElement.readyState >= videoElement.HAVE_METADATA) {
+              resolve();
+            } else {
+              reject(new Error('Video metadata loading timed out'));
+            }
+          }, 5000);
         });
         // play() returns a Promise — must be awaited on iOS Safari
         try {
-          await videoRef.current.play();
+          await videoElement.play();
+          console.log('[QRScanner] Video playing successfully');
         } catch (e) {
           console.warn('[QRScanner] Autoplay blocked, user interaction needed:', e);
+          // Try playing again on user interaction
+          const playOnClick = () => {
+            videoElement.play().catch(err => console.warn('[QRScanner] Play failed on click:', err));
+            document.body.removeEventListener('click', playOnClick);
+          };
+          document.body.addEventListener('click', playOnClick, { once: true });
         }
 
         scanIntervalRef.current = setInterval(() => {
           scanFrame();
-        }, 250);
+        }, 200); // More frequent scanning for better detection
       }
     } catch (err: any) {
       console.error('[QRScanner] Camera access error:', err);
@@ -155,24 +182,46 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
     if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return;
 
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    try {
+      // Set canvas size to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
-    // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Draw video frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Get image data from canvas
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    
-    // Detect QR code using jsQR
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'dontInvert',
-    });
-    
-    if (code && code.data) {
-      // QR code detected!
-      handleQRDetected(code.data);
+      // Get image data from canvas
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // Try detecting QR code with different inversion modes
+      let code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert',
+      });
+      
+      if (!code) {
+        code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'invertFirst',
+        });
+      }
+      
+      if (!code) {
+        code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'onlyInvert',
+        });
+      }
+      
+      if (!code) {
+        code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'attemptBoth',
+        });
+      }
+      
+      if (code && code.data) {
+        // QR code detected!
+        handleQRDetected(code.data);
+      }
+    } catch (e) {
+      console.error('[QRScanner] Error scanning frame:', e);
     }
   };
 
@@ -378,9 +427,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           <div className="relative">
             <video
               ref={videoRef}
-              className="w-full rounded-xl bg-black"
+              className="w-full rounded-xl bg-black object-cover"
               playsInline
               muted
+              autoPlay
+              controls={false}
+              style={{ minHeight: '300px' }}
             />
             <canvas ref={canvasRef} className="hidden" />
 
