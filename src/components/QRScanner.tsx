@@ -18,9 +18,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
   const [scanSuccess, setScanSuccess] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scanFrameRef = useRef<() => void>(() => {});
+  const handleQRDetectedRef = useRef<(data: string) => Promise<void>>(async () => {});
 
   const stopScanning = useCallback(() => {
     console.log('[QRScanner] Stopping scanning...');
@@ -151,8 +153,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         }
 
         scanIntervalRef.current = setInterval(() => {
-          scanFrame();
-        }, 200); // More frequent scanning for better detection
+          scanFrameRef.current();
+        }, 150); // More frequent scanning for better detection
       }
     } catch (err: any) {
       console.error('[QRScanner] Camera access error:', err);
@@ -170,226 +172,223 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     }
   };
 
-  const scanFrame = () => {
-    if (!videoRef.current || !canvasRef.current || !isScanning) return;
+  // Update refs whenever dependencies change
+  useEffect(() => {
+    scanFrameRef.current = () => {
+      if (!videoRef.current || !canvasRef.current || !isScanning) return;
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
 
-    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+      if (!ctx || video.readyState < video.HAVE_ENOUGH_DATA) return;
 
-    try {
-      // Set canvas size to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      try {
+        // Set canvas size to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-      // Draw video frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Get image data from canvas
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      // Try detecting QR code with different inversion modes
-      let code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'dontInvert',
-      });
-      
-      if (!code) {
-        code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'invertFirst',
-        });
-      }
-      
-      if (!code) {
-        code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'onlyInvert',
-        });
-      }
-      
-      if (!code) {
-        code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'attemptBoth',
-        });
-      }
-      
-      if (code && code.data) {
-        // QR code detected! Stop scanning first, then handle
-        stopScanning();
-        handleQRDetected(code.data);
-      }
-    } catch (e) {
-      console.error('[QRScanner] Error scanning frame:', e);
-    }
-  };
-
-  const handleQRDetected = async (data: string) => {
-    // Show success feedback
-    setScanSuccess(true);
-    
-    // Helper function to normalize Nimiq address (remove spaces)
-    const normalizeAddress = (addr: string): string => {
-      return addr.replace(/\s/g, '').toUpperCase();
-    };
-
-    // Helper function to format Nimiq address with spaces
-    const formatAddress = (addr: string): string => {
-      const normalized = normalizeAddress(addr);
-      return normalized.match(/.{1,4}/g)?.join(' ') || normalized;
-    };
-
-    // Helper function to ask about saving address
-    const askToSaveAddress = async (address: string) => {
-      setTimeout(async () => {
-        const { wallet } = useAppStore.getState();
-        if (!wallet.address) return;
+        // Get image data from canvas
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         
-        // Check if this address is already saved
-        const { getSavedAddresses } = await import('@/lib/api-client');
-        const contacts = await getSavedAddresses(wallet.address);
-        const normalized = normalizeAddress(address);
-        const alreadySaved = contacts.some(c => normalizeAddress(c.recipient_address) === normalized);
+        // Try detecting QR code with all inversion modes
+        const inversionOptions = ['attemptBoth', 'dontInvert', 'invertFirst', 'onlyInvert'] as const;
+        let code = null;
         
-        if (!alreadySaved) {
+        for (const inversion of inversionOptions) {
+          code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: inversion,
+          });
+          if (code && code.data) {
+            break;
+          }
+        }
+        
+        if (code && code.data) {
+          console.log('[QRScanner] QR code detected:', code.data);
+          // QR code detected! Stop scanning first, then handle
+          stopScanning();
+          handleQRDetectedRef.current(code.data);
+        }
+      } catch (e) {
+        console.error('[QRScanner] Error scanning frame:', e);
+      }
+    };
+  }, [isScanning, stopScanning]);
+
+  // Update handleQRDetectedRef whenever dependencies change
+  useEffect(() => {
+    handleQRDetectedRef.current = async (data: string) => {
+      // Show success feedback
+      setScanSuccess(true);
+      
+      // Helper function to normalize Nimiq address (remove spaces)
+      const normalizeAddress = (addr: string): string => {
+        return addr.replace(/\s/g, '').toUpperCase();
+      };
+
+      // Helper function to format Nimiq address with spaces
+      const formatAddress = (addr: string): string => {
+        const normalized = normalizeAddress(addr);
+        return normalized.match(/.{1,4}/g)?.join(' ') || normalized;
+      };
+
+      // Helper function to ask about saving address
+      const askToSaveAddress = async (address: string) => {
+        setTimeout(async () => {
+          const { wallet } = useAppStore.getState();
+          if (!wallet.address) return;
+          
+          // Check if this address is already saved
+          const { getSavedAddresses } = await import('@/lib/api-client');
+          const contacts = await getSavedAddresses(wallet.address);
+          const normalized = normalizeAddress(address);
+          const alreadySaved = contacts.some(c => normalizeAddress(c.recipient_address) === normalized);
+          
+          if (!alreadySaved) {
+            addMessage({
+              role: 'ai',
+              content: `Would you like to save this address for future use?\n\nAddress: ${address.substring(0, 10)}...${address.substring(address.length - 6)}\n\nJust say "Save this as [name]" (e.g., "Save this as Friend")`,
+            });
+          }
+        }, 2000);
+      };
+      
+      // Parse QR code data
+      const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
+      
+      if (data.startsWith(`${baseUrl}/pay/`) || data.includes('/pay/')) {
+        // NimHub simple pay link: /pay/<address>
+        try {
+          const url = new URL(data);
+          const addressFromUrl = decodeURIComponent(url.pathname.split('/pay/')[1] || '');
+          const normalizedAddress = normalizeAddress(addressFromUrl);
+          const formattedAddress = formatAddress(normalizedAddress);
+          const amount = url.searchParams.get('amount');
+          const message = url.searchParams.get('message');
+          
+          let responseMessage = `QR scanned — NimHub pay link:\nTo: ${formattedAddress}`;
+          if (amount) responseMessage += `\nAmount: ${amount} NIM`;
+          if (message) responseMessage += `\nFor: ${message}`;
+          
           addMessage({
             role: 'ai',
-            content: `Would you like to save this address for future use?\n\nAddress: ${address.substring(0, 10)}...${address.substring(address.length - 6)}\n\nJust say "Save this as [name]" (e.g., "Save this as Friend")`,
+            content: responseMessage,
+            action: {
+              type: 'send',
+              recipient: formattedAddress,
+              amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
+              message: message || undefined,
+              locked: !!amount && parseFloat(amount) > 0,
+            }
           });
+          await askToSaveAddress(formattedAddress);
+        } catch {
+          addMessage({ role: 'ai', content: `QR scanned but couldn't parse NimHub pay link: ${data}` });
         }
-      }, 2000);
-    };
-    
-    // Parse QR code data
-    const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
-    
-    if (data.startsWith(`${baseUrl}/pay/`) || data.includes('/pay/')) {
-      // NimHub simple pay link: /pay/<address>
-      try {
-        const url = new URL(data);
-        const addressFromUrl = decodeURIComponent(url.pathname.split('/pay/')[1] || '');
-        const normalizedAddress = normalizeAddress(addressFromUrl);
-        const formattedAddress = formatAddress(normalizedAddress);
-        const amount = url.searchParams.get('amount');
-        const message = url.searchParams.get('message');
-        
-        let responseMessage = `QR scanned — NimHub pay link:\nTo: ${formattedAddress}`;
-        if (amount) responseMessage += `\nAmount: ${amount} NIM`;
-        if (message) responseMessage += `\nFor: ${message}`;
-        
-        addMessage({
-          role: 'ai',
-          content: responseMessage,
-          action: {
-            type: 'send',
-            recipient: formattedAddress,
-            amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
-            message: message || undefined,
-            locked: !!amount && parseFloat(amount) > 0,
-          }
-        });
-        await askToSaveAddress(formattedAddress);
-      } catch {
-        addMessage({ role: 'ai', content: `QR scanned but couldn't parse NimHub pay link: ${data}` });
-      }
-    } else if (
-      // NimHub payment REQUEST link: /?to=<address>&amount=<nim>&message=<msg>
-      (data.startsWith(baseUrl) || data.startsWith('https://nimhub.online')) &&
-      data.includes('?') && data.includes('to=')
-    ) {
-      try {
-        const url = new URL(data);
-        const to      = url.searchParams.get('to') || '';
-        const amount  = url.searchParams.get('amount');
-        const message = url.searchParams.get('message');
-        const normalizedAddress = normalizeAddress(to);
-        const formattedAddress  = formatAddress(normalizedAddress);
-        const hasAmount = !!amount && parseFloat(amount) > 0;
+      } else if (
+        // NimHub payment REQUEST link: /?to=<address>&amount=<nim>&message=<msg>
+        (data.startsWith(baseUrl) || data.startsWith('https://nimhub.online')) &&
+        data.includes('?') && data.includes('to=')
+      ) {
+        try {
+          const url = new URL(data);
+          const to      = url.searchParams.get('to') || '';
+          const amount  = url.searchParams.get('amount');
+          const message = url.searchParams.get('message');
+          const normalizedAddress = normalizeAddress(to);
+          const formattedAddress  = formatAddress(normalizedAddress);
+          const hasAmount = !!amount && parseFloat(amount) > 0;
 
-        let responseMessage = `Payment request scanned!\n\nTo: ${formattedAddress}`;
-        if (amount) responseMessage += `\nAmount: ${amount} NIM`;
-        if (message) responseMessage += `\nFor: ${message}`;
-        if (hasAmount) responseMessage += `\n\n⚠️ Amount is fixed by the requester and cannot be changed.`;
+          let responseMessage = `Payment request scanned!\n\nTo: ${formattedAddress}`;
+          if (amount) responseMessage += `\nAmount: ${amount} NIM`;
+          if (message) responseMessage += `\nFor: ${message}`;
+          if (hasAmount) responseMessage += `\n\n⚠️ Amount is fixed by the requester and cannot be changed.`;
 
+          addMessage({
+            role: 'ai',
+            content: responseMessage,
+            action: {
+              type: 'send',
+              recipient: formattedAddress,
+              amountLuna: hasAmount ? Math.round(parseFloat(amount!) * 100000) : 0,
+              message: message || undefined,
+              locked: hasAmount,
+            }
+          });
+          await askToSaveAddress(formattedAddress);
+        } catch {
+          addMessage({ role: 'ai', content: `QR scanned but couldn't parse payment request: ${data}` });
+        }
+      } else if (data.toUpperCase().startsWith('NQ') && normalizeAddress(data).length >= 36) {
+        // Nimiq address detected (with or without spaces)
+        const formattedAddress = formatAddress(data);
         addMessage({
           role: 'ai',
-          content: responseMessage,
+          content: `QR code scanned!\n\nDetected Nimiq address:\n${formattedAddress}\n\nHow much NIM would you like to send to this address?`,
           action: {
             type: 'send',
             recipient: formattedAddress,
-            amountLuna: hasAmount ? Math.round(parseFloat(amount!) * 100000) : 0,
-            message: message || undefined,
-            locked: hasAmount,
-          }
-        });
-        await askToSaveAddress(formattedAddress);
-      } catch {
-        addMessage({ role: 'ai', content: `QR scanned but couldn't parse payment request: ${data}` });
-      }
-    } else if (data.toUpperCase().startsWith('NQ') && normalizeAddress(data).length >= 36) {
-      // Nimiq address detected (with or without spaces)
-      const formattedAddress = formatAddress(data);
-      addMessage({
-        role: 'ai',
-        content: `QR code scanned!\n\nDetected Nimiq address:\n${formattedAddress}\n\nHow much NIM would you like to send to this address?`,
-        action: {
-          type: 'send',
-          recipient: formattedAddress,
-          amountLuna: 0,
-        }
-      });
-      
-      // Ask if user wants to save this address
-      await askToSaveAddress(formattedAddress);
-    } else if (data.startsWith('nimiq:')) {
-      // Nimiq payment request URI
-      try {
-        const url = new URL(data);
-        const addressFromUri = url.pathname;
-        const formattedAddress = formatAddress(addressFromUri);
-        const amount = url.searchParams.get('amount');
-        
-        let message = `QR code scanned! 📷\n\nPayment request detected:\nTo: ${formattedAddress}`;
-        if (amount) {
-          message += `\nAmount: ${amount} NIM`;
-        }
-        
-        addMessage({
-          role: 'ai',
-          content: message,
-          action: {
-            type: 'send',
-            recipient: formattedAddress,
-            amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
+            amountLuna: 0,
           }
         });
         
         // Ask if user wants to save this address
         await askToSaveAddress(formattedAddress);
-      } catch (err) {
+      } else if (data.startsWith('nimiq:')) {
+        // Nimiq payment request URI
+        try {
+          const url = new URL(data);
+          const addressFromUri = url.pathname;
+          const formattedAddress = formatAddress(addressFromUri);
+          const amount = url.searchParams.get('amount');
+          
+          let message = `QR code scanned! 📷\n\nPayment request detected:\nTo: ${formattedAddress}`;
+          if (amount) {
+            message += `\nAmount: ${amount} NIM`;
+          }
+          
+          addMessage({
+            role: 'ai',
+            content: message,
+            action: {
+              type: 'send',
+              recipient: formattedAddress,
+              amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
+            }
+          });
+          
+          // Ask if user wants to save this address
+          await askToSaveAddress(formattedAddress);
+        } catch (err) {
+          addMessage({
+            role: 'ai',
+            content: `QR code scanned but couldn't parse payment request: ${data}`,
+          });
+        }
+      } else {
+        // Unknown QR code format
         addMessage({
           role: 'ai',
-          content: `QR code scanned but couldn't parse payment request: ${data}`,
+          content: `QR code scanned: ${data}\n\nThis doesn't appear to be a Nimiq address, NimHub payment link, or payment request. Please scan a valid Nimiq QR code.`,
         });
       }
-    } else {
-      // Unknown QR code format
-      addMessage({
-        role: 'ai',
-        content: `QR code scanned: ${data}\n\nThis doesn't appear to be a Nimiq address, NimHub payment link, or payment request. Please scan a valid Nimiq QR code.`,
-      });
-    }
 
-    if (onScan) {
-      onScan(data);
-    }
-  };
+      if (onScan) {
+        onScan(data);
+      }
+    };
+  }, [addMessage, onScan]);
 
   const handleManualSubmit = () => {
     const value = manualValue.trim();
     if (!value) return;
     setManualOpen(false);
     setManualValue('');
-    handleQRDetected(value);
+    handleQRDetectedRef.current(value);
   };
 
   return (

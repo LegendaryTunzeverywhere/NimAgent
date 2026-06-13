@@ -9,13 +9,55 @@ export default function BottomNav() {
 
   // Hide bottom nav when the virtual keyboard is open — frees up space for chat input.
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return;
+    if (typeof window === 'undefined') return;
+    
     const THRESHOLD = 0.75;
-    const handle = () => {
-      setKeyboardVisible((window.visualViewport!.height / window.innerHeight) < THRESHOLD);
+    
+    const checkKeyboardVisibility = () => {
+      let visible = false;
+      
+      // Method 1: visualViewport (most reliable)
+      if (window.visualViewport) {
+        const ratio = window.visualViewport.height / window.innerHeight;
+        visible = ratio < THRESHOLD;
+      }
+      
+      // Method 2: Check if innerHeight changed significantly (fallback)
+      if (!visible && window.innerHeight < window.outerHeight * 0.85) {
+        visible = true;
+      }
+      
+      setKeyboardVisible(visible);
     };
-    window.visualViewport.addEventListener('resize', handle);
-    return () => window.visualViewport!.removeEventListener('resize', handle);
+
+    // Listen for various events that indicate keyboard visibility changes
+    const events = [
+      'resize',
+      'orientationchange',
+      'focusin',
+      'focusout'
+    ];
+    
+    events.forEach(event => {
+      window.addEventListener(event, checkKeyboardVisibility);
+    });
+    
+    // Also check visualViewport resize if available
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', checkKeyboardVisibility);
+    }
+    
+    // Initial check
+    checkKeyboardVisibility();
+    
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, checkKeyboardVisibility);
+      });
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', checkKeyboardVisibility);
+      }
+    };
   }, []);
 
   if (keyboardVisible) return null;
