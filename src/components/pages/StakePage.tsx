@@ -25,6 +25,8 @@ export default function StakePage() {
   const [showUnstakeModal, setShowUnstakeModal] = useState(false);
   const [unstakeAmount, setUnstakeAmount] = useState('');
   const [unstaking, setUnstaking] = useState(false);
+  const [unstakeResult, setUnstakeResult] = useState<{ txHash: string; amount: number } | null>(null);
+  const [unstakeError, setUnstakeError] = useState<string | null>(null);
   const [hubApi, setHubApi] = useState<any>(null); // Pre-loaded Hub API instance
 
   const { wallet, setActiveTab } = useAppStore();
@@ -327,130 +329,204 @@ export default function StakePage() {
       <Modal
         open={showUnstakeModal}
         onClose={() => {
+          if (unstaking) return;
           setShowUnstakeModal(false);
           setUnstakeAmount('');
+          setUnstakeResult(null);
+          setUnstakeError(null);
         }}
-        title="💰 Unstake Your NIM"
-        subtitle={`Current staked: ${stakerInfo ? (stakerInfo.balance / 100000).toLocaleString() : '0'} NIM`}
+        title={unstakeResult ? 'Unstake Initiated' : unstakeError ? 'Unstake Failed' : 'Unstake Your NIM'}
+        subtitle={
+          unstakeResult
+            ? `${unstakeResult.amount.toLocaleString()} NIM unstaked`
+            : unstakeError
+            ? 'Something went wrong'
+            : `Currently staked: ${stakerInfo ? (stakerInfo.balance / 100000).toLocaleString() : '0'} NIM`
+        }
         footer={
-          <>
+          unstakeResult ? (
             <button
               onClick={() => {
                 setShowUnstakeModal(false);
                 setUnstakeAmount('');
+                setUnstakeResult(null);
+                setUnstakeError(null);
+                setTimeout(() => window.location.reload(), 100);
               }}
-              disabled={unstaking}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
             >
-              Cancel
+              Done
             </button>
-            <button
-              onClick={async () => {
-                if (!unstakeAmount || !stakerInfo || !walletAddress) return;
-                
-                const amount = parseFloat(unstakeAmount);
-                if (isNaN(amount) || amount <= 0) {
-                  alert('❌ Invalid amount');
-                  return;
-                }
-                
-                const amountLuna = Math.round(amount * 100000);
-                
-                // Check if amount exceeds staked balance
-                if (amountLuna > stakerInfo.balance) {
-                  alert(`❌ Cannot unstake ${amount} NIM\n\nYou only have ${(stakerInfo.balance / 100000).toLocaleString()} NIM staked.`);
-                  return;
-                }
-                
-                try {
-                  setUnstaking(true);
-                  
-                  // Import unstaking function
-                  const { unstakeNIM } = await import('@/lib/staking');
-                  
-                  // Execute unstake transaction with prewarmed Hub API
-                  const txHash = await unstakeNIM(walletAddress, amountLuna, hubApi);
-                  
+          ) : unstakeError ? (
+            <>
+              <button
+                onClick={() => setUnstakeError(null)}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
                   setShowUnstakeModal(false);
                   setUnstakeAmount('');
-                  
-                  // Show success message
-                  alert(
-                    `✅ Unstake Initiated!\n\n` +
-                    `Amount: ${amount} NIM\n` +
-                    `Transaction: ${txHash}\n\n` +
-                    `⏳ Note: Unstaked NIM will be available for withdrawal after ~1 epoch (~24h).`
-                  );
-                  
-                  // Refresh staker info
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 2000);
-                  
-                } catch (error: any) {
-                  console.error('[StakePage] Unstake error:', error);
-                  
-                  // Check if user cancelled
-                  if (error.message?.includes('cancelled') || error.message?.includes('closed')) {
-                    alert('Transaction cancelled');
-                  } else {
-                    alert(`❌ Unstake Failed\n\n${error.message || 'Unknown error'}`);
+                  setUnstakeError(null);
+                }}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
+              >
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setShowUnstakeModal(false);
+                  setUnstakeAmount('');
+                  setUnstakeError(null);
+                }}
+                disabled={unstaking}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!unstakeAmount || !stakerInfo || !walletAddress) return;
+
+                  const amount = parseFloat(unstakeAmount);
+                  if (isNaN(amount) || amount <= 0) {
+                    setUnstakeError('Please enter a valid amount.');
+                    return;
                   }
-                } finally {
-                  setUnstaking(false);
-                }
-              }}
-              disabled={!unstakeAmount || unstaking || parseFloat(unstakeAmount || '0') <= 0}
-              className="btn-gold px-6 py-2 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {unstaking ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Unstaking...
-                </>
-              ) : (
-                'Confirm Unstake'
-              )}
-            </button>
-          </>
+
+                  const amountLuna = Math.round(amount * 100000);
+
+                  if (amountLuna > stakerInfo.balance) {
+                    setUnstakeError(`You only have ${(stakerInfo.balance / 100000).toLocaleString()} NIM staked. Enter a smaller amount.`);
+                    return;
+                  }
+
+                  try {
+                    setUnstaking(true);
+                    setUnstakeError(null);
+
+                    const { unstakeNIM } = await import('@/lib/staking');
+                    const txHash = await unstakeNIM(walletAddress, amountLuna, hubApi);
+
+                    setUnstakeResult({ txHash, amount });
+                    setUnstakeAmount('');
+                  } catch (error: any) {
+                    console.error('[StakePage] Unstake error:', error);
+                    if (error.message?.includes('cancelled') || error.message?.includes('closed')) {
+                      // User dismissed the wallet popup — close modal silently
+                      setShowUnstakeModal(false);
+                      setUnstakeAmount('');
+                    } else {
+                      setUnstakeError(error.message || 'Unstake failed. Please try again.');
+                    }
+                  } finally {
+                    setUnstaking(false);
+                  }
+                }}
+                disabled={!unstakeAmount || unstaking || parseFloat(unstakeAmount || '0') <= 0}
+                className="btn-gold px-6 py-2 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {unstaking ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Unstaking...
+                  </>
+                ) : (
+                  'Confirm Unstake'
+                )}
+              </button>
+            </>
+          )
         }
       >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700 dark:text-white/70">
-              Amount to unstake (NIM)
-            </label>
-            <input
-              type="number"
-              autoFocus
-              value={unstakeAmount}
-              onChange={(e) => setUnstakeAmount(e.target.value)}
-              min="0.00001"
-              step="0.01"
-              placeholder="0.00"
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/[0.04] border-2 border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-lg font-mono placeholder-gray-400 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20 transition-all"
-            />
-            {stakerInfo && (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500 dark:text-white/40">Available: {(stakerInfo.balance / 100000).toLocaleString()} NIM</span>
-                <button
-                  type="button"
-                  onClick={() => setUnstakeAmount((stakerInfo.balance / 100000).toString())}
-                  className="text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright font-semibold transition-colors"
-                >
-                  Max
-                </button>
-              </div>
-            )}
+        {/* Success state */}
+        {unstakeResult ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-green-100 dark:bg-success/15 mx-auto">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 dark:text-success">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-base font-bold text-gray-900 dark:text-white">
+                {unstakeResult.amount.toLocaleString()} NIM unstaked
+              </p>
+              <p className="text-sm text-gray-500 dark:text-white/50">Transaction submitted to the network</p>
+            </div>
+            <div className="rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] p-3 space-y-1">
+              <p className="text-[10px] font-medium text-gray-500 dark:text-white/40 uppercase tracking-wider">Transaction hash</p>
+              <p className="text-xs font-mono text-gray-700 dark:text-white/70 break-all leading-relaxed">
+                {unstakeResult.txHash}
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/8 border border-amber-200 dark:border-amber-500/20">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0">
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" />
+              </svg>
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                Your NIM will be available to withdraw after approximately 1 epoch (~24 hours). This is a Nimiq network requirement.
+              </p>
+            </div>
           </div>
-          
-          <div className="flex items-start gap-2 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
-            <span className="text-amber-600 dark:text-amber-400 mt-0.5">⏳</span>
-            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              <strong className="font-semibold">Note:</strong> Unstaked NIM will be available for withdrawal after approximately 1 epoch (~24 hours). This is a blockchain requirement for security.
-            </p>
+        ) : unstakeError ? (
+          /* Error state */
+          <div className="space-y-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-100 dark:bg-error/15 mx-auto">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-error">
+                <circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6" /><path d="M9 9l6 6" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Transaction failed</p>
+            </div>
+            <div className="rounded-xl bg-red-50 dark:bg-error/8 border border-red-200 dark:border-error/20 p-3">
+              <p className="text-sm text-red-700 dark:text-error leading-relaxed">{unstakeError}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Default: amount entry */
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-white/70">
+                Amount to unstake (NIM)
+              </label>
+              <input
+                type="number"
+                autoFocus
+                value={unstakeAmount}
+                onChange={(e) => setUnstakeAmount(e.target.value)}
+                min="0.00001"
+                step="0.01"
+                placeholder="0.00"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/[0.04] border-2 border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-lg font-mono placeholder-gray-400 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20 transition-all"
+              />
+              {stakerInfo && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500 dark:text-white/40">Available: {(stakerInfo.balance / 100000).toLocaleString()} NIM</span>
+                  <button
+                    type="button"
+                    onClick={() => setUnstakeAmount((stakerInfo.balance / 100000).toString())}
+                    className="text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright font-semibold transition-colors"
+                  >
+                    Max
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-start gap-2 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+              <span className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0">⏳</span>
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                <strong className="font-semibold">Note:</strong> Unstaked NIM will be available for withdrawal after approximately 1 epoch (~24 hours). This is a blockchain requirement for security.
+              </p>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
