@@ -14,7 +14,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const { addMessage } = useAppStore();
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
   const [scanSuccess, setScanSuccess] = useState(false);
@@ -31,7 +31,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       scanIntervalRef.current = null;
     }
 
-    // Stop all tracks, even if not in state
+    // Stop all tracks
     if (videoRef.current?.srcObject) {
       const currentStream = videoRef.current.srcObject as MediaStream;
       currentStream.getTracks().forEach(track => {
@@ -41,11 +41,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       videoRef.current.srcObject = null;
     }
 
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-  }, [stream]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -82,7 +82,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         { video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
         { video: { facingMode: 'user' } },
         { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: true },
+        { video: true }
       ];
 
       console.log('[QRScanner] Attempting to get camera stream...');
@@ -102,7 +102,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         throw new Error('Could not access camera. Please allow camera permission and try again.');
       }
 
-      setStream(mediaStream);
+      streamRef.current = mediaStream;
 
       // Ensure all previous tracks are stopped if any exist
       if (videoRef.current?.srcObject) {
@@ -166,10 +166,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       setError(msg);
       setIsScanning(false);
       // Ensure any partial stream is cleaned up
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
-      }
+      stopScanning();
     }
   };
 
