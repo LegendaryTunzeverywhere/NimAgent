@@ -171,7 +171,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   };
 
   const scanFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !isScanning) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -214,7 +214,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       }
       
       if (code && code.data) {
-        // QR code detected!
+        // QR code detected! Stop scanning first, then handle
+        stopScanning();
         handleQRDetected(code.data);
       }
     } catch (e) {
@@ -225,11 +226,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const handleQRDetected = async (data: string) => {
     // Show success feedback
     setScanSuccess(true);
-    
-    // Stop scanning after a short delay to show the success state
-    setTimeout(() => {
-      stopScanning();
-    }, 500);
     
     // Helper function to normalize Nimiq address (remove spaces)
     const normalizeAddress = (addr: string): string => {
