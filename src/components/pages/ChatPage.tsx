@@ -8,21 +8,17 @@ import Modal from '@/components/Modal';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
-const QUICK_PROMPTS: { label: string; icon: IconName; query?: string }[] = [
-  { label: 'Send NIM',       icon: 'send' },
-  { label: 'Gift card',      icon: 'gift-card',  query: 'Buy gift card' },
-  { label: 'Top up airtime', icon: 'airtime' },
-  { label: 'Pay a bill',     icon: 'bill' },
-];
-
-const DISCOVER_PROMPTS: { label: string; query: string }[] = [
-  { label: 'What can you do?',    query: 'What can you help me with on NimHub?' },
-  { label: 'About Nimiq',         query: 'Tell me something interesting about Nimiq and NIM.' },
-  { label: 'How gift cards work', query: 'How do gift card purchases work on NimHub?' },
-];
-
 const ALL_COMMANDS = [
-  { category: 'Send & Receive', commands: ['Send 50 NIM to [address]','Send to Mom (saved contact)','Show my address','Scan QR code','Check my balance'] },
+  { category: 'Quick Start', commands: [
+    'What can you help me with?',
+    'Tell me about Nimiq',
+    'How do gift cards work?',
+    'Send NIM',
+    'Buy gift card',
+    'Top up airtime',
+    'Pay a bill',
+  ]},
+  { category: 'Send & Receive', commands: ['Send 50 NIM to [address]','Send to Mom (saved contact)','Show my address','Scan QR code','Check my balance','Request 50 NIM payment'] },
   { category: 'Saved Contacts', commands: ['Save [address] as Mom','Send to Coffee Shop','Show my contacts','Rename Mom to Mother','Delete Alice'] },
   { category: 'Gift Cards',     commands: ['Buy Amazon gift card','Get $50 Steam card','Netflix gift card $25'] },
   { category: 'Airtime & Data', commands: ['Top up +234... with $10','Buy 5GB data bundle'] },
@@ -273,7 +269,7 @@ export default function ChatPage() {
             <button
               onClick={() => { showSessions ? setShowSessions(false) : (fetchSessions(), setShowSessions(true)); }}
               disabled={!wallet.connected}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Icon name="history" size={12} strokeWidth={2.2} />
               <span className="hidden sm:inline">History</span>
@@ -286,7 +282,7 @@ export default function ChatPage() {
                 if (useAppStore.getState().messages.length > 0) clearMessages();
                 await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd like to do." });
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
               title="New chat"
             >
               <Icon name="plus" size={12} strokeWidth={2.5} />
@@ -296,7 +292,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="info" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Commands</span>
@@ -304,7 +300,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>
@@ -333,20 +329,23 @@ export default function ChatPage() {
                 onClick={() => loadSession(s.sessionId)}
                 className={`flex items-start justify-between gap-2 p-3 rounded-xl cursor-pointer transition-all ${
                   s.sessionId === currentSessionId
-                    ? 'bg-amber-50 dark:bg-gold/8 border border-amber-200 dark:border-gold/20'
-                    : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                    ? 'bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/30'
+                    : 'hover:bg-gray-100 dark:hover:bg-white/[0.07] border border-transparent'
                 }`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 dark:text-white/85 truncate">{s.lastMessage}</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
+                  <p className="text-sm text-gray-900 dark:text-white/90 truncate font-medium">{s.lastMessage}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/55 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
                   {s.sessionId === currentSessionId && (
-                    <p className="text-[10px] text-amber-600 dark:text-gold font-semibold mt-1">Current session</p>
+                    <p className="text-[10px] text-amber-700 dark:text-gold font-semibold mt-1 flex items-center gap-1">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                      Current session
+                    </p>
                   )}
                 </div>
                 <button
                   onClick={e => { e.stopPropagation(); setSessionToDelete(s.sessionId); }}
-                  className="p-1 rounded-lg text-red-400 dark:text-error/50 hover:text-red-600 dark:hover:text-error hover:bg-red-50 dark:hover:bg-error/10 transition-colors flex-shrink-0 mt-0.5"
+                  className="p-1 rounded-lg text-red-500 dark:text-error/70 hover:text-red-700 dark:hover:text-error hover:bg-red-100 dark:hover:bg-error/15 transition-colors flex-shrink-0 mt-0.5"
                 >
                   <Icon name="delete" size={14} strokeWidth={2} />
                 </button>
@@ -500,30 +499,6 @@ export default function ChatPage() {
         className="shrink-0 px-3 pt-2 bg-white dark:bg-background-primary border-t border-gray-100 dark:border-white/[0.05] z-10"
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
       >
-        {/* Prompt chips — single scrollable row, hidden when keyboard open */}
-        {!keyboardOpen && messages.length <= 4 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
-            {DISCOVER_PROMPTS.map(p => (
-              <button key={p.label} onClick={() => sendMessage(p.query)} disabled={loading}
-                className="flex-shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 disabled:opacity-50 transition-colors whitespace-nowrap">
-                {p.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {!keyboardOpen && (
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
-            {QUICK_PROMPTS.map(p => (
-              <button key={p.label} onClick={() => sendMessage(p.query || p.label)} disabled={loading}
-                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 disabled:opacity-50 transition-colors whitespace-nowrap">
-                <Icon name={p.icon} size={11} strokeWidth={2} />
-                {p.label}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Input row */}
         <div className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all ${
           isListening
@@ -675,15 +650,15 @@ export default function ChatPage() {
 
           <div className="grid grid-cols-2 gap-2.5">
             {[
-              { icon: 'send'      as IconName, title: 'Send & Receive',  desc: 'Instant, feeless',        color: 'text-blue-600 dark:text-brand-blue-light',   bg: 'bg-blue-50 dark:bg-brand-blue/8' },
-              { icon: 'gift-card' as IconName, title: 'Gift Cards',       desc: 'Amazon, Steam & more',    color: 'text-amber-600 dark:text-gold',              bg: 'bg-amber-50 dark:bg-gold/8' },
-              { icon: 'airtime'   as IconName, title: 'Mobile Top-ups',   desc: 'Airtime & data globally', color: 'text-green-600 dark:text-green-400',         bg: 'bg-green-50 dark:bg-green-500/8' },
-              { icon: 'bill'      as IconName, title: 'Pay Bills',         desc: 'Electricity, TV & more', color: 'text-purple-600 dark:text-purple-400',        bg: 'bg-purple-50 dark:bg-purple-500/8' },
+              { icon: 'send'      as IconName, title: 'Send & Receive',  desc: 'Instant, feeless',        color: 'text-blue-600 dark:text-blue-400',    bg: 'bg-blue-100 dark:bg-blue-500/15',   border: 'border-blue-200 dark:border-blue-500/20' },
+              { icon: 'gift-card' as IconName, title: 'Gift Cards',       desc: 'Amazon, Steam & more',    color: 'text-amber-600 dark:text-gold',       bg: 'bg-amber-100 dark:bg-gold/15',      border: 'border-amber-200 dark:border-gold/20' },
+              { icon: 'airtime'   as IconName, title: 'Mobile Top-ups',   desc: 'Airtime & data globally', color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-100 dark:bg-green-500/15', border: 'border-green-200 dark:border-green-500/20' },
+              { icon: 'bill'      as IconName, title: 'Pay Bills',         desc: 'Electricity, TV & more', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-500/15', border: 'border-purple-200 dark:border-purple-500/20' },
             ].map(f => (
-              <div key={f.title} className={`p-3 rounded-xl ${f.bg} border border-gray-100 dark:border-white/[0.06]`}>
+              <div key={f.title} className={`p-3 rounded-xl ${f.bg} border ${f.border}`}>
                 <Icon name={f.icon} size={18} strokeWidth={2} className={`${f.color} mb-1.5`} />
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">{f.title}</p>
-                <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">{f.desc}</p>
+                <p className="text-[11px] text-gray-600 dark:text-white/65 mt-0.5">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -702,28 +677,28 @@ export default function ChatPage() {
                   setInput(ex.q.replace(/['"]/g, ''));
                   setTimeout(() => inputRef.current?.focus(), 80);
                 }}
-                className="w-full text-left p-3 rounded-xl bg-amber-50 dark:bg-gold/6 border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/12 transition-all group"
+                className="w-full text-left p-3 rounded-xl bg-amber-100 dark:bg-gold/10 border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/18 transition-all group"
               >
                 <p className="text-[13px] font-semibold text-amber-700 dark:text-gold">{ex.q}</p>
-                <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">→ {ex.a}</p>
+                <p className="text-[11px] text-gray-600 dark:text-white/60 mt-0.5">→ {ex.a}</p>
               </button>
             ))}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-green-50 dark:bg-green-500/8 border border-green-200 dark:border-green-500/20 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/15 flex items-center justify-center flex-shrink-0">
+          <div className="p-3.5 rounded-xl bg-green-100 dark:bg-green-500/12 border border-green-300 dark:border-green-500/25 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-green-200 dark:bg-green-500/20 flex items-center justify-center flex-shrink-0">
               <Icon name="check" size={15} strokeWidth={2.5} className="text-green-700 dark:text-green-400" />
             </div>
             <div>
               <p className="text-sm font-bold text-green-800 dark:text-green-300 mb-0.5">Non-custodial</p>
-              <p className="text-[11px] text-green-700 dark:text-green-200/75 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
+              <p className="text-[11px] text-green-700 dark:text-green-200/85 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
             </div>
           </div>
 
           <div className="flex gap-2.5">
             <button
               onClick={() => { setShowOnboarding(false); setShowHelp(true); }}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-white/8 text-gray-800 dark:text-white border border-gray-200 dark:border-white/12 hover:bg-gray-200 dark:hover:bg-white/12 transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-white border border-gray-300 dark:border-white/15 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
             >
               View Commands
             </button>

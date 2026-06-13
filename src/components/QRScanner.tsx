@@ -52,29 +52,68 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       setScanSuccess(false);
       setIsScanning(true);
 
-      // Request camera access
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment', // Use back camera if available
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+      // Check secure context — camera API requires HTTPS or localhost
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        setError('Camera requires a secure connection (HTTPS). Please open the app via https://nimhub.online');
+        setIsScanning(false);
+        return;
+      }
+
+      // Check API availability
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError('Camera access is not supported in this browser. Try Chrome on Android or Safari on iOS.');
+        setIsScanning(false);
+        return;
+      }
+
+      // Try back camera first, fall back to any camera.
+      // Using a constraints array avoids a hard failure on devices where
+      // 'environment' isn't available (front-camera-only devices, some WebViews).
+      let mediaStream: MediaStream | null = null;
+      const constraintSets = [
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { video: { facingMode: 'environment' } },
+        { video: true },
+      ];
+
+      for (const constraints of constraintSets) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch {
+          // try next set
         }
-      });
+      }
+
+      if (!mediaStream) {
+        throw new Error('Could not access camera. Please allow camera permission and try again.');
+      }
 
       setStream(mediaStream);
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        // play() returns a Promise — must be awaited on iOS Safari
+        try {
+          await videoRef.current.play();
+        } catch {
+          // Autoplay may be blocked; the video still works via user interaction
+        }
 
-        // Start scanning for QR codes (scan every 250ms for better responsiveness)
         scanIntervalRef.current = setInterval(() => {
           scanFrame();
         }, 250);
       }
     } catch (err: any) {
       console.error('Camera access error:', err);
-      setError(err.message || 'Camera access denied');
+      const msg = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
+        ? 'Camera permission denied. Please allow camera access in your browser settings and try again.'
+        : err?.name === 'NotFoundError'
+        ? 'No camera found on this device.'
+        : err?.name === 'NotReadableError'
+        ? 'Camera is already in use by another app. Close it and try again.'
+        : err?.message || 'Camera access failed. Try again or use the manual entry option.';
+      setError(msg);
       setIsScanning(false);
     }
   };

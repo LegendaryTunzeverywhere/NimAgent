@@ -1,53 +1,68 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-
-const tabs = [
-  {
-    id: 'home' as const,
-    label: 'Home',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-  },
-  {
-    id: 'chat' as const,
-    label: 'AI Chat',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'stake' as const,
-    label: 'Stake',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        <path d="M2 17l10 5 10-5" />
-        <path d="M2 12l10 5 10-5" />
-      </svg>
-    ),
-  },
-  {
-    id: 'history' as const,
-    label: 'History',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3v5h5" />
-        <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-        <path d="M12 7v5l4 2" />
-      </svg>
-    ),
-  },
-];
 
 export default function BottomNav() {
   const { activeTab, setActiveTab } = useAppStore();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Hide bottom nav when the virtual keyboard is open — frees up space for chat input.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const THRESHOLD = 0.75;
+    const handle = () => {
+      setKeyboardVisible((window.visualViewport!.height / window.innerHeight) < THRESHOLD);
+    };
+    window.visualViewport.addEventListener('resize', handle);
+    return () => window.visualViewport!.removeEventListener('resize', handle);
+  }, []);
+
+  if (keyboardVisible) return null;
+
+  const tabs = [
+    {
+      id: 'home' as const,
+      label: 'Home',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      ),
+    },
+    {
+      id: 'chat' as const,
+      label: 'AI Chat',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'stake' as const,
+      label: 'Stake',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      ),
+    },
+    {
+      id: 'history' as const,
+      label: 'History',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 3v5h5" />
+          <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+          <path d="M12 7v5l4 2" />
+        </svg>
+      ),
+    },
+  ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 px-4 pointer-events-none">
