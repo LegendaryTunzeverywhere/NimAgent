@@ -269,7 +269,7 @@ export default function ChatPage() {
             <button
               onClick={() => { showSessions ? setShowSessions(false) : (fetchSessions(), setShowSessions(true)); }}
               disabled={!wallet.connected}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Icon name="history" size={12} strokeWidth={2.2} />
               <span className="hidden sm:inline">History</span>
@@ -282,7 +282,7 @@ export default function ChatPage() {
                 if (useAppStore.getState().messages.length > 0) clearMessages();
                 await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd like to do." });
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
               title="New chat"
             >
               <Icon name="plus" size={12} strokeWidth={2.5} />
@@ -292,7 +292,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="info" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Commands</span>
@@ -300,7 +300,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>

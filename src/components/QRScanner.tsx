@@ -23,6 +23,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopScanning = useCallback(() => {
+    console.log('[QRScanner] Stopping scanning...');
     setIsScanning(false);
     
     if (scanIntervalRef.current) {
@@ -30,13 +31,19 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       scanIntervalRef.current = null;
     }
 
+    // Stop all tracks, even if not in state
+    if (videoRef.current?.srcObject) {
+      const currentStream = videoRef.current.srcObject as MediaStream;
+      currentStream.getTracks().forEach(track => {
+        track.stop();
+        console.log('[QRScanner] Stopped track:', track.kind, track.label);
+      });
+      videoRef.current.srcObject = null;
+    }
+
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
     }
   }, [stream]);
 
@@ -67,20 +74,24 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       }
 
       // Try back camera first, fall back to any camera.
-      // Using a constraints array avoids a hard failure on devices where
-      // 'environment' isn't available (front-camera-only devices, some WebViews).
       let mediaStream: MediaStream | null = null;
       const constraintSets = [
         { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-        { video: { facingMode: 'environment' } },
+        { video: { facingMode: { exact: 'environment' } } },
+        { video: { facingMode: 'user' } },
+        { video: { width: { ideal: 1280 }, height: { ideal: 720 } } },
         { video: true },
       ];
 
-      for (const constraints of constraintSets) {
+      console.log('[QRScanner] Attempting to get camera stream...');
+      for (let i = 0; i < constraintSets.length; i++) {
         try {
-          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+          console.log(`[QRScanner] Trying constraint set ${i + 1}:`, constraintSets[i]);
+          mediaStream = await navigator.mediaDevices.getUserMedia(constraintSets[i]);
+          console.log('[QRScanner] Successfully got stream with constraints:', constraintSets[i]);
           break;
-        } catch {
+        } catch (e) {
+          console.warn(`[QRScanner] Constraint set ${i + 1} failed:`, e);
           // try next set
         }
       }
@@ -91,13 +102,25 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
       setStream(mediaStream);
 
+      // Ensure all previous tracks are stopped if any exist
+      if (videoRef.current?.srcObject) {
+        const oldStream = videoRef.current.srcObject as MediaStream;
+        oldStream.getTracks().forEach(track => track.stop());
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Wait for video to be ready
+        await new Promise<void>((resolve, reject) => {
+          if (!videoRef.current) return reject(new Error('Video ref not available'));
+          videoRef.current.onloadedmetadata = () => resolve();
+          videoRef.current.onerror = reject;
+        });
         // play() returns a Promise — must be awaited on iOS Safari
         try {
           await videoRef.current.play();
-        } catch {
-          // Autoplay may be blocked; the video still works via user interaction
+        } catch (e) {
+          console.warn('[QRScanner] Autoplay blocked, user interaction needed:', e);
         }
 
         scanIntervalRef.current = setInterval(() => {
@@ -105,7 +128,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         }, 250);
       }
     } catch (err: any) {
-      console.error('Camera access error:', err);
+      console.error('[QRScanner] Camera access error:', err);
       const msg = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
         ? 'Camera permission denied. Please allow camera access in your browser settings and try again.'
         : err?.name === 'NotFoundError'
@@ -115,6 +138,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         : err?.message || 'Camera access failed. Try again or use the manual entry option.';
       setError(msg);
       setIsScanning(false);
+      // Ensure any partial stream is cleaned up
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
     }
   };
 
