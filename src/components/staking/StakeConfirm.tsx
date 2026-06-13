@@ -47,18 +47,18 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
           </div>
           <div>
             <p className="font-semibold text-sm text-gray-900 dark:text-white">{validator.name}</p>
-            <p className="font-mono text-[10px] text-gray-500 dark:text-white/40">
+            <p className="font-mono text-[10px] text-gray-500 dark:text-white/55">
               {validator.address.slice(0, 12)}...
             </p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-gray-50 dark:bg-white/[0.04] rounded-xl p-3">
-            <p className="text-gray-500 dark:text-white/40 text-[9px] font-mono mb-1">YOUR NET APY</p>
+            <p className="text-gray-500 dark:text-white/55 text-[9px] font-mono mb-1">YOUR NET APY</p>
             <p className="text-amber-700 dark:text-gold font-mono font-bold">{netAPY.toFixed(1)}%</p>
           </div>
           <div className="bg-gray-50 dark:bg-white/[0.04] rounded-xl p-3">
-            <p className="text-gray-500 dark:text-white/40 text-[9px] font-mono mb-1">VALIDATOR FEE</p>
+            <p className="text-gray-500 dark:text-white/55 text-[9px] font-mono mb-1">VALIDATOR FEE</p>
             <p className="text-gray-900 dark:text-white font-mono font-bold">{validator.fee}%</p>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
 
       {/* Amount input */}
       <div>
-        <label className="text-gray-500 dark:text-white/40 text-[10px] font-mono tracking-widest block mb-2">
+        <label className="text-gray-500 dark:text-white/55 text-[10px] font-mono tracking-widest block mb-2">
           AMOUNT TO STAKE
         </label>
         <div className="relative">
@@ -78,11 +78,11 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
             min="1000"
             className="w-full px-4 py-3 pr-16 rounded-xl border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-600 dark:focus:ring-gold/60 transition-shadow"
           />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-sm text-gray-500 dark:text-white/40">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-sm text-gray-500 dark:text-white/55">
             NIM
           </span>
         </div>
-        <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono mt-1.5">
+        <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mt-1.5">
           Minimum: 1,000 NIM · NIM stays in your wallet
         </p>
       </div>
@@ -94,7 +94,7 @@ export default function StakeConfirm({ validator, apy, walletAddress, onBack, on
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-4 rounded-xl"
         >
-          <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono mb-3">ESTIMATED REWARDS</p>
+          <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mb-3">ESTIMATED REWARDS</p>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-white/60 text-sm">Per month</span>

@@ -6,73 +6,91 @@ import Icon from './Icon';
 
 interface QRCodeDisplayProps {
   address: string;
+  /** Optional amount in NIM for a payment request QR */
+  amount?: number;
+  /** Optional message / label for the payment request */
+  message?: string;
 }
 
-export default function QRCodeDisplay({ address }: QRCodeDisplayProps) {
+type QRMode = 'request' | 'nimhub' | 'address';
+
+export default function QRCodeDisplay({ address, amount, message }: QRCodeDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState(false);
-  const [qrType, setQrType] = useState<'nimhub' | 'address'>('nimhub');
+  const [copied, setCopied]   = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [error, setError]     = useState(false);
+  // Default to 'request' when an amount is provided, otherwise 'nimhub'
+  const [mode, setMode]       = useState<QRMode>(amount ? 'request' : 'nimhub');
 
-  // Normalize address by removing spaces for URL
   const normalizedAddress = address.replace(/\s/g, '');
-
-  // Create NimHub URL for the address (without spaces)
   const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
-  const nimhubUrl = `${baseUrl}/pay/${normalizedAddress}`;
-  const qrData = qrType === 'nimhub' ? nimhubUrl : address;
 
+  // ── URL builders ──────────────────────────────────────────────────────────
+  const buildRequestUrl = () => {
+    const params = new URLSearchParams({ to: normalizedAddress });
+    if (amount)  params.set('amount',  amount.toFixed(5).replace(/\.?0+$/, ''));
+    if (message) params.set('message', message);
+    return `${baseUrl}/?${params.toString()}`;
+  };
+
+  const nimhubUrl  = `${baseUrl}/pay/${normalizedAddress}`;
+  const requestUrl = buildRequestUrl();
+
+  const qrData = mode === 'request' ? requestUrl
+               : mode === 'nimhub'  ? nimhubUrl
+               : address;
+
+  const displayLabel = mode === 'request' ? 'Payment Request Link'
+                     : mode === 'nimhub'  ? 'NimHub Payment Link'
+                     : 'Nimiq Address';
+
+  // ── Generate QR ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!canvasRef.current) return;
-
-    QRCode.toCanvas(
-      canvasRef.current,
-      qrData,
-      {
-        errorCorrectionLevel: 'H',
-        margin: 2,
-        width: 240,
-        color: {
-          dark: '#0d0d1a',
-          light: '#ffffff',
-        },
-      }
-    ).catch((err) => {
-      console.error('QR generation error:', err);
-      setError(true);
-    });
+    setError(false);
+    QRCode.toCanvas(canvasRef.current, qrData, {
+      errorCorrectionLevel: 'H',
+      margin: 2,
+      width: 240,
+      color: { dark: '#0d0d1a', light: '#ffffff' },
+    }).catch(() => setError(true));
   }, [qrData]);
 
+  // ── Actions ───────────────────────────────────────────────────────────────
   const handleDownload = () => {
     if (!canvasRef.current) return;
-
     const link = document.createElement('a');
     link.href = canvasRef.current.toDataURL('image/png');
-    const filename = qrType === 'nimhub' 
-      ? `nimhub-pay-${address.substring(0, 9)}.png`
-      : `nimiq-${address.substring(0, 9)}.png`;
-    link.download = filename;
+    link.download = mode === 'request'
+      ? `nimhub-request-${normalizedAddress.slice(0, 8)}.png`
+      : mode === 'nimhub'
+      ? `nimhub-pay-${normalizedAddress.slice(0, 8)}.png`
+      : `nimiq-${normalizedAddress.slice(0, 8)}.png`;
     link.click();
   };
 
-  const handleCopy = async () => {
+  const handleCopyQr = async () => {
     try {
       await navigator.clipboard.writeText(qrData);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
+    } catch { /* silent */ }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(mode === 'request' ? requestUrl : nimhubUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* silent */ }
   };
 
   if (error) {
     return (
-      <div className="glass rounded-2xl p-6 text-center space-y-3">
-        <p className="text-red-400">Failed to generate QR code</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm hover:bg-white/10 transition-colors"
-        >
+      <div className="bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-6 text-center space-y-3 max-w-sm">
+        <p className="text-red-600 dark:text-red-400 text-sm">Failed to generate QR code</p>
+        <button onClick={() => setError(false)}
+          className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-white/5 text-gray-700 dark:text-white text-sm hover:bg-gray-300 dark:hover:bg-white/10 transition-colors">
           Retry
         </button>
       </div>
@@ -80,69 +98,107 @@ export default function QRCodeDisplay({ address }: QRCodeDisplayProps) {
   }
 
   return (
-    <div className="glass rounded-2xl p-6 space-y-4 text-center max-w-sm">
-      <div className="flex justify-center mb-3">
-        <div className="flex bg-white/5 rounded-lg p-1">
-          <button
-            onClick={() => setQrType('nimhub')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              qrType === 'nimhub'
-                ? 'bg-gold text-background-primary'
-                : 'text-white/60 hover:text-white/80'
-            }`}
-          >
-            🌐 NimHub Link
+    <div className="bg-white dark:bg-white/[0.035] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-5 space-y-4 text-center max-w-sm">
+
+      {/* ── Mode tabs ─────────────────────────────────────────────────────── */}
+      <div className="flex bg-gray-100 dark:bg-white/[0.05] rounded-xl p-1 gap-0.5">
+        {amount && (
+          <button onClick={() => setMode('request')}
+            className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+              mode === 'request'
+                ? 'bg-amber-500 dark:bg-gold text-white dark:text-background-primary shadow-sm'
+                : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+            }`}>
+            Request {amount} NIM
           </button>
-          <button
-            onClick={() => setQrType('address')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-              qrType === 'address'
-                ? 'bg-gold text-background-primary'
-                : 'text-white/60 hover:text-white/80'
-            }`}
-          >
-            📍 Raw Address
-          </button>
-        </div>
+        )}
+        <button onClick={() => setMode('nimhub')}
+          className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+            mode === 'nimhub'
+              ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+          }`}>
+          Pay Link
+        </button>
+        <button onClick={() => setMode('address')}
+          className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+            mode === 'address'
+              ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+          }`}>
+          Address
+        </button>
       </div>
 
-      <canvas ref={canvasRef} className="mx-auto rounded-lg" />
-      
-      <div className="space-y-2">
-        <div className="text-xs text-white/40 uppercase tracking-wide">
-          {qrType === 'nimhub' ? 'NimHub Payment Link' : 'Nimiq Address'}
-        </div>
-        <div className="text-xs text-white/70 font-mono break-all px-2 bg-black/20 rounded-lg py-2">
-          {qrType === 'nimhub' ? nimhubUrl : address}
-        </div>
-      </div>
-
-      {qrType === 'nimhub' && (
-        <div className="text-xs text-white/50 bg-gold/10 border border-gold/20 rounded-lg p-3">
-          <p className="font-semibold text-gold mb-1 flex items-center gap-1.5">
-            <Icon name="sparkles" size={13} strokeWidth={2} /> Smart QR Code
-          </p>
-          <p>This QR code opens NimHub for easy payments. Users can send NIM directly from their browser or wallet app!</p>
+      {/* ── Payment request summary ───────────────────────────────────────── */}
+      {mode === 'request' && amount && (
+        <div className="flex items-center justify-between px-3 py-2.5 bg-amber-100 dark:bg-gold/10 border border-amber-300 dark:border-gold/25 rounded-xl">
+          <div className="text-left">
+            <p className="text-[10px] font-medium text-amber-700 dark:text-gold/70 uppercase tracking-wider">Requesting</p>
+            <p className="text-lg font-bold text-amber-700 dark:text-gold font-mono leading-tight">{amount} NIM</p>
+            {message && <p className="text-[11px] text-amber-600 dark:text-gold/65 mt-0.5 truncate max-w-[160px]">{message}</p>}
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-500 dark:bg-gold flex items-center justify-center flex-shrink-0">
+            <Icon name="qr-code" size={20} strokeWidth={2} className="text-white dark:text-background-primary" />
+          </div>
         </div>
       )}
 
-      <div className="flex gap-2 justify-center">
-        <button
-          onClick={handleDownload}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-sm font-semibold hover:bg-gold/20 transition-colors"
+      {/* ── QR canvas ─────────────────────────────────────────────────────── */}
+      <div className="flex justify-center">
+        <div className="p-3 bg-white rounded-xl border border-gray-200 dark:border-white/[0.08] shadow-sm">
+          <canvas ref={canvasRef} className="block" />
+        </div>
+      </div>
+
+      {/* ── URL display ───────────────────────────────────────────────────── */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-gray-500 dark:text-white/50 uppercase tracking-wider font-medium">{displayLabel}</p>
+        <div
+          onClick={handleCopyQr}
+          className="text-[11px] text-gray-700 dark:text-white/70 font-mono break-all px-3 py-2 bg-gray-50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-white/[0.06] cursor-pointer hover:bg-gray-100 dark:hover:bg-black/30 transition-colors select-all"
+          title="Click to copy"
         >
-          <Icon name="download" size={15} strokeWidth={2} /> Download
+          {qrData.length > 80 ? `${qrData.slice(0, 42)}…${qrData.slice(-20)}` : qrData}
+        </div>
+      </div>
+
+      {/* ── Info note ─────────────────────────────────────────────────────── */}
+      {mode === 'request' && (
+        <div className="text-[11px] text-amber-700 dark:text-gold/75 bg-amber-100 dark:bg-gold/8 border border-amber-300 dark:border-gold/20 rounded-xl px-3 py-2.5 text-left leading-relaxed">
+          <strong className="font-semibold">Share this QR or link.</strong> When someone scans it or taps the link, NimHub opens with a pre-filled payment of <strong>{amount} NIM</strong> to your wallet — they just confirm.
+        </div>
+      )}
+      {mode === 'nimhub' && (
+        <div className="text-[11px] text-gray-600 dark:text-white/55 bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] rounded-xl px-3 py-2.5 text-left leading-relaxed">
+          Opens NimHub with your address pre-filled. The sender chooses the amount.
+        </div>
+      )}
+
+      {/* ── Action buttons ─────────────────────────────────────────────────── */}
+      <div className="flex gap-2">
+        <button onClick={handleDownload}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-white/75 border border-gray-200 dark:border-white/[0.08] hover:bg-gray-200 dark:hover:bg-white/[0.10] transition-colors">
+          <Icon name="download" size={14} strokeWidth={2} /> Save
         </button>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-sm font-semibold hover:bg-gold/20 transition-colors"
-        >
-          {copied ? (
-            <><Icon name="check" size={15} strokeWidth={2.5} /> Copied!</>
-          ) : (
-            <><Icon name="copy" size={15} strokeWidth={2} /> Copy {qrType === 'nimhub' ? 'Link' : 'Address'}</>
-          )}
-        </button>
+        {(mode === 'request' || mode === 'nimhub') && (
+          <button onClick={handleCopyLink}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-amber-100 dark:bg-gold/10 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors">
+            {linkCopied
+              ? <><Icon name="check" size={14} strokeWidth={2.5} /> Copied!</>
+              : <><Icon name="copy"  size={14} strokeWidth={2}   /> Copy Link</>
+            }
+          </button>
+        )}
+        {mode === 'address' && (
+          <button onClick={handleCopyQr}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-amber-100 dark:bg-gold/10 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors">
+            {copied
+              ? <><Icon name="check" size={14} strokeWidth={2.5} /> Copied!</>
+              : <><Icon name="copy"  size={14} strokeWidth={2}   /> Copy Address</>
+            }
+          </button>
+        )}
       </div>
     </div>
   );

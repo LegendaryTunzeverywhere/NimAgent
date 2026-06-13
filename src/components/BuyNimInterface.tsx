@@ -322,7 +322,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 dark:text-white/40">Minimum: {CURRENCY_SYMBOLS[currency]}20</p>
+            <p className="text-xs text-gray-500 dark:text-white/55">Minimum: {CURRENCY_SYMBOLS[currency]}20</p>
           </div>
 
           {/* Quote Display */}
@@ -352,7 +352,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
                 </div>
               </div>
               {timeRemaining > 0 && (
-                <p className={`text-xs text-center ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-gray-500 dark:text-white/40'}`}>
+                <p className={`text-xs text-center ${timeRemaining <= 10 ? 'text-warning animate-pulse' : 'text-gray-500 dark:text-white/55'}`}>
                   Quote expires in {timeRemaining}s
                 </p>
               )}
@@ -365,7 +365,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
             disabled={loading || quoteLoading || !quote || !amount || parseFloat(amount) < 20}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               loading || quoteLoading || !quote || !amount || parseFloat(amount) < 20
-                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
+                ? 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 cursor-not-allowed'
                 : 'bg-brand-blue text-white hover:bg-brand-blue-dark'
             }`}
           >
@@ -386,7 +386,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
               placeholder="your@email.com"
               className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm outline-none focus:border-brand-blue/50"
             />
-            <p className="text-xs text-gray-500 dark:text-white/40">
+            <p className="text-xs text-gray-500 dark:text-white/55">
               We'll send a verification code to this email for KYC compliance
             </p>
           </div>
@@ -396,7 +396,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
             disabled={loading || !email || !email.includes('@')}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               loading || !email || !email.includes('@')
-                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
+                ? 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 cursor-not-allowed'
                 : 'bg-brand-blue text-white hover:bg-brand-blue-dark'
             }`}
           >
@@ -425,7 +425,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
               className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm outline-none focus:border-brand-blue/50 text-center text-2xl font-mono tracking-widest"
               maxLength={6}
             />
-            <p className="text-xs text-gray-500 dark:text-white/40 text-center">
+            <p className="text-xs text-gray-500 dark:text-white/55 text-center">
               Check your email ({email}) for the verification code
             </p>
           </div>
@@ -435,7 +435,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
             disabled={loading || !verificationCode || verificationCode.length < 4}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               loading || !verificationCode || verificationCode.length < 4
-                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
+                ? 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 cursor-not-allowed'
                 : 'bg-brand-blue text-white hover:bg-brand-blue-dark'
             }`}
           >
@@ -478,7 +478,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
             disabled={loading}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               loading
-                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/30 cursor-not-allowed'
+                ? 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 cursor-not-allowed'
                 : 'bg-brand-blue text-white hover:bg-brand-blue-dark'
             }`}
           >
@@ -525,7 +525,7 @@ export default function BuyNimInterface({ onComplete }: BuyNimInterfaceProps) {
       )}
 
       {/* Info Notice */}
-      <div className="text-xs text-gray-500 dark:text-white/40 text-center bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-lg p-3">
+      <div className="text-xs text-gray-500 dark:text-white/55 text-center bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-lg p-3">
         <p className="mb-1 font-semibold text-gray-700 dark:text-white/60">Powered by Coinify</p>
         <p>Secure fiat-to-crypto purchase with KYC compliance. Minimum {CURRENCY_SYMBOLS[currency]}20.</p>
       </div>

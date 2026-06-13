@@ -13,8 +13,6 @@ const QUICK_PROMPTS: { label: string; icon: IconName; query?: string }[] = [
   { label: 'Gift card',      icon: 'gift-card',  query: 'Buy gift card' },
   { label: 'Top up airtime', icon: 'airtime' },
   { label: 'Pay a bill',     icon: 'bill' },
-  { label: 'My address',     icon: 'qr-code',    query: 'Show my address' },
-  { label: 'Check balance',  icon: 'balance',    query: "What's my balance?" },
 ];
 
 const DISCOVER_PROMPTS: { label: string; query: string }[] = [
@@ -242,7 +240,7 @@ export default function ChatPage() {
       if (sessionToDelete === currentSessionId) {
         startNewSession();
         await new Promise(r => setTimeout(r, 50));
-        await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd like to do." });
+        await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd me like to do." });
       }
     } catch { /* silent */ }
     finally { setDeleting(false); setSessionToDelete(null); }
@@ -272,16 +270,16 @@ export default function ChatPage() {
 
         <div className="flex items-center gap-1.5">
           {/* History / New */}
-          <div className="flex items-center rounded-full border border-gray-200 dark:border-white/10 overflow-hidden bg-gray-50 dark:bg-white/[0.03]">
+          <div className="flex items-center rounded-full border border-gray-300 dark:border-white/12 overflow-hidden bg-gray-100 dark:bg-white/[0.05]">
             <button
               onClick={() => { showSessions ? setShowSessions(false) : (fetchSessions(), setShowSessions(true)); }}
               disabled={!wallet.connected}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-white/65 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Icon name="history" size={12} strokeWidth={2.2} />
               <span className="hidden sm:inline">History</span>
             </button>
-            <div className="w-px h-4 bg-gray-200 dark:bg-white/10" />
+            <div className="w-px h-4 bg-gray-200 dark:bg-white/12" />
             <button
               onClick={async () => {
                 setShowSessions(false);
@@ -289,7 +287,7 @@ export default function ChatPage() {
                 if (useAppStore.getState().messages.length > 0) clearMessages();
                 await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd like to do." });
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-white/65 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white transition-colors"
               title="New chat"
             >
               <Icon name="plus" size={12} strokeWidth={2.5} />
@@ -299,7 +297,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-gray-50 dark:bg-white/[0.03] text-gray-600 dark:text-white/65 border border-gray-200 dark:border-white/10 hover:bg-blue-50 dark:hover:bg-brand-blue/10 hover:text-blue-700 dark:hover:text-brand-blue-light hover:border-blue-200 dark:hover:border-brand-blue/25 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 transition-all"
           >
             <Icon name="info" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Commands</span>
@@ -307,7 +305,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-gold/8 text-amber-700 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/15 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 transition-all"
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>
@@ -320,7 +318,7 @@ export default function ChatPage() {
         <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 bg-white dark:bg-[#16182a] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden animate-modal-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">
             <span className="text-sm font-bold text-gray-900 dark:text-white">Chat Sessions</span>
-            <button onClick={() => setShowSessions(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
+            <button onClick={() => setShowSessions(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
@@ -328,7 +326,7 @@ export default function ChatPage() {
             {loadingSessions ? (
               <div className="flex items-center justify-center py-8 gap-2">
                 <div className="w-5 h-5 border-2 border-gray-300 dark:border-gold/30 border-t-gray-600 dark:border-t-gold rounded-full animate-spin" />
-                <span className="text-xs text-gray-500 dark:text-white/40">Loading...</span>
+                <span className="text-xs text-gray-500 dark:text-white/55">Loading...</span>
               </div>
             ) : sessions.length ? sessions.map(s => (
               <div
@@ -341,8 +339,8 @@ export default function ChatPage() {
                 }`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 dark:text-white/80 truncate">{s.lastMessage}</p>
-                  <p className="text-[11px] text-gray-400 dark:text-white/35 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
+                  <p className="text-sm text-gray-800 dark:text-white/85 truncate">{s.lastMessage}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
                   {s.sessionId === currentSessionId && (
                     <p className="text-[10px] text-amber-600 dark:text-gold font-semibold mt-1">Current session</p>
                   )}
@@ -356,8 +354,8 @@ export default function ChatPage() {
               </div>
             )) : (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-500 dark:text-white/40">No previous sessions</p>
-                <p className="text-xs text-gray-400 dark:text-white/25 mt-1">Start chatting to create one</p>
+                <p className="text-sm text-gray-600 dark:text-white/55">No previous sessions</p>
+                <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Start chatting to create one</p>
               </div>
             )}
           </div>
@@ -434,14 +432,14 @@ export default function ChatPage() {
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                 <button
                   onClick={() => navigator.clipboard.writeText(msg.content)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                 >
                   <Icon name="copy" size={10} strokeWidth={2} /> Copy
                 </button>
                 {msg.role === 'ai' && (
                   <button
                     onClick={() => { setInput(`Re: "${msg.content.slice(0, 60).replace(/\n/g, ' ').trim()}${msg.content.length > 60 ? '…' : ''}" `); inputRef.current?.focus(); }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                   >
                     <Icon name="chevron-right" size={10} strokeWidth={2} /> Reply
                   </button>
@@ -481,14 +479,21 @@ export default function ChatPage() {
 
       {/* ── Scroll-to-bottom button ──────────────────────────────────────────── */}
       {showScrollBtn && !loading && (
-        <button
-          onClick={scrollToBottom}
-          className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%-48px)] w-8 h-8 rounded-full bg-white dark:bg-[#1c1e2e] border border-gray-200 dark:border-white/10 shadow-md flex items-center justify-center text-gray-500 dark:text-white/60 hover:text-gray-800 dark:hover:text-white hover:shadow-lg transition-all z-20"
-          style={{ bottom: 'auto', top: 'calc(100% - 130px)' }}
-          aria-label="Scroll to latest message"
-        >
-          <Icon name="chevron-down" size={15} strokeWidth={2.5} />
-        </button>
+        <div className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+          style={{ bottom: keyboardOpen ? '72px' : '152px' }}>
+          <button
+            onClick={scrollToBottom}
+            className="pointer-events-auto flex flex-col items-center gap-0.5 group"
+            aria-label="Scroll to latest message"
+          >
+            <span className="text-[9px] font-medium text-gray-500 dark:text-white/50 group-hover:text-gray-700 dark:group-hover:text-white/70 transition-colors">
+              new messages
+            </span>
+            <span className="w-7 h-7 rounded-full bg-white dark:bg-[#1c1e2e] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-gray-500 dark:text-white/65 group-hover:text-amber-600 dark:group-hover:text-gold group-hover:border-amber-300 dark:group-hover:border-gold/30 transition-all animate-scroll-hint">
+              <Icon name="chevron-down" size={14} strokeWidth={2.5} />
+            </span>
+          </button>
+        </div>
       )}
 
       {/* ── Input area ──────────────────────────────────────────────────────── */}
@@ -501,7 +506,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
             {DISCOVER_PROMPTS.map(p => (
               <button key={p.label} onClick={() => sendMessage(p.query)} disabled={loading}
-                className="flex-shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-brand-blue/8 text-blue-700 dark:text-brand-blue-light border border-blue-200 dark:border-brand-blue/20 hover:bg-blue-100 dark:hover:bg-brand-blue/15 disabled:opacity-50 transition-colors whitespace-nowrap">
+                className="flex-shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light border border-blue-300 dark:border-brand-blue/30 hover:bg-blue-200 dark:hover:bg-brand-blue/25 disabled:opacity-50 transition-colors whitespace-nowrap">
                 {p.label}
               </button>
             ))}
@@ -512,7 +517,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
             {QUICK_PROMPTS.map(p => (
               <button key={p.label} onClick={() => sendMessage(p.query || p.label)} disabled={loading}
-                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-gold/8 text-amber-700 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/15 disabled:opacity-50 transition-colors whitespace-nowrap">
+                className="flex-shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/25 disabled:opacity-50 transition-colors whitespace-nowrap">
                 <Icon name={p.icon} size={11} strokeWidth={2} />
                 {p.label}
               </button>
@@ -533,7 +538,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
-                : 'text-gray-400 dark:text-white/35 hover:text-gray-600 dark:hover:text-white/60 hover:bg-gray-100 dark:hover:bg-white/[0.06]'
+                : 'text-gray-500 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.06]'
             } disabled:opacity-40`}
             title={isListening ? 'Stop' : 'Voice input'}
           >
@@ -559,7 +564,7 @@ export default function ChatPage() {
 
           {/* Word count (only when near limit) */}
           {wordCount > MAX_WORDS * 0.75 && input.trim() && (
-            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-gray-400 dark:text-white/35'}`}>
+            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-gray-500 dark:text-white/50'}`}>
               {wordCount}/{MAX_WORDS}
             </span>
           )}
@@ -571,7 +576,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit
                 ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
-                : 'bg-gray-100 dark:bg-white/[0.05] text-gray-300 dark:text-white/20'
+                : 'bg-gray-100 dark:bg-white/[0.05] text-gray-400 dark:text-white/35'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -588,12 +593,12 @@ export default function ChatPage() {
           </p>
         )}
         {!wallet.connected && !isListening && (
-          <p className="text-[11px] text-gray-400 dark:text-white/30 text-center mt-1.5 flex items-center justify-center gap-1">
-            <Icon name="wallet" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/70" />
+          <p className="text-[11px] text-gray-500 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">
+            <Icon name="wallet" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
             Connect your wallet for full functionality
           </p>
         )}
-        <p className="text-[9px] text-center text-gray-300 dark:text-white/20 mt-1.5">
+        <p className="text-[9px] text-center text-gray-500 dark:text-white/50 mt-1.5">
           Independent Project · Not affiliated with Nimiq Foundation
         </p>
       </div>
@@ -627,7 +632,7 @@ export default function ChatPage() {
 
       {/* ── Commands modal ───────────────────────────────────────────────────── */}
       <Modal open={showHelp} onClose={() => setShowHelp(false)} title="Commands" subtitle="Tap any example to use it">
-        <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4" id="commands-container">
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4 relative" id="commands-container">
           {ALL_COMMANDS.map(section => (
             <div key={section.category} className="space-y-1.5">
               <p className="text-xs font-bold text-amber-600 dark:text-gold px-1">{section.category}</p>
@@ -648,6 +653,12 @@ export default function ChatPage() {
               <p key={t} className="text-xs text-blue-600 dark:text-brand-blue-light/75 flex items-start gap-1.5"><span className="mt-1 w-1 h-1 rounded-full bg-blue-400 dark:bg-brand-blue/60 flex-shrink-0" />{t}</p>
             ))}
           </div>
+          {/* Scroll hint */}
+          <div className="sticky bottom-0 left-0 right-0 flex justify-center pt-2 pb-1 pointer-events-none">
+            <span className="animate-scroll-hint text-gray-500 dark:text-white/50">
+              <Icon name="chevron-down" size={16} strokeWidth={2.5} />
+            </span>
+          </div>
         </div>
       </Modal>
 
@@ -658,7 +669,7 @@ export default function ChatPage() {
         title="Welcome to NimHub AI"
         subtitle="Your intelligent crypto assistant"
       >
-        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-5" id="onboarding-container">
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-5 relative" id="onboarding-container">
           <p className="text-sm text-gray-600 dark:text-white/75 leading-relaxed">
             Chat naturally to manage crypto — send NIM, buy gift cards, top up airtime, pay bills, and more. No menus, no jargon.
           </p>
@@ -723,6 +734,13 @@ export default function ChatPage() {
             >
               Start Chatting
             </button>
+          </div>
+
+          {/* Scroll hint */}
+          <div className="sticky bottom-0 left-0 right-0 flex justify-center pt-1 pointer-events-none">
+            <span className="animate-scroll-hint text-gray-500 dark:text-white/50">
+              <Icon name="chevron-down" size={16} strokeWidth={2.5} />
+            </span>
           </div>
         </div>
       </Modal>

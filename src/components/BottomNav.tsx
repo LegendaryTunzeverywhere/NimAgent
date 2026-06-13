@@ -62,7 +62,7 @@ export default function BottomNav() {
                 'relative flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-all duration-200',
                 isActive
                   ? 'text-amber-700 dark:text-gold'
-                  : 'text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60',
+                  : 'text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
             >

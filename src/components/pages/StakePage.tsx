@@ -193,13 +193,13 @@ export default function StakePage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mx-5 mt-4 mb-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4"
+          className="mx-5 mt-4 mb-2 bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/20 rounded-xl p-4"
         >
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full animate-spin" />
             <div className="flex-1">
               <p className="text-amber-700 dark:text-amber-400 text-sm font-semibold">Stake transaction pending</p>
-              <p className="text-gray-600 dark:text-white/50 text-xs mt-0.5">
+              <p className="text-gray-600 dark:text-white/65 text-xs mt-0.5">
                 Waiting for blockchain confirmation... This usually takes 1-2 minutes.
               </p>
             </div>
@@ -241,13 +241,13 @@ export default function StakePage() {
             className="flex-1 px-5 py-4"
           >
             {/* APY banner */}
-            <div className="bg-amber-50 dark:bg-gold/[0.06] border border-amber-200 dark:border-gold/15 rounded-xl flex items-center justify-between mb-5 px-4 py-3">
+            <div className="bg-amber-100 dark:bg-gold/[0.06] border border-amber-300 dark:border-gold/15 rounded-xl flex items-center justify-between mb-5 px-4 py-3">
               <div>
-                <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono tracking-widest">NETWORK APY</p>
+                <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono tracking-widest">NETWORK APY</p>
                 <p className="font-mono text-2xl font-bold text-amber-700 dark:text-gold mt-0.5">~{apy}%</p>
               </div>
               <div className="text-right">
-                <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono">MIN STAKE</p>
+                <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono">MIN STAKE</p>
                 <p className="font-mono text-sm font-semibold text-gray-900 dark:text-white mt-0.5">1,000 NIM</p>
               </div>
             </div>
@@ -261,7 +261,7 @@ export default function StakePage() {
               className="w-full mb-4 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-600 dark:focus:ring-gold/60 transition-shadow"
             />
 
-            <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono mb-3">
+            <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mb-3">
               {filteredValidators.length} VALIDATORS · SORTED BY TRUST SCORE
             </p>
 
@@ -286,9 +286,9 @@ export default function StakePage() {
             </div>
 
             {/* Staking Disclaimer */}
-            <div className="mt-6 rounded-xl p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+            <div className="mt-6 rounded-xl p-4 bg-amber-100 dark:bg-amber-500/5 border border-amber-300 dark:border-amber-500/15">
               <div className="flex items-start gap-2.5">
-                <div className="flex-shrink-0 w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center mt-0.5">
+                <div className="flex-shrink-0 w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/30 flex items-center justify-center mt-0.5">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -456,15 +456,15 @@ export default function StakePage() {
               <p className="text-base font-bold text-gray-900 dark:text-white">
                 {unstakeResult.amount.toLocaleString()} NIM unstaked
               </p>
-              <p className="text-sm text-gray-500 dark:text-white/50">Transaction submitted to the network</p>
+              <p className="text-sm text-gray-500 dark:text-white/65">Transaction submitted to the network</p>
             </div>
             <div className="rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] p-3 space-y-1">
-              <p className="text-[10px] font-medium text-gray-500 dark:text-white/40 uppercase tracking-wider">Transaction hash</p>
+              <p className="text-[10px] font-medium text-gray-500 dark:text-white/55 uppercase tracking-wider">Transaction hash</p>
               <p className="text-xs font-mono text-gray-700 dark:text-white/70 break-all leading-relaxed">
                 {unstakeResult.txHash}
               </p>
             </div>
-            <div className="flex items-start gap-2.5 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/8 border border-amber-200 dark:border-amber-500/20">
+            <div className="flex items-start gap-2.5 rounded-xl p-3 bg-amber-100 dark:bg-amber-500/8 border border-amber-300 dark:border-amber-500/20">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0">
                 <circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" />
               </svg>
@@ -484,7 +484,7 @@ export default function StakePage() {
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Transaction failed</p>
             </div>
-            <div className="rounded-xl bg-red-50 dark:bg-error/8 border border-red-200 dark:border-error/20 p-3">
+            <div className="rounded-xl bg-red-100 dark:bg-error/8 border border-red-300 dark:border-error/20 p-3">
               <p className="text-sm text-red-700 dark:text-error leading-relaxed">{unstakeError}</p>
             </div>
           </div>
@@ -507,7 +507,7 @@ export default function StakePage() {
               />
               {stakerInfo && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-white/40">Available: {(stakerInfo.balance / 100000).toLocaleString()} NIM</span>
+                  <span className="text-gray-500 dark:text-white/55">Available: {(stakerInfo.balance / 100000).toLocaleString()} NIM</span>
                   <button
                     type="button"
                     onClick={() => setUnstakeAmount((stakerInfo.balance / 100000).toString())}
@@ -519,7 +519,7 @@ export default function StakePage() {
               )}
             </div>
 
-            <div className="flex items-start gap-2 rounded-xl p-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+            <div className="flex items-start gap-2 rounded-xl p-3 bg-amber-100 dark:bg-amber-500/5 border border-amber-300 dark:border-amber-500/15">
               <span className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0">⏳</span>
               <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                 <strong className="font-semibold">Note:</strong> Unstaked NIM will be available for withdrawal after approximately 1 epoch (~24 hours). This is a blockchain requirement for security.
@@ -566,13 +566,13 @@ function StakeHeader({ view, setView, stakerInfo }: {
               Sta<span className="text-amber-700 dark:text-gold">king</span>
             </h1>
             {isTestnet && (
-              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20">
                 TESTNET
               </span>
             )}
           </div>
         )}
-        <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono tracking-widest mt-0.5">
+        <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono tracking-widest mt-0.5">
           {viewLabels[view]}
         </p>
       </div>
@@ -587,7 +587,7 @@ function StakeHeader({ view, setView, stakerInfo }: {
                 'text-[10px] font-mono px-3 py-1.5 rounded-lg border transition-colors',
                 view === v
                   ? 'border-amber-600/40 dark:border-gold/40 text-amber-700 dark:text-gold bg-amber-600/8 dark:bg-gold/8'
-                  : 'border-gray-200 dark:border-white/[0.06] text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60',
+                  : 'border-gray-200 dark:border-white/[0.06] text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/60',
               ].join(' ')}
             >
               {v === 'dashboard' ? 'MY STAKE' : 'VALIDATORS'}

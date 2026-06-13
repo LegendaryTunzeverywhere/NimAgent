@@ -43,14 +43,14 @@ export default function ValidatorCard({ validator, apy, onSelect }: {
               className="group flex items-center gap-1 mt-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded px-1 -mx-1 transition-colors"
               title="Copy validator address"
             >
-              <p className="font-mono text-[10px] text-gray-500 dark:text-white/40">
+              <p className="font-mono text-[10px] text-gray-500 dark:text-white/55">
                 {validator.address.slice(0, 12)}...{validator.address.slice(-8)}
               </p>
               <Icon 
                 name={copied ? "check" : "copy"} 
                 size={10} 
                 strokeWidth={2.5} 
-                className={`${copied ? 'text-success' : 'text-gray-400 dark:text-white/30'} opacity-0 group-hover:opacity-100 transition-opacity`}
+                className={`${copied ? 'text-success' : 'text-gray-500 dark:text-white/50'} opacity-0 group-hover:opacity-100 transition-opacity`}
               />
             </button>
           </div>
@@ -72,14 +72,14 @@ export default function ValidatorCard({ validator, apy, onSelect }: {
           { label: 'STAKERS', value: (validator.stakers ?? 0).toLocaleString() },
         ].map(({ label, value }) => (
           <div key={label} className="bg-gray-50 dark:bg-white/[0.04] rounded-xl p-2.5 text-center">
-            <p className="text-gray-500 dark:text-white/40 text-[9px] font-mono mb-0.5">{label}</p>
+            <p className="text-gray-500 dark:text-white/55 text-[9px] font-mono mb-0.5">{label}</p>
             <p className="text-gray-900 dark:text-white text-xs font-semibold">{value}</p>
           </div>
         ))}
       </div>
 
       {/* Reward estimate */}
-      <div className="flex items-center justify-between bg-amber-50 dark:bg-gold/[0.06] border border-amber-200 dark:border-gold/15 rounded-xl p-3">
+      <div className="flex items-center justify-between bg-amber-100 dark:bg-gold/[0.06] border border-amber-300 dark:border-gold/15 rounded-xl p-3">
         <span className="text-gray-600 dark:text-white/50 text-xs">10,000 NIM earns ~</span>
         <span className="font-mono text-sm font-semibold text-amber-700 dark:text-gold">
           {exampleRewards.toLocaleString()} NIM/yr
@@ -89,7 +89,7 @@ export default function ValidatorCard({ validator, apy, onSelect }: {
       {/* Trust score bar */}
       <div className="mt-3">
         <div className="flex justify-between mb-1">
-          <span className="text-gray-500 dark:text-white/40 text-[9px] font-mono">TRUST SCORE</span>
+          <span className="text-gray-500 dark:text-white/55 text-[9px] font-mono">TRUST SCORE</span>
           <span className="text-[9px] font-mono" style={{ color: trust.color }}>
             {(validator.trustScore ?? 50).toFixed(0)}/100
           </span>

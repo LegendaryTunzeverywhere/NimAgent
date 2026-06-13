@@ -353,17 +353,17 @@ export default function HomePage() {
         <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-200 dark:border-gold/25 flex items-center justify-center text-amber-600 dark:text-gold">
+              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center text-amber-600 dark:text-gold">
                 <Icon name="wallet" size={15} />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-white/40">
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-white/55">
                 Total Balance
               </span>
             </div>
             {wallet.connected && (
               <button
                 onClick={disconnectWallet}
-                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50 border border-gray-200 dark:border-white/10 hover:bg-red-50 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-200 dark:hover:border-error/25 transition-colors"
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/65 border border-gray-200 dark:border-white/10 hover:bg-red-100 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-300 dark:hover:border-error/25 transition-colors"
                 title="Disconnect Wallet"
               >
                 <Icon name="disconnect" size={12} strokeWidth={2.2} />
@@ -381,11 +381,11 @@ export default function HomePage() {
                 <span className="text-lg font-bold text-amber-600 dark:text-gold">NIM</span>
               </div>
               <div className="flex items-center gap-2 mb-8">
-                <span className="text-sm text-gray-500 dark:text-white/40 font-mono">
+                <span className="text-sm text-gray-500 dark:text-white/55 font-mono">
                   ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
-                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-green-600 dark:text-success bg-green-50 dark:bg-success/10' : 'text-red-600 dark:text-error bg-red-50 dark:bg-error/10'}`}>
+                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-green-600 dark:text-success bg-green-100 dark:bg-success/10' : 'text-red-600 dark:text-error bg-red-100 dark:bg-error/10'}`}>
                     {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                   </span>
                 )}
@@ -410,7 +410,7 @@ export default function HomePage() {
               Start AI Chat
             </button>
             <button
-              className="flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-white/5 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/30 hover:bg-amber-50 dark:hover:bg-gold/10 transition-all"
+              className="flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-white/5 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-100 dark:hover:bg-gold/10 transition-all"
               onClick={() => setActiveTab('history')}
             >
               <Icon name="history" size={16} strokeWidth={2.2} />
@@ -429,21 +429,21 @@ export default function HomePage() {
       {wallet.connected && (
         <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1 -mt-2">
           <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">NIM Price</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
             <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
               {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
             </p>
           </div>
           <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">Sent Today</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
-            <p className="text-xs text-gray-400 dark:text-white/30 mt-1">
+            <p className="text-xs text-gray-500 dark:text-white/65 mt-1">
               ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
             </p>
           </div>
           <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/40 mb-2 uppercase tracking-wider">Network</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Network</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white capitalize">{network}</p>
             <p className="text-xs text-success mt-1 flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" /> Live
@@ -486,7 +486,7 @@ export default function HomePage() {
                   >
                     <Icon name={action.icon} size={20} />
                   </span>
-                  <span className="text-[10px] font-semibold text-gray-600 dark:text-white/60 text-center leading-tight px-1">
+                  <span className="text-[10px] font-semibold text-gray-600 dark:text-white/72 text-center leading-tight px-1">
                     {action.label}
                   </span>
                 </button>
@@ -532,7 +532,7 @@ export default function HomePage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{tx.label}</p>
-                      <p className="text-xs text-gray-500 dark:text-white/40">{tx.time}</p>
+                      <p className="text-xs text-gray-500 dark:text-white/55">{tx.time}</p>
                     </div>
                     <p className="text-sm font-bold flex-shrink-0" style={{ color: txColor }}>{tx.amount} NIM</p>
                     <svg
@@ -544,7 +544,7 @@ export default function HomePage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={`text-gray-400 dark:text-white/30 transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
+                      className={`text-gray-500 dark:text-white/65 transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
@@ -554,27 +554,27 @@ export default function HomePage() {
                   {expandedTx === tx.id.toString() && (
                     <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/40">Type:</span>
+                        <span className="text-xs text-gray-500 dark:text-white/55">Type:</span>
                         <span className="text-xs text-gray-700 dark:text-white/70 capitalize">{tx.category}</span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/40">Amount:</span>
+                        <span className="text-xs text-gray-500 dark:text-white/55">Amount:</span>
                         <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.amount} NIM</span>
                       </div>
                       {tx.usd && (
                         <div className="flex justify-between items-center gap-2">
-                          <span className="text-xs text-gray-500 dark:text-white/40">USD Value:</span>
+                          <span className="text-xs text-gray-500 dark:text-white/55">USD Value:</span>
                           <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.usd}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/40">Status:</span>
+                        <span className="text-xs text-gray-500 dark:text-white/55">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">{tx.status}</span>
                       </div>
                       {tx.hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-gray-500 dark:text-white/40">TX Hash:</span>
+                            <span className="text-xs text-gray-500 dark:text-white/55">TX Hash:</span>
                             <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
                               {tx.hash}
                             </span>
@@ -588,7 +588,7 @@ export default function HomePage() {
                                 : 'https://test.nimiq.watch/#';
                               window.open(`${baseUrl}${tx.hash}`, '_blank');
                             }}
-                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
+                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
                           </button>
@@ -603,8 +603,8 @@ export default function HomePage() {
           ) : (
             <div className="card-premium rounded-2xl p-8 text-center">
               <div className="text-3xl mb-2 opacity-50">📊</div>
-              <p className="text-sm text-gray-600 dark:text-white/40">No recent transactions</p>
-              <p className="text-xs text-gray-400 dark:text-white/30 mt-1">Start by sending NIM or making a payment</p>
+              <p className="text-sm text-gray-600 dark:text-white/55">No recent transactions</p>
+              <p className="text-xs text-gray-500 dark:text-white/65 mt-1">Start by sending NIM or making a payment</p>
             </div>
           )}
         </div>
@@ -671,7 +671,7 @@ export default function HomePage() {
       {/* Legal Disclaimer */}
       <div className="animate-fade-up-delay-5 rounded-2xl p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06]">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 border border-amber-200 dark:border-gold/25 flex items-center justify-center mt-0.5">
+          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center mt-0.5">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-gold">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -682,8 +682,8 @@ export default function HomePage() {
             <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-1">
               Independent Community Project
             </p>
-            <p className="text-[11px] leading-relaxed text-gray-500 dark:text-white/40">
-              NimHub is an independent community project and is <strong className="font-semibold text-gray-600 dark:text-white/50">not officially affiliated with or operated by the Nimiq Foundation</strong>.
+            <p className="text-[11px] leading-relaxed text-gray-500 dark:text-white/55">
+              NimHub is an independent community project and is <strong className="font-semibold text-gray-600 dark:text-white/65">not officially affiliated with or operated by the Nimiq Foundation</strong>.
             </p>
           </div>
         </div>

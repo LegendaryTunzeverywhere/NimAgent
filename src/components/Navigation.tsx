@@ -18,7 +18,7 @@ export default function Navigation() {
             <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
               Nim<span className="text-amber-700 dark:text-gold">Hub</span>
             </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-white/30 mt-0.5">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-white/50 mt-0.5">
               AI Payments
             </span>
           </div>

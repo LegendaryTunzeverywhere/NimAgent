@@ -413,3 +413,14 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Scroll hint — gentle nudge downward to signal more content below */
+@keyframes scrollHint {
+  0%, 100% { transform: translateY(0);    opacity: 0.7; }
+  50%       { transform: translateY(4px); opacity: 1;   }
+}
+.animate-scroll-hint { animation: scrollHint 1.8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-hint { animation: none; opacity: 0.85; }
+}

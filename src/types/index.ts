@@ -61,6 +61,7 @@ export interface ActionCard {
   accountNumber?: string;
   billerId?: string;
   address?: string;
+  message?: string;       // Payment request message / label
   fromCoin?: string;
   toCoin?: string;
   amount?: string;
@@ -73,6 +74,7 @@ export interface ActionCard {
   completed?: boolean;
   failed?: boolean;
   txHash?: string;
+  locked?: boolean;      // Amount locked — cannot be changed by sender (payment request)
 }
 
 export interface QuickAction {

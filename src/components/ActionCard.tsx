@@ -50,9 +50,11 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Pre-validation state — done BEFORE the user clicks Pay so the wallet
   // popup isn't blocked by a network request inside the click handler.
   const isOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
+  // Lock immediately for orders (server-priced), AND for payment requests where
+  // the receiver has specified a fixed amount the sender must not change.
+  const isPaymentRequest = action.type === 'send' && !!action.locked && !!action.amountLuna;
   const [prevalidationError, setPrevalidationError] = useState<string | null>(null);
-  // LOCK IMMEDIATELY for orders to prevent editing during validation, and lock after transaction completes
-  const [amountLocked, setAmountLocked] = useState(isOrder);
+  const [amountLocked, setAmountLocked] = useState(isOrder || isPaymentRequest);
   const [quoteId, setQuoteId] = useState<string | null>(null);
   
   // Real-time quote refresh state
@@ -228,7 +230,8 @@ export default function ActionCard({ action }: ActionCardProps) {
 
   // Handle QR Code display
   if (action.type === 'qr-code' && action.address) {
-    return <QRCodeDisplay address={action.address} />;
+    const nimAmount = action.amountLuna ? action.amountLuna / 100000 : undefined;
+    return <QRCodeDisplay address={action.address} amount={nimAmount} message={action.message} />;
   }
 
   // Handle QR Code scanning
@@ -256,7 +259,7 @@ export default function ActionCard({ action }: ActionCardProps) {
     const isWithdraw = action.type === 'withdraw';
     const isUnstake = action.type === 'unstake';
     return (
-      <div className="bg-white dark:bg-white/[0.035] border-2 border-amber-200 dark:border-[#F5A623]/20 rounded-2xl p-4 max-w-sm bg-gradient-to-br from-amber-50/50 to-transparent dark:from-[#F5A623]/5 backdrop-blur-xl">
+      <div className="bg-white dark:bg-white/[0.035] border-2 border-amber-300 dark:border-[#F5A623]/20 rounded-2xl p-4 max-w-sm bg-gradient-to-br from-amber-50/50 to-transparent dark:from-[#F5A623]/5 backdrop-blur-xl">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-[#F5A623]/10 flex items-center justify-center">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-700 dark:text-[#F5A623]">
@@ -269,7 +272,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             <p className="font-semibold text-sm text-gray-900 dark:text-white">
               {isWithdraw ? 'Withdraw Stake' : isUnstake ? 'Manage Staking' : 'Earn Staking Rewards'}
             </p>
-            <p className="text-[10px] font-mono text-gray-600 dark:text-[#4A5568]">
+            <p className="text-[10px] font-mono text-gray-500 dark:text-white/55">
               {isWithdraw ? 'WITHDRAW UNLOCKED NIM' : isUnstake ? 'UNSTAKE & WITHDRAW' : '~8% APY · NON-CUSTODIAL'}
             </p>
           </div>
@@ -299,7 +302,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-sm text-gray-900 dark:text-white">Saved Contacts</p>
-            <p className="text-[10px] text-gray-600 dark:text-white/40 font-mono">
+            <p className="text-[10px] text-gray-600 dark:text-white/55 font-mono">
               {loadingContacts ? 'LOADING...' : `${savedContacts.length} CONTACT${savedContacts.length !== 1 ? 'S' : ''}`}
             </p>
           </div>
@@ -311,8 +314,8 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
         ) : savedContacts.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-sm text-gray-600 dark:text-white/50 mb-1">No saved contacts yet</p>
-            <p className="text-xs text-gray-500 dark:text-white/30">
+            <p className="text-sm text-gray-600 dark:text-white/65 mb-1">No saved contacts yet</p>
+            <p className="text-xs text-gray-500 dark:text-white/45">
               Save addresses by saying "Save [address] as [name]"
             </p>
           </div>
@@ -339,10 +342,10 @@ export default function ActionCard({ action }: ActionCardProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] sm:text-xs font-mono text-gray-600 dark:text-white/50 break-all">
+                  <p className="text-[11px] sm:text-xs font-mono text-gray-600 dark:text-white/65 break-all">
                     {contact.recipient_address}
                   </p>
-                  <p className="text-[10px] text-gray-500 dark:text-white/30 mt-0.5">
+                  <p className="text-[10px] text-gray-500 dark:text-white/45 mt-0.5">
                     {isValidAddr ? (
                       contact.usage_count > 0 
                         ? `Used ${contact.usage_count} time${contact.usage_count !== 1 ? 's' : ''}`
@@ -759,20 +762,32 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Details */}
       {action.type === 'send' && (
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-white/50 text-sm font-medium">To</span>
+          <span className="text-gray-600 dark:text-white/65 text-sm font-medium">To</span>
           <span className="text-gray-900 dark:text-white font-mono text-xs">{action.recipient?.substring(0, 14)}...</span>
+        </div>
+      )}
+
+      {/* Payment request lock banner — shown when receiver set a fixed amount */}
+      {isPaymentRequest && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-100 dark:bg-gold/10 border border-amber-300 dark:border-gold/25">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-gold flex-shrink-0">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <p className="text-xs text-amber-700 dark:text-gold font-medium leading-snug">
+            Amount fixed by requester{action.message ? ` · ${action.message}` : ''} — cannot be changed
+          </p>
         </div>
       )}
 
       {action.type === 'gift-card' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Product</span>
+            <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Product</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.product}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Value</span>
+              <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Value</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -781,7 +796,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           {/* Show available denominations from catalog — display only, not selectable */}
           {availableAmounts && availableAmounts.length > 0 && !success && (
             <div className="space-y-1">
-              <p className="text-gray-500 dark:text-white/40 text-[10px] font-medium uppercase tracking-wider">Available amounts</p>
+              <p className="text-gray-500 dark:text-white/55 text-[10px] font-medium uppercase tracking-wider">Available amounts</p>
               <div className="flex flex-wrap gap-1.5">
                 {availableAmounts.map(a => (
                   <span
@@ -789,7 +804,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                     className={`text-[11px] font-mono px-2 py-0.5 rounded select-none ${
                       Number(action.fiatAmount) === a
                         ? 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold/90 ring-1 ring-amber-300 dark:ring-gold/30'
-                        : 'bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-white/40'
+                        : 'bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-white/55'
                     }`}
                   >
                     {CURRENCY_SYMBOLS[action.currency || 'USD']}{a}
@@ -799,12 +814,12 @@ export default function ActionCard({ action }: ActionCardProps) {
             </div>
           )}
           {amountRange && !availableAmounts && !success && (
-            <p className="text-gray-500 dark:text-white/40 text-[10px]">
+            <p className="text-gray-500 dark:text-white/55 text-[10px]">
               Range: {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.min} – {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.max}
             </p>
           )}
           <div className="space-y-1">
-            <label className="text-gray-600 dark:text-white/50 text-xs font-medium">Email (optional)</label>
+            <label className="text-gray-600 dark:text-white/65 text-xs font-medium">Email (optional)</label>
             <input
               type="email"
               value={email}
@@ -812,7 +827,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               placeholder="your@email.com"
               className="w-full px-3 py-2 rounded-lg bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20"
             />
-            <p className="text-gray-500 dark:text-white/30 text-xs">We'll send the gift card code to this email</p>
+            <p className="text-gray-500 dark:text-white/45 text-xs">We'll send the gift card code to this email</p>
           </div>
         </>
       )}
@@ -820,23 +835,23 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'airtime' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Phone</span>
+            <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Phone</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.phone}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Operator</span>
+            <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Operator</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.operator}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Amount</span>
+              <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Amount</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
           )}
           {amountRange && !success && (
-            <p className="text-gray-500 dark:text-white/40 text-[10px]">
+            <p className="text-gray-500 dark:text-white/55 text-[10px]">
               Valid range: {amountRange.currency} {amountRange.min} – {amountRange.max}
             </p>
           )}
@@ -846,16 +861,16 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'bill' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Service</span>
+            <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Service</span>
             <span className="text-gray-900 dark:text-white font-semibold">{action.service}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Account</span>
+            <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Account</span>
             <span className="text-gray-900 dark:text-white font-mono text-xs">{action.accountNumber}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-white/50 text-sm font-medium">Amount</span>
+              <span className="text-gray-600 dark:text-white/65 text-sm font-medium">Amount</span>
               <span className="text-gray-900 dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -867,7 +882,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Amount Input */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-gray-600 dark:text-white/50 text-xs font-medium">Amount to pay</label>
+          <label className="text-gray-600 dark:text-white/65 text-xs font-medium">Amount to pay</label>
           {isOrder && !success && quoteExpiry && (
             <button
               onClick={refreshQuote}
@@ -895,10 +910,10 @@ export default function ActionCard({ action }: ActionCardProps) {
             readOnly={amountLocked}
             className="flex-1 bg-transparent text-gray-900 dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/40"
           />
-          <span className="text-gray-700 dark:text-white/50 text-sm font-bold">NIM</span>
+          <span className="text-gray-700 dark:text-white/65 text-sm font-bold">NIM</span>
         </div>
         {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
-          <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-gray-600 dark:text-white/40'} text-right`}>
+          <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-gray-600 dark:text-white/55'} text-right`}>
             Quote expires in {timeRemaining}s
           </p>
         )}

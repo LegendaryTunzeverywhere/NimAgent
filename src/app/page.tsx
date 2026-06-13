@@ -52,13 +52,17 @@ function PaymentLinkHandler() {
       setActiveTab('chat');
 
       setTimeout(() => {
+        const hasAmount = !!amount && parseFloat(amount) > 0;
         addMessage({
           role: 'ai',
-          content: `Payment request detected! 📱\n\nRecipient: ${to}${amount ? `\nAmount: ${amount} NIM` : ''}${message ? `\nMessage: ${message}` : ''}\n\nReady to send?`,
+          content: `Payment request detected!\n\nRecipient: ${to}${amount ? `\nAmount: ${amount} NIM` : ''}${message ? `\nFor: ${message}` : ''}\n\n${hasAmount ? '⚠️ The amount is fixed by the requester and cannot be changed.' : 'The sender can choose the amount.'}`,
           action: {
             type: 'send',
             recipient: to,
-            amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
+            amountLuna: hasAmount ? Math.round(parseFloat(amount!) * 100000) : 0,
+            message: message || undefined,
+            // Lock the amount when a specific value was requested — sender cannot edit it
+            locked: hasAmount,
           }
         });
       }, 500);

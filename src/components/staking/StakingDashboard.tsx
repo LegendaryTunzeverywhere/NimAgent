@@ -24,24 +24,24 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-6 rounded-xl shadow-sm dark:shadow-none"
       >
-        <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono tracking-widest mb-4">YOUR ACTIVE STAKE</p>
+        <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono tracking-widest mb-4">YOUR ACTIVE STAKE</p>
         <div className="text-center mb-6">
           <p className="font-mono text-4xl font-extrabold text-amber-700 dark:text-gold">
             {activeNIM.toLocaleString()}
           </p>
-          <p className="font-mono text-gray-500 dark:text-white/40 text-sm mt-1">NIM staked</p>
+          <p className="font-mono text-gray-500 dark:text-white/55 text-sm mt-1">NIM staked</p>
         </div>
 
         {/* Reward estimates */}
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-gray-50 dark:bg-black/30 rounded-xl p-3 text-center">
-            <p className="text-gray-500 dark:text-white/40 text-[9px] font-mono mb-1">MONTHLY</p>
+            <p className="text-gray-500 dark:text-white/55 text-[9px] font-mono mb-1">MONTHLY</p>
             <p className="font-mono text-sm font-semibold text-emerald-600 dark:text-[#00D4A1]">
               ~{(annualRewards / 12).toFixed(1)} NIM
             </p>
           </div>
           <div className="bg-gray-50 dark:bg-black/30 rounded-xl p-3 text-center">
-            <p className="text-gray-500 dark:text-white/40 text-[9px] font-mono mb-1">YEARLY</p>
+            <p className="text-gray-500 dark:text-white/55 text-[9px] font-mono mb-1">YEARLY</p>
             <p className="font-mono text-sm font-semibold text-emerald-600 dark:text-[#00D4A1]">
               ~{annualRewards.toFixed(1)} NIM
             </p>
@@ -52,7 +52,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
       {/* Current validator */}
       {currentValidator && (
         <div className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-4 rounded-xl">
-          <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono mb-3">STAKING WITH</p>
+          <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mb-3">STAKING WITH</p>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.06] flex items-center justify-center font-mono font-bold text-amber-700 dark:text-gold text-sm">
@@ -60,7 +60,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
               </div>
               <div>
                 <p className="font-semibold text-sm text-gray-900 dark:text-white">{currentValidator.name}</p>
-                <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono">
+                <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono">
                   {currentValidator.fee}% fee · {currentValidator.payoutSchedule || 'pool'} payout
                 </p>
               </div>
@@ -69,7 +69,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
               <p className="font-mono text-sm font-bold text-amber-700 dark:text-gold">
                 {(apy * (1 - currentValidator.fee / 100)).toFixed(1)}%
               </p>
-              <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono">NET APY</p>
+              <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono">NET APY</p>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
 
       {/* Inactive stake (if any) */}
       {stakerInfo.inactiveBalance > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-500/[0.06] border border-amber-200 dark:border-amber-500/20 p-4 rounded-xl">
+        <div className="bg-amber-100 dark:bg-amber-500/[0.06] border border-amber-300 dark:border-amber-500/20 p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-amber-700 dark:text-amber-400 text-xs font-semibold">Unstaking in progress</p>
@@ -87,7 +87,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
             </div>
             <span className="px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">PENDING</span>
           </div>
-          <p className="text-gray-500 dark:text-white/40 text-[10px] font-mono mt-2">
+          <p className="text-gray-500 dark:text-white/55 text-[10px] font-mono mt-2">
             Available after the reporting window (~1 epoch)
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function StakingDashboard({ stakerInfo, validators, apy, walletAd
         </button>
       </div>
 
-      <p className="text-gray-400 dark:text-white/30 text-[10px] font-mono text-center">
+      <p className="text-gray-500 dark:text-white/50 text-[10px] font-mono text-center">
         NON-CUSTODIAL · YOUR NIM STAYS IN YOUR WALLET
       </p>
     </div>
