@@ -16,7 +16,7 @@ export default function Navigation() {
           <Logo size={34} glow />
           <div className="flex flex-col leading-none">
             <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
-              Nim<span className="text-amber-700 dark:text-gold">Hub</span>
+              Nim<span className="text-amber-700 dark:text-gold">Agent</span>
             </span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-white/50 mt-0.5">
               AI Payments

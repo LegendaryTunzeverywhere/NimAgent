@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'NimAgent: AI-Powered Nimiq Payments',
-    description: 'Your AI-powered Nimiq payment hub.',
+    description: 'Your AI-powered Nimiq payment Agent.',
   },
 };
 
