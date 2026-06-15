@@ -667,27 +667,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      {/* Legal Disclaimer */}
-      <div className="animate-fade-up-delay-5 rounded-2xl p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06]">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center mt-0.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-gold">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-1">
-              Independent Community Project
-            </p>
-            <p className="text-[11px] leading-relaxed text-gray-500 dark:text-white/55">
-              NimAgent is an independent community project and is <strong className="font-semibold text-gray-600 dark:text-white/65">not officially affiliated with or operated by the Nimiq Foundation</strong>.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

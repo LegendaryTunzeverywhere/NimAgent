@@ -572,9 +572,7 @@ export default function ChatPage() {
             Connect your wallet for full functionality
           </p>
         )}
-        <p className="text-[9px] text-center text-gray-500 dark:text-white/50 mt-1.5">
-          Independent Project · Not affiliated with Nimiq Foundation
-        </p>
+
       </div>
 
       {/* ── Delete session modal ─────────────────────────────────────────────── */}

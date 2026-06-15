@@ -108,18 +108,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Global Disclaimer Footer - only show on History page (Chat has its own layout) */}
-        {activeTab === 'history' && (
-          <div className="fixed bottom-20 left-0 right-0 px-6 pointer-events-none z-20">
-            <div className="max-w-md mx-auto pointer-events-auto">
-              <div className="backdrop-blur-md bg-white/95 dark:bg-[#08090E]/95 border border-gray-300 dark:border-white/20 rounded-xl px-3 py-2 shadow-xl">
-                <p className="text-[10px] text-center text-gray-700 dark:text-white/60 leading-relaxed">
-                  <strong className="font-bold">Independent Project:</strong> Not affiliated with Nimiq Foundation
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         <BottomNav />
       </main>

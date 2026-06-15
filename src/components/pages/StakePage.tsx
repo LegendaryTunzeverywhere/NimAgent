@@ -296,7 +296,7 @@ export default function StakePage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-                    <strong className="font-semibold">Staking Disclaimer:</strong> Validator performance varies. Research validators before staking. This is an independent community project not affiliated with Nimiq Foundation.
+                    <strong className="font-semibold">Staking Disclaimer:</strong> Validator performance varies. Research validators before staking.
                   </p>
                 </div>
               </div>
