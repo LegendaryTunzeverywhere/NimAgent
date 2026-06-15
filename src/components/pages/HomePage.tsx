@@ -618,10 +618,10 @@ export default function HomePage() {
               <Logo size={64} glow />
             </div>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
-              Welcome to Nim<span className="text-gradient-gold">Hub</span>
+              Welcome to Nim<span className="text-gradient-gold">Agent</span>
             </h2>
             <p className="text-sm text-gray-600 dark:text-white/55 mb-6 max-w-xs mx-auto leading-relaxed">
-              Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto, all in one chat.
+              Your AI-powered Nimiq payment agent. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto, all in one chat.
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
