@@ -1,4 +1,4 @@
-# NimHub - AI-Powered Nimiq Payment Platform
+# NimAgent - AI-Powered Nimiq Payment Platform
 
 > Your intelligent payment assistant for Nimiq cryptocurrency. Send NIM, buy gift cards, top up airtime, pay bills — all powered by AI.
 
@@ -53,7 +53,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-nimhub-next/
+nimagent-next/
 ├── src/
 │   ├── app/                    # Next.js app directory
 │   ├── components/             # React components
@@ -219,7 +219,7 @@ This creates:
 ## 📚 Documentation
 
 - **QUICK_REFERENCE.md** - Quick commands and troubleshooting
-- **NIMHUB_GUIDE.md** - Complete development guide
+- **NIMAGENT_GUIDE.md** - Complete development guide
 - **AI_AGENT_INTEGRATION.md** - AI agent implementation details
 - **DEPLOYMENT_CHECKLIST.md** - Production deployment guide
 - **ISSUES_FIXED.md** - Recent bug fixes and improvements
@@ -233,7 +233,7 @@ This creates:
 
 ## 🔒 Security
 
-NimHub implements **enterprise-grade cryptographic security** with 13+ layers of defense:
+NimAgent implements **enterprise-grade cryptographic security** with 13+ layers of defense:
 
 ### Core Security Features
 ✅ **API Authentication** - Secret key required for all API calls (NEW)  

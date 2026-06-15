@@ -1,5 +1,5 @@
 /**
- * NimHub Icon System
+ * NimAgent Icon System
  *
  * A unified, line-stroke icon set (Feather/Lucide style) so the whole app
  * shares one visual language instead of mismatched emojis. All icons inherit

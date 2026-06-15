@@ -12,18 +12,18 @@ interface QRCodeDisplayProps {
   message?: string;
 }
 
-type QRMode = 'request' | 'nimhub' | 'address';
+type QRMode = 'request' | 'nimagent' | 'address';
 
 export default function QRCodeDisplay({ address, amount, message }: QRCodeDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied]   = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [error, setError]     = useState(false);
-  // Default to 'request' when an amount is provided, otherwise 'nimhub'
-  const [mode, setMode]       = useState<QRMode>(amount ? 'request' : 'nimhub');
+  // Default to 'request' when an amount is provided, otherwise 'nimagent'
+  const [mode, setMode]       = useState<QRMode>(amount ? 'request' : 'nimagent');
 
   const normalizedAddress = address.replace(/\s/g, '');
-  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
+  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimagent.online';
 
   // ── URL builders ──────────────────────────────────────────────────────────
   const buildRequestUrl = () => {
@@ -33,15 +33,15 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
     return `${baseUrl}/?${params.toString()}`;
   };
 
-  const nimhubUrl  = `${baseUrl}/pay/${normalizedAddress}`;
+  const nimagentUrl  = `${baseUrl}/pay/${normalizedAddress}`;
   const requestUrl = buildRequestUrl();
 
   const qrData = mode === 'request' ? requestUrl
-               : mode === 'nimhub'  ? nimhubUrl
+               : mode === 'nimagent'  ? nimagentUrl
                : address;
 
   const displayLabel = mode === 'request' ? 'Payment Request Link'
-                     : mode === 'nimhub'  ? 'NimHub Payment Link'
+                     : mode === 'nimagent'  ? 'NimAgent Payment Link'
                      : 'Nimiq Address';
 
   // ── Generate QR ───────────────────────────────────────────────────────────
@@ -62,9 +62,9 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
     const link = document.createElement('a');
     link.href = canvasRef.current.toDataURL('image/png');
     link.download = mode === 'request'
-      ? `nimhub-request-${normalizedAddress.slice(0, 8)}.png`
-      : mode === 'nimhub'
-      ? `nimhub-pay-${normalizedAddress.slice(0, 8)}.png`
+      ? `nimagent-request-${normalizedAddress.slice(0, 8)}.png`
+      : mode === 'nimagent'
+      ? `nimagent-pay-${normalizedAddress.slice(0, 8)}.png`
       : `nimiq-${normalizedAddress.slice(0, 8)}.png`;
     link.click();
   };
@@ -79,7 +79,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(mode === 'request' ? requestUrl : nimhubUrl);
+      await navigator.clipboard.writeText(mode === 'request' ? requestUrl : nimagentUrl);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch { /* silent */ }
@@ -112,9 +112,9 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
             Request {amount} NIM
           </button>
         )}
-        <button onClick={() => setMode('nimhub')}
+        <button onClick={() => setMode('nimagent')}
           className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
-            mode === 'nimhub'
+            mode === 'nimagent'
               ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
               : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
           }`}>
@@ -166,12 +166,12 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
       {/* ── Info note ─────────────────────────────────────────────────────── */}
       {mode === 'request' && (
         <div className="text-[11px] text-amber-700 dark:text-gold/75 bg-amber-100 dark:bg-gold/8 border border-amber-300 dark:border-gold/20 rounded-xl px-3 py-2.5 text-left leading-relaxed">
-          <strong className="font-semibold">Share this QR or link.</strong> When someone scans it or taps the link, NimHub opens with a pre-filled payment of <strong>{amount} NIM</strong> to your wallet — they just confirm.
+          <strong className="font-semibold">Share this QR or link.</strong> When someone scans it or taps the link, NimAgent opens with a pre-filled payment of <strong>{amount} NIM</strong> to your wallet — they just confirm.
         </div>
       )}
-      {mode === 'nimhub' && (
+      {mode === 'nimagent' && (
         <div className="text-[11px] text-gray-600 dark:text-white/55 bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] rounded-xl px-3 py-2.5 text-left leading-relaxed">
-          Opens NimHub with your address pre-filled. The sender chooses the amount.
+          Opens NimAgent with your address pre-filled. The sender chooses the amount.
         </div>
       )}
 
@@ -181,7 +181,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-white/75 border border-gray-200 dark:border-white/[0.08] hover:bg-gray-200 dark:hover:bg-white/[0.10] transition-colors">
           <Icon name="download" size={14} strokeWidth={2} /> Save
         </button>
-        {(mode === 'request' || mode === 'nimhub') && (
+        {(mode === 'request' || mode === 'nimagent') && (
           <button onClick={handleCopyLink}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-amber-100 dark:bg-gold/10 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors">
             {linkCopied

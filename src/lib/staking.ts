@@ -1,5 +1,5 @@
 /**
- * NimHub Staking — delegate NIM to validators via Nimiq Hub API
+ * NimAgent Staking — delegate NIM to validators via Nimiq Hub API
  *
  * CORRECT IMPLEMENTATION:
  * - Send to staking contract (NQ77...0001 for testnet)
@@ -134,7 +134,7 @@ export async function stakeNIM(
 
     // Use checkout with extraData - this will send to staking contract with validator in data
     const result = await hub.checkout({
-      appName: 'NimHub',
+      appName: 'NimAgent',
       recipient: STAKING_CONTRACT, // Send to staking contract, not validator directly
       value: amountLuna,
       fee: 0,
@@ -224,7 +224,7 @@ export async function unstakeNIM(
 
     // Use checkout with extraData
     const result = await hub.checkout({
-      appName: 'NimHub',
+      appName: 'NimAgent',
       recipient: STAKING_CONTRACT, // Send to staking contract
       value: amountLuna,
       fee: 0,

@@ -1,5 +1,5 @@
 ---
-name: NimHub
+name: NimAgent
 description: AI‑powered Nimiq payment platform
 colors:
   nimiq-gold: "#F5A623"
@@ -38,13 +38,13 @@ components:
     padding: "12px 24px"
 ---
 
-# Design System: NimHub
+# Design System: NimAgent
 
 ## 1. Overview
 
 **Creative North Star: "The Conversation Hub"**
 
-NimHub's design prioritizes conversational, human‑centered interactions first. It feels secure, simple, and friendly—warm, approachable, and confident. The system avoids crypto jargon and visual clutter, focusing on clarity and trust.
+NimAgent's design prioritizes conversational, human‑centered interactions first. It feels secure, simple, and friendly—warm, approachable, and confident. The system avoids crypto jargon and visual clutter, focusing on clarity and trust.
 
 This system explicitly rejects generic crypto‑exchange clutter, skeuomorphic payment‑app flashiness, and minimalist‑but‑unusable interfaces that trade clarity for aesthetics.
 

@@ -1,6 +1,6 @@
 // Shared wallet adapter contract.
 //
-// NimHub runs in two environments:
+// NimAgent runs in two environments:
 //   - "hub":     standalone web build, wallet via the Nimiq Hub popup (@nimiq/hub-api)
 //   - "miniapp": inside the Nimiq Pay app, wallet via the injected provider (@nimiq/mini-app-sdk)
 //

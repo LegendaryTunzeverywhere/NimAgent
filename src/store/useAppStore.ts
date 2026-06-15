@@ -424,7 +424,7 @@ export const useAppStore = create<AppState>()(
                 
                 await addMessage({
                   role: 'ai',
-                  content: response.message || `✅ Saved ${action.nickname} to your contacts!`,
+                  content: `✅ Saved ${action.nickname} to your contacts!`,
                 });
                 return; // Don't add action card
               } catch (err: any) {
@@ -478,7 +478,7 @@ export const useAppStore = create<AppState>()(
                 await updateSavedAddress(found.address.id, walletAddress, updateData);
                 await addMessage({
                   role: 'ai',
-                  content: response.message || `✅ Updated ${lookupNickname} in your contacts!`,
+                  content: `✅ Updated ${lookupNickname} in your contacts!`,
                 });
                 return;
               } catch (err: any) {
@@ -507,7 +507,7 @@ export const useAppStore = create<AppState>()(
                 await deleteSavedAddress(found.address.id, walletAddress);
                 await addMessage({
                   role: 'ai',
-                  content: response.message || `✅ Removed ${action.nickname} from your contacts!`,
+                  content: `✅ Removed ${action.nickname} from your contacts!`,
                 });
                 return;
               } catch (err: any) {
@@ -545,7 +545,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'nimhub-storage',
+      name: 'nimagent-storage',
       partialize: (state) => ({
         wallet: {
           address: state.wallet.address,

@@ -683,7 +683,7 @@ export default function HomePage() {
               Independent Community Project
             </p>
             <p className="text-[11px] leading-relaxed text-gray-500 dark:text-white/55">
-              NimHub is an independent community project and is <strong className="font-semibold text-gray-600 dark:text-white/65">not officially affiliated with or operated by the Nimiq Foundation</strong>.
+              NimAgent is an independent community project and is <strong className="font-semibold text-gray-600 dark:text-white/65">not officially affiliated with or operated by the Nimiq Foundation</strong>.
             </p>
           </div>
         </div>

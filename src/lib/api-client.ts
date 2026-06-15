@@ -1,4 +1,4 @@
-// API client for NimHub backend
+// API client for NimAgent backend
 //
 // This client now uses the BFF (Backend-for-Frontend) pattern.
 // Instead of calling Railway directly, it calls Next.js API routes

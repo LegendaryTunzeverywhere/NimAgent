@@ -1,12 +1,12 @@
 // Hub adapter — standalone web build.
 //
-// Wraps @nimiq/hub-api (the Nimiq Hub popup). This is the original NimHub
+// Wraps @nimiq/hub-api (the Nimiq Hub popup). This is the original NimAgent
 // wallet behavior, kept intact so the app still works outside Nimiq Pay.
 
 import type { WalletAdapter, PaymentRequest, SignResult } from './types';
 
 const HUB_URL = process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com';
-const APP_NAME = 'NimHub';
+const APP_NAME = 'NimAgent';
 
 let hubApiInstance: any = null;
 let cachedAddress: string | null = null;

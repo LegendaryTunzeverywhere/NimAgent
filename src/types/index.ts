@@ -39,7 +39,7 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'withdraw' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'withdraw' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
@@ -66,6 +66,7 @@ export interface ActionCard {
   toCoin?: string;
   amount?: string;
   recipientEmail?: string;
+  formUrl?: string;       // Support form URL
   // Catalog-supplied hints (set by validation, shown as UX context in the card)
   availableAmounts?: number[];   // FIXED denominations the server confirmed are valid
   minAmount?: number;            // Lower bound for RANGE products

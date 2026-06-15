@@ -103,15 +103,15 @@ export default function ChatPage() {
 
   // ── Onboarding ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!localStorage.getItem('nimhub_onboarding_seen') && wallet.connected) {
+    if (!localStorage.getItem('nimagent_onboarding_seen') && wallet.connected) {
       setShowOnboarding(true);
     }
   }, [wallet.connected]);
 
   // ── Session init ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const WELCOME_CONNECTED    = "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code: just ask in plain language. New here? Tap a suggestion below to explore what's possible.";
-    const WELCOME_DISCONNECTED = "Hi, I'm your NimHub agent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and more. Connect your wallet to get started, or ask me anything about NimHub.";
+    const WELCOME_CONNECTED    = "Hi, I'm your NimAgent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and show your QR code: just ask in plain language. New here? Tap a suggestion below to explore what's possible.";
+    const WELCOME_DISCONNECTED = "Hi, I'm your NimAgent. I can send NIM, buy gift cards, top up airtime, pay bills, swap crypto, and more. Connect your wallet to get started, or ask me anything about NimAgent.";
 
     if (!hasInitialized && wallet.connected && wallet.address) {
       loadOrCreateSession().then(() => {
@@ -235,7 +235,7 @@ export default function ChatPage() {
       if (sessionToDelete === currentSessionId) {
         startNewSession();
         await new Promise(r => setTimeout(r, 50));
-        await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd me like to do." });
+        await addMessage({ role: 'ai', content: "Hi, I'm your NimAgent. Just ask in plain language what you'd me like to do." });
       }
     } catch { /* silent */ }
     finally { setDeleting(false); setSessionToDelete(null); }
@@ -280,7 +280,7 @@ export default function ChatPage() {
                 setShowSessions(false);
                 startNewSession();
                 if (useAppStore.getState().messages.length > 0) clearMessages();
-                await addMessage({ role: 'ai', content: "Hi, I'm your NimHub agent. Just ask in plain language what you'd like to do." });
+                await addMessage({ role: 'ai', content: "Hi, I'm your NimAgent. Just ask in plain language what you'd like to do." });
               }}
               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
               title="New chat"
@@ -639,8 +639,8 @@ export default function ChatPage() {
       {/* ── Onboarding modal ─────────────────────────────────────────────────── */}
       <Modal
         open={showOnboarding}
-        onClose={() => { setShowOnboarding(false); localStorage.setItem('nimhub_onboarding_seen', 'true'); }}
-        title="Welcome to NimHub AI"
+        onClose={() => { setShowOnboarding(false); localStorage.setItem('nimagent_onboarding_seen', 'true'); }}
+        title="Welcome to NimAgent AI"
         subtitle="Your intelligent crypto assistant"
       >
         <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-5 relative" id="onboarding-container">
@@ -673,7 +673,7 @@ export default function ChatPage() {
               <button key={i}
                 onClick={() => {
                   setShowOnboarding(false);
-                  localStorage.setItem('nimhub_onboarding_seen', 'true');
+                  localStorage.setItem('nimagent_onboarding_seen', 'true');
                   setInput(ex.q.replace(/['"]/g, ''));
                   setTimeout(() => inputRef.current?.focus(), 80);
                 }}
@@ -703,7 +703,7 @@ export default function ChatPage() {
               View Commands
             </button>
             <button
-              onClick={() => { setShowOnboarding(false); localStorage.setItem('nimhub_onboarding_seen', 'true'); }}
+              onClick={() => { setShowOnboarding(false); localStorage.setItem('nimagent_onboarding_seen', 'true'); }}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
             >
               Start Chatting

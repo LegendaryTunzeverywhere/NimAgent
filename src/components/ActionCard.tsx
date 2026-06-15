@@ -254,6 +254,42 @@ export default function ActionCard({ action }: ActionCardProps) {
     return <BuyNimInterface />;
   }
 
+  // Handle Support - show support form button
+  if (action.type === 'support') {
+    return (
+      <div className="glass dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-brand-blue/10 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700 dark:text-brand-blue-light">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">Get Support</p>
+            <p className="text-[10px] font-mono text-gray-500 dark:text-white/55">HELP · FEEDBACK · BUG REPORT</p>
+          </div>
+        </div>
+        {action.formUrl ? (
+          <a
+            href={action.formUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 dark:bg-brand-blue text-white font-semibold hover:bg-blue-700 dark:hover:bg-brand-blue/90 transition-colors flex items-center justify-center gap-2"
+          >
+            Open Support Form
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+              <polyline points="15,3 21,3 21,9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </a>
+        ) : (
+          <p className="text-sm text-gray-600 dark:text-white/65">Support form coming soon! Please check back later.</p>
+        )}
+      </div>
+    );
+  }
+
   // Handle Staking - redirect to stake tab
   if (action.type === 'stake' || action.type === 'unstake' || action.type === 'withdraw') {
     const isWithdraw = action.type === 'withdraw';
@@ -486,7 +522,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         const hash = await requestPayment(
           normalizedRecipient,
           amountLuna,
-          'NimHub-send',
+          'NimAgent-send',
           'direct',
           wallet.address // Pass wallet address to skip address selection
         );
@@ -570,7 +606,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         const hash = await requestPayment(
           serviceAddress,
           amountLuna,
-          `NimHub-${action.type}`,
+          `NimAgent-${action.type}`,
           action.type,
           wallet.address // Pass wallet address to skip address selection
         );

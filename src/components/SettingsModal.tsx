@@ -53,7 +53,7 @@ export default function SettingsModal({
         open={open}
         onClose={onClose}
         title="Settings"
-        subtitle="Customize your NimHub experience"
+        subtitle="Customize your NimAgent experience"
       >
         <div className="space-y-6">
           {/* Appearance Section */}
@@ -256,7 +256,7 @@ export default function SettingsModal({
               </li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-white/65 pt-2 border-t border-gray-200 dark:border-white/5">
-              We recommend testing on testnet first if you're new to NimHub.
+              We recommend testing on testnet first if you're new to NimAgent.
             </p>
           </div>
         </div>

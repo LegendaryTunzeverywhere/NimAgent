@@ -6,7 +6,7 @@ interface LogoProps {
 }
 
 /**
- * NimHub brand mark — an "N" formed as a payment node graph.
+ * NimAgent brand mark — an "N" formed as a payment node graph.
  * Two terminal nodes (gold) and one accent node (purple) suggest
  * a network/hub routing value between points.
  */

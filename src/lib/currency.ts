@@ -1,4 +1,4 @@
-// Currency conversion utilities for NimHub
+// Currency conversion utilities for NimAgent
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',

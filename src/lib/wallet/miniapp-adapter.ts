@@ -9,7 +9,7 @@ import type { ErrorResponse, NimiqProvider, SignatureResult } from '@nimiq/mini-
 import type { WalletAdapter, PaymentRequest, SignResult } from './types';
 import { getNimiqProvider } from './detect';
 
-const APP_NAME = 'NimHub';
+const APP_NAME = 'NimAgent';
 
 /** Narrow the `T | ErrorResponse` union the provider returns. */
 function isErrorResponse(value: unknown): value is ErrorResponse {
@@ -30,7 +30,7 @@ function unwrap<T>(value: T | ErrorResponse): T {
 
 async function provider(): Promise<NimiqProvider> {
   const p = await getNimiqProvider();
-  if (!p) throw new Error('Nimiq Pay provider unavailable. Open NimHub inside the Nimiq Pay app.');
+  if (!p) throw new Error('Nimiq Pay provider unavailable. Open NimAgent inside the Nimiq Pay app.');
   return p;
 }
 

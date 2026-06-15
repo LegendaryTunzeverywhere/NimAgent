@@ -65,7 +65,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
       // Check secure context — camera API requires HTTPS or localhost
       if (typeof window !== 'undefined' && !window.isSecureContext) {
-        setError('Camera requires a secure connection (HTTPS). Please open the app via https://nimhub.online');
+        setError('Camera requires a secure connection (HTTPS). Please open the app via https://nimagent.online');
         setIsScanning(false);
         return;
       }
@@ -258,10 +258,10 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       };
       
       // Parse QR code data
-      const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimhub.online';
+      const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://nimagent.online';
       
       if (data.startsWith(`${baseUrl}/pay/`) || data.includes('/pay/')) {
-        // NimHub simple pay link: /pay/<address>
+        // NimAgent simple pay link: /pay/<address>
         try {
           const url = new URL(data);
           const addressFromUrl = decodeURIComponent(url.pathname.split('/pay/')[1] || '');
@@ -270,7 +270,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           const amount = url.searchParams.get('amount');
           const message = url.searchParams.get('message');
           
-          let responseMessage = `QR scanned — NimHub pay link:\nTo: ${formattedAddress}`;
+          let responseMessage = `QR scanned — NimAgent pay link:\nTo: ${formattedAddress}`;
           if (amount) responseMessage += `\nAmount: ${amount} NIM`;
           if (message) responseMessage += `\nFor: ${message}`;
           
@@ -287,11 +287,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           });
           await askToSaveAddress(formattedAddress);
         } catch {
-          addMessage({ role: 'ai', content: `QR scanned but couldn't parse NimHub pay link: ${data}` });
+          addMessage({ role: 'ai', content: `QR scanned but couldn't parse NimAgent pay link: ${data}` });
         }
       } else if (
-        // NimHub payment REQUEST link: /?to=<address>&amount=<nim>&message=<msg>
-        (data.startsWith(baseUrl) || data.startsWith('https://nimhub.online')) &&
+        // NimAgent payment REQUEST link: /?to=<address>&amount=<nim>&message=<msg>
+        (data.startsWith(baseUrl) || data.startsWith('https://nimagent.online')) &&
         data.includes('?') && data.includes('to=')
       ) {
         try {
@@ -373,7 +373,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         // Unknown QR code format
         addMessage({
           role: 'ai',
-          content: `QR code scanned: ${data}\n\nThis doesn't appear to be a Nimiq address, NimHub payment link, or payment request. Please scan a valid Nimiq QR code.`,
+          content: `QR code scanned: ${data}\n\nThis doesn't appear to be a Nimiq address, NimAgent payment link, or payment request. Please scan a valid Nimiq QR code.`,
         });
       }
 
@@ -534,7 +534,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleManualSubmit();
           }}
           rows={3}
-          placeholder="NQ.. address, https://nimhub.online/pay/..., or nimiq:..."
+          placeholder="NQ.. address, https://nimagent.online/pay/..., or nimiq:..."
           className="w-full px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-mono placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 resize-none break-all"
         />
         <p className="text-gray-500 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>

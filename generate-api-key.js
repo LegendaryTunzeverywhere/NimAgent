@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Generate a secure random API key for NimHub
+ * Generate a secure random API key for NimAgent
  * 
  * Usage: node generate-api-key.js
  * 
@@ -15,7 +15,7 @@ function generateApiKey(length = 32) {
   return crypto.randomBytes(length).toString('hex');
 }
 
-console.log('\n🔐 NimHub API Key Generator\n');
+console.log('\n🔐 NimAgent API Key Generator\n');
 console.log('━'.repeat(60));
 console.log('\nGenerated API Secret:');
 console.log('\x1b[32m%s\x1b[0m', generateApiKey());

@@ -1,6 +1,6 @@
 {
-  "name": "NimHub - AI Payments",
-  "short_name": "NimHub",
+  "name": "NimAgent - AI Payments",
+  "short_name": "NimAgent",
   "description": "Your AI-powered Nimiq payment hub. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto - all in one chat.",
   "start_url": "/",
   "display": "standalone",
