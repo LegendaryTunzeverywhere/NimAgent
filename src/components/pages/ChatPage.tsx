@@ -374,9 +374,9 @@ export default function ChatPage() {
               </div>
             )}
 
-            <div className={`flex flex-col gap-1.5 max-w-[82%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col gap-1.5 max-w-[95%] sm:max-w-[82%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               {/* Bubble */}
-              <div className={`rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed ${
+              <div className={`rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed break-words ${
                 msg.role === 'user'
                   ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary font-medium rounded-br-sm'
                   : 'bg-gray-100 dark:bg-white/[0.07] text-gray-900 dark:text-white/90 border border-gray-200 dark:border-white/[0.06] rounded-bl-sm'
@@ -391,14 +391,14 @@ export default function ChatPage() {
                       <div key={idx} className="mt-2 space-y-2">
                         <div
                           onClick={() => navigator.clipboard.writeText(hash)}
-                          className="flex items-center gap-2 bg-black/20 dark:bg-black/30 rounded-lg px-2.5 py-1.5 font-mono text-[10px] cursor-pointer hover:bg-black/30 dark:hover:bg-black/40 transition-colors group/hash"
+                          className="flex items-center gap-2 bg-black/20 dark:bg-black/30 rounded-lg px-2.5 py-1.5 font-mono text-[10px] cursor-pointer hover:bg-black/30 dark:hover:bg-black/40 transition-colors group/hash break-all"
                         >
-                          <span className="flex-1 opacity-80">{hash.slice(0, 10)}…{hash.slice(-8)}</span>
+                          <span className="flex-1 opacity-80 font-mono">{hash.slice(0, 10)}…{hash.slice(-8)}</span>
                           <Icon name="copy" size={11} strokeWidth={2} className="opacity-40 group-hover/hash:opacity-80 transition-opacity" />
                         </div>
                         <a href={`${base}${hash}`} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors">
-                          <Icon name="explorer" size={11} strokeWidth={2} />
+                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors break-all">
+                          <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                           <span className="underline underline-offset-2">View on Explorer</span>
                         </a>
                       </div>
@@ -411,8 +411,8 @@ export default function ChatPage() {
                     if (!trusted) return <p key={idx} className="break-all">{line}</p>;
                     return (
                       <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors mt-1">
-                        <Icon name="explorer" size={11} strokeWidth={2} />
+                        className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors mt-1 break-all">
+                        <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                         <span className="underline underline-offset-2">View on Explorer</span>
                       </a>
                     );

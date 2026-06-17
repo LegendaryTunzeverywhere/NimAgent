@@ -512,7 +512,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         
         addMessage({
           role: 'ai',
-          content: `Payment sent successfully! 🎉\n\nTransaction Hash:\n${hash}\n\nView on explorer:\n${explorerUrl}`,
+          content: `Payment sent successfully! 🎉\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
         });
 
         // Ask if user wants to save this address (after a short delay)
@@ -644,27 +644,27 @@ export default function ActionCard({ action }: ActionCardProps) {
             : `https://test.nimiq.watch/#${hash}`;
 
           if (action.type === 'gift-card' && result.code) {
-            let msg = `Here's your ${action.product} gift card! 🎁\n\n🎟️ Gift Card Code:\n${result.code}`;
+            let msg = `Here's your ${action.product} gift card! 🎁\n\n🎟️ Code: ${result.code}`;
             if (result.pin) msg += `\n🔐 PIN: ${result.pin}`;
             if (result.serialNumber) msg += `\n#️⃣ Serial: ${result.serialNumber}`;
-            if (email) msg += `\n\n📧 Gift card sent to: ${email}`;
-            msg += `\n\n💳 Transaction Hash:\n${hash}\n\n🔗 View on Explorer:\n${explorerUrl}\n\n⚠️ Keep this safe — it won't be shown again.`;
+            if (email) msg += `\n📧 To: ${email}`;
+            msg += `\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}\n\n⚠️ Keep this safe — it won't be shown again.`;
             addMessage({ role: 'ai', content: msg });
           } else if (action.type === 'gift-card') {
-            let msg = `${action.product} gift card order placed! 🎁\n\n`;
-            if (result.sandboxNote) msg += `ℹ️ ${result.sandboxNote}\n\n`;
-            if (email) msg += `📧 Gift card will be sent to: ${email}\n\n`;
-            msg += `💳 Transaction Hash:\n${hash}\n\n🔗 View on Explorer:\n${explorerUrl}`;
+            let msg = `${action.product} gift card order placed! 🎁`;
+            if (result.sandboxNote) msg += `\n\nℹ️ ${result.sandboxNote}`;
+            if (email) msg += `\n📧 Sent to: ${email}`;
+            msg += `\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`;
             addMessage({ role: 'ai', content: msg });
           } else if (action.type === 'airtime') {
             addMessage({
               role: 'ai',
-              content: `Airtime sent! 📱\n\n${action.operator} ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount} to ${action.phone}\n\nTransaction Hash:\n${hash}\n\nView on explorer:\n${explorerUrl}`,
+              content: `Airtime sent! 📱\n\n${action.operator} ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount} to ${action.phone}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
             });
           } else if (action.type === 'bill') {
             addMessage({
               role: 'ai',
-              content: `Bill paid! 🧾\n\n${action.service} payment of ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount} confirmed.\n\nRef: ${result.reference}\n\nTransaction Hash:\n${hash}\n\nView on explorer:\n${explorerUrl}`,
+              content: `Bill paid! 🧾\n\n${action.service} payment of ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount}\nRef: ${result.reference}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
             });
           }
         } else {
