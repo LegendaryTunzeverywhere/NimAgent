@@ -33,10 +33,10 @@ export default function ChatPage() {
   const {
     wallet, messages, addMessage, clearMessages,
     sendMessageToAI, startNewSession, loadOrCreateSession, currentSessionId,
+    aiLoading,
   } = useAppStore();
 
   const [input,           setInput]           = useState('');
-  const [loading,         setLoading]         = useState(false);
   const [isListening,     setIsListening]     = useState(false);
   const [hasInitialized,  setHasInitialized]  = useState(false);
   const [showSessions,    setShowSessions]    = useState(false);
@@ -130,29 +130,26 @@ export default function ChatPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     const isMobile = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-    if (!isMobile && messages.length > 0 && messages[messages.length - 1].role === 'ai' && !loading) {
+    if (!isMobile && messages.length > 0 && messages[messages.length - 1].role === 'ai' && !aiLoading) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [messages, loading]);
+  }, [messages, aiLoading]);
 
-  // ── Send ────────────────────────────────────────────────────────────────────
+  // ─── Send ────────────────────────────────────────────────────────────────────
   const sendMessage = useCallback(async (text?: string) => {
     const msg = (text || input).trim();
-    if (!msg || loading) return;
+    if (!msg || aiLoading) return;
     setInput('');
-    setLoading(true);
     try {
       const lower = msg.toLowerCase().trim();
       if (/^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lower)) {
         addMessage({ role: 'user', content: msg });
         addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { type: 'qr-scan' } });
-        setLoading(false);
         return;
       }
       await sendMessageToAI(msg, wallet.address || undefined);
     } catch (e) { console.error('Chat error:', e); }
-    finally    { setLoading(false); }
-  }, [input, loading, addMessage, sendMessageToAI, wallet.address]);
+  }, [input, aiLoading, addMessage, sendMessageToAI, wallet.address]);
 
   useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
@@ -439,7 +436,7 @@ export default function ChatPage() {
                     <Icon name="chevron-right" size={10} strokeWidth={2} /> Reply
                   </button>
                 )}
-                {msg.role === 'user' && i === messages.length - 1 && !loading && (
+                {msg.role === 'user' && i === messages.length - 1 && !aiLoading && (
                   <button
                     onClick={() => sendMessage(msg.content)}
                     className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-blue-600 dark:text-brand-blue-light hover:bg-blue-50 dark:hover:bg-brand-blue/10 transition-colors"
@@ -456,7 +453,7 @@ export default function ChatPage() {
         ))}
 
         {/* Typing indicator */}
-        {loading && (
+        {aiLoading && (
           <div className="flex gap-2.5 animate-fade-up">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-600 dark:bg-brand-blue text-white animate-breathe shadow-sm shadow-blue-500/20">
               <Icon name="robot" size={14} strokeWidth={2.2} />
@@ -473,7 +470,7 @@ export default function ChatPage() {
       </div>
 
       {/* ── Scroll-to-bottom button ──────────────────────────────────────────── */}
-      {showScrollBtn && !loading && (
+      {showScrollBtn && !aiLoading && (
         <div className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
           style={{ bottom: keyboardOpen ? '72px' : '152px' }}>
           <button
@@ -505,7 +502,7 @@ export default function ChatPage() {
           {/* Mic button */}
           <button
             onClick={toggleVoice}
-            disabled={loading}
+            disabled={aiLoading}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
@@ -528,7 +525,7 @@ export default function ChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !isOverLimit && sendMessage()}
-            disabled={loading || isListening}
+            disabled={aiLoading || isListening}
             placeholder={isListening ? 'Listening…' : 'Ask me anything…'}
             className="flex-1 bg-transparent text-[14px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none disabled:cursor-not-allowed"
           />
@@ -543,7 +540,7 @@ export default function ChatPage() {
           {/* Send button */}
           <button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || loading || isOverLimit}
+            disabled={!input.trim() || aiLoading || isOverLimit}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit
                 ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-sm shadow-amber-500/25'

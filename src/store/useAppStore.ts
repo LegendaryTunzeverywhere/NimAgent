@@ -33,6 +33,7 @@ export const useAppStore = create<AppState>()(
       currentSessionId: null,
       theme: 'dark',
       network: 'testnet',
+      aiLoading: false,
 
       setActiveTab: (tab) => {
         console.log('[Store] Setting active tab:', tab);
@@ -345,6 +346,9 @@ export const useAppStore = create<AppState>()(
           return;
         }
 
+        // Set loading state
+        set({ aiLoading: true });
+
         // Get history before adding user message — send more turns and include
         // action metadata so the server can build rich context for the AI.
         const history = messages.slice(-20).map(m => ({
@@ -535,6 +539,9 @@ export const useAppStore = create<AppState>()(
               ? "You're sending messages a bit fast. Please wait a few seconds and try again."
               : "I'm currently unable to connect to the AI service. This could be due to network issues or server maintenance. Please try again in a moment, or check your connection.",
           });
+        } finally {
+          // Clear loading state
+          set({ aiLoading: false });
         }
       },
 

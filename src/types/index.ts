@@ -102,6 +102,7 @@ export interface AppState {
   currentSessionId: string | null;
   theme: 'dark' | 'light';
   network: 'testnet' | 'mainnet';
+  aiLoading: boolean;
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   setNetwork: (network: 'testnet' | 'mainnet') => void;
