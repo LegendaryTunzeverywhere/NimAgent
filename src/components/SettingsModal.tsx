@@ -124,58 +124,6 @@ export default function SettingsModal({
           </div>
         </div>
       </Modal>
-
-      {/* Network Switch Warning Modal */}
-      <Modal
-        open={showNetworkWarning}
-        onClose={cancelNetworkSwitch}
-        title="Switch to Mainnet?"
-        subtitle="You're about to use real money"
-        footer={
-          <>
-            <button
-              onClick={cancelNetworkSwitch}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmNetworkSwitch}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 dark:bg-error/90 text-white hover:bg-red-600 dark:hover:bg-error transition-colors flex items-center gap-1.5"
-            >
-              <Icon name="alert" size={14} strokeWidth={2.2} /> Switch to Mainnet
-            </button>
-          </>
-        }
-      >
-        <div className="flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl bg-red-100 dark:bg-error/10 border border-red-300 dark:border-error/20 text-red-600 dark:text-error flex items-center justify-center flex-shrink-0">
-            <Icon name="alert" size={20} strokeWidth={2} />
-          </span>
-          <div className="space-y-3">
-            <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">
-              Switching to mainnet means you'll be using <strong className="text-gray-900 dark:text-white">real NIM</strong> and making <strong className="text-gray-900 dark:text-white">real transactions</strong> that cannot be undone.
-            </p>
-            <ul className="space-y-2 text-xs text-gray-600 dark:text-white/60">
-              <li className="flex items-start gap-2">
-                <span className="text-red-600 dark:text-error mt-0.5">•</span>
-                <span>All transactions are permanent and irreversible</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-red-600 dark:text-error mt-0.5">•</span>
-                <span>You will be spending real cryptocurrency</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-red-600 dark:text-error mt-0.5">•</span>
-                <span>Double-check all addresses and amounts</span>
-              </li>
-            </ul>
-            <p className="text-xs text-gray-500 dark:text-white/65 pt-2 border-t border-gray-200 dark:border-white/5">
-              We recommend testing on testnet first if you're new to NimAgent.
-            </p>
-          </div>
-        </div>
-      </Modal>
     </>
   );
 }
