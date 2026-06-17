@@ -397,7 +397,7 @@ export default function ChatPage() {
                           <Icon name="copy" size={11} strokeWidth={2} className="opacity-40 group-hover/hash:opacity-80 transition-opacity" />
                         </div>
                         <a href={`${base}${hash}`} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors break-all">
+                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors break-all">
                           <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                           <span className="underline underline-offset-2">View on Explorer</span>
                         </a>
@@ -411,7 +411,7 @@ export default function ChatPage() {
                     if (!trusted) return <p key={idx} className="break-all">{line}</p>;
                     return (
                       <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[11px] text-amber-200 dark:text-gold/80 hover:text-amber-100 dark:hover:text-gold transition-colors mt-1 break-all">
+                        className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors mt-1 break-all">
                         <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                         <span className="underline underline-offset-2">View on Explorer</span>
                       </a>
