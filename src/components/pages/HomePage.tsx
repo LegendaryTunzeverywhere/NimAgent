@@ -307,7 +307,7 @@ export default function HomePage() {
     'Pay Bills': '#2B6BD6',
   };
 
-  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
+  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
@@ -546,7 +546,7 @@ export default function HomePage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
+                              const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
                               const baseUrl = network === 'mainnet' 
                                 ? 'https://nimiq.watch/#' 
                                 : 'https://test.nimiq.watch/#';

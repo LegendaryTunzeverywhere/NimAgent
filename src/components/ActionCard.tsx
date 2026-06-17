@@ -505,7 +505,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           });
         }
         
-        const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
+        const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
         const explorerUrl = network === 'mainnet' 
           ? `https://nimiq.watch/#${hash}`
           : `https://test.nimiq.watch/#${hash}`;
@@ -638,7 +638,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             });
           }
           
-          const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'testnet';
+          const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
           const explorerUrl = network === 'mainnet' 
             ? `https://nimiq.watch/#${hash}`
             : `https://test.nimiq.watch/#${hash}`;
