@@ -23,9 +23,6 @@ const TRANSACTION_ICONS: Record<string, IconName> = {
   airtime: 'airtime',
   bill: 'bill',
   swap: 'swap',
-  stake: 'lock',
-  unstake: 'unlock',
-  withdraw: 'unlock',
 };
 
 const TRANSACTION_COLORS: Record<string, string> = {
@@ -35,9 +32,6 @@ const TRANSACTION_COLORS: Record<string, string> = {
   airtime: '#2B6BD6',
   bill: '#2B6BD6',
   swap: '#F5A623',
-  stake: '#D4AF37',
-  unstake: '#F59E0B',
-  withdraw: '#F59E0B',
 };
 
 export default function HistoryPage() {
@@ -101,7 +95,7 @@ export default function HistoryPage() {
           let type = tx.type;
           
           // Don't override stake/unstake/withdraw/order types
-          if (type && ['stake', 'unstake', 'withdraw', 'gift-card', 'airtime', 'bill'].includes(type)) {
+          if (type && ['gift-card', 'airtime', 'bill'].includes(type)) {
             console.log('[HistoryPage] Preserving type:', type);
             return {
               ...tx,
@@ -214,7 +208,6 @@ export default function HistoryPage() {
     if (filter === 'All') return true;
     if (filter === 'Sent') return tx.type === 'send';
     if (filter === 'Received') return tx.type === 'receive';
-    if (filter === 'Staking') return tx.type === 'stake' || tx.type === 'unstake' || tx.type === 'withdraw';
     if (filter === 'Bills') return tx.type === 'bill';
     if (filter === 'Gift Cards') return tx.type === 'gift-card';
     if (filter === 'Airtime') return tx.type === 'airtime';
@@ -223,8 +216,8 @@ export default function HistoryPage() {
 
   const formatAmount = (luna: number, type: string) => {
     const nim = (luna / 100000).toFixed(2);
-    // Receive shows +, stake/unstake/withdraw show no sign, everything else shows -
-    const sign = type === 'receive' ? '+' : (type === 'stake' || type === 'unstake' || type === 'withdraw') ? '' : '-';
+    // Receive shows +, everything else shows -
+    const sign = type === 'receive' ? '+' : '-';
     return `${sign}${nim} NIM`;
   };
 
@@ -245,18 +238,6 @@ export default function HistoryPage() {
   };
 
   const getTransactionLabel = (tx: Transaction) => {
-    if (tx.type === 'stake') {
-      if (tx.to_address) {
-        return `Staked with ${tx.to_address.replace(/\s/g, '').slice(0, 4)}…${tx.to_address.replace(/\s/g, '').slice(-4)}`;
-      }
-      return 'NIM Staked';
-    }
-    if (tx.type === 'unstake') {
-      return 'NIM Unstaked';
-    }
-    if (tx.type === 'withdraw') {
-      return 'Stake Withdrawn';
-    }
     if (tx.type === 'send') {
       if (tx.to_address) {
         const addr = tx.to_address.replace(/\s/g, '');
@@ -301,21 +282,11 @@ export default function HistoryPage() {
   const totalReceived = transactions
     .filter(tx => tx.type === 'receive')
     .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
-  const totalStaked = transactions
-    .filter(tx => tx.type === 'stake')
-    .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
-  const totalUnstaked = transactions
-    .filter(tx => tx.type === 'unstake' || tx.type === 'withdraw')
-    .reduce((sum, tx) => sum + tx.amount_luna, 0) / 100000;
-  const activeStake = totalStaked - totalUnstaked;
   
   const stats = {
     totalSent,
     totalReceived,
-    totalStaked,
-    totalUnstaked,
-    activeStake,
-    netChange: totalReceived - totalSent - activeStake, // Net change considers active stake
+    netChange: totalReceived - totalSent,
   };
 
   return (
@@ -406,7 +377,7 @@ export default function HistoryPage() {
         </button>
 
         <div id="filter-pills-container" className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide pb-1 px-4">
-          {['All', 'Sent', 'Received', 'Staking', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
+          {['All', 'Sent', 'Received', 'Bills', 'Gift Cards', 'Airtime'].map((filterOption) => (
             <button
             key={filterOption}
             onClick={() => setFilter(filterOption)}
@@ -622,16 +593,6 @@ export default function HistoryPage() {
                 <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Total Received</p>
                 <p className="text-lg font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 dark:text-white/65">NIM</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Active Stake</p>
-                <p className="text-lg font-bold text-amber-600 dark:text-gold tabular-nums">{stats.activeStake.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 dark:text-white/65">NIM</p>
-                {stats.totalUnstaked > 0 && (
-                  <p className="text-[10px] text-gray-500 dark:text-white/65 mt-1">
-                    ({stats.totalStaked.toFixed(2)} staked - {stats.totalUnstaked.toFixed(2)} unstaked)
-                  </p>
-                )}
               </div>
               <div className="card-premium rounded-2xl p-4 text-center">
                 <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Net Change</p>

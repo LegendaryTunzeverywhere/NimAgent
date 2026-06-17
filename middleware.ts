@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Content Security Policy - allows Nimiq RPC connections for staking and camera access for QR scanning
+  // Content Security Policy - allows camera access for QR scanning and price feed connections
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",

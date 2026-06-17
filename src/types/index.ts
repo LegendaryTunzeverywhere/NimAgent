@@ -39,7 +39,7 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'crypto-swap' | 'buy-nim' | 'stake' | 'unstake' | 'withdraw' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
@@ -98,11 +98,11 @@ export interface AppState {
   wallet: WalletState;
   transactions: Transaction[];
   messages: Message[];
-  activeTab: 'home' | 'chat' | 'stake' | 'history';
+  activeTab: 'home' | 'chat' | 'history';
   currentSessionId: string | null;
   theme: 'dark' | 'light';
   network: 'testnet' | 'mainnet';
-  setActiveTab: (tab: 'home' | 'chat' | 'stake' | 'history') => void;
+  setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   setNetwork: (network: 'testnet' | 'mainnet') => void;
   connectWallet: () => Promise<void>;
