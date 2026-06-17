@@ -10,7 +10,6 @@ import BottomNav from '@/components/BottomNav';
 import HomePage from '@/components/pages/HomePage';
 import ChatPage from '@/components/pages/ChatPage';
 import HistoryPage from '@/components/pages/HistoryPage';
-import StakePage from '@/components/pages/StakePage';
 
 /**
  * Reads payment params from the URL (?to=&amount=&message=) and seeds a chat
@@ -96,11 +95,6 @@ export default function Home() {
             </div>
           )}
           {activeTab === 'chat' && <ChatPage />}
-          {activeTab === 'stake' && (
-            <div className="h-full overflow-y-auto pb-28 pt-[104px]">
-              <StakePage />
-            </div>
-          )}
           {activeTab === 'history' && (
             <div className="h-full overflow-y-auto pb-36 pt-[104px]">
               <HistoryPage />

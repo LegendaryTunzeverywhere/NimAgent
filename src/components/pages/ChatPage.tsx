@@ -23,9 +23,6 @@ const ALL_COMMANDS = [
   { category: 'Gift Cards',     commands: ['Buy Amazon gift card','Get $50 Steam card','Netflix gift card $25'] },
   { category: 'Airtime & Data', commands: ['Top up +234... with $10','Buy 5GB data bundle'] },
   { category: 'Bill Payments',  commands: ['Pay electricity bill','Pay DSTV subscription','Pay internet bill'] },
-  { category: 'Crypto Swap',    commands: ['Swap NIM to BTC','Cash out (swap to BTC)'] },
-  { category: 'Staking',        commands: ['Stake my NIM','Which validator is best?','Unstake my NIM'] },
-  { category: 'Buy NIM',        commands: ['Buy NIM with card','Add funds'] },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────

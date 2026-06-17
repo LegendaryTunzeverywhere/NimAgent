@@ -33,8 +33,6 @@ function txIconFor(tx: Transaction): IconName {
       return 'airtime';
     case 'bill':
       return 'bill';
-    case 'swap':
-      return 'swap';
     case 'receive':
       return 'receive';
     case 'send':
@@ -162,13 +160,7 @@ export default function HomePage() {
             
             // Build label based on transaction type first, then fall back to send/receive
             let typeInfo: { icon: string; color: string; label: string };
-            if (item.type === 'stake') {
-              typeInfo = { icon: '🔒', color: 'warning', label: 'NIM Staked' };
-            } else if (item.type === 'unstake') {
-              typeInfo = { icon: '🔓', color: 'warning', label: 'NIM Unstaked' };
-            } else if (item.type === 'withdraw') {
-              typeInfo = { icon: '🔓', color: 'warning', label: 'Stake Withdrawn' };
-            } else if (item.type === 'gift-card') {
+            if (item.type === 'gift-card') {
               const product = item.details?.product || 'Gift Card';
               typeInfo = { icon: '🎁', color: 'error', label: `${product} Purchase` };
             } else if (item.type === 'airtime') {
@@ -274,30 +266,6 @@ export default function HomePage() {
       return;
     }
 
-    // Handle Crypto Swap directly
-    if (actionType === 'Crypto Swap') {
-      addMessage({
-        role: 'ai',
-        content: 'Welcome to the crypto swap interface! 🔄\n\nExchange NIM for BTC or BTC for NIM with real-time rates. Perfect for diversifying your crypto portfolio or taking advantage of market opportunities.',
-        action: {
-          type: 'crypto-swap',
-        }
-      });
-      return;
-    }
-
-    // Handle Cash Out - opens swap interface with message about selling NIM
-    if (actionType === 'Buy NIM') {
-      addMessage({
-        role: 'ai',
-        content: 'Ready to buy NIM with your local currency! 💳\n\nYou can purchase NIM using a credit/debit card or bank transfer. Simple KYC verification required. Just tell me how much you want to buy and in which currency (USD, EUR, etc.).',
-        action: {
-          type: 'buy-nim',
-        }
-      });
-      return;
-    }
-
     // Send message to AI and get response for other actions
     setTimeout(async () => {
       let message = '';
@@ -323,8 +291,6 @@ export default function HomePage() {
     { icon: 'send', label: 'Send NIM', action: () => handleQuickAction('Send NIM') },
     { icon: 'qr-code', label: 'Generate QR', action: () => handleQuickAction('Generate QR') },
     { icon: 'qr-scan', label: 'Scan QR', action: () => handleQuickAction('Scan QR') },
-    { icon: 'swap', label: 'Crypto Swap', action: () => handleQuickAction('Crypto Swap') },
-    { icon: 'wallet', label: 'Buy NIM', action: () => handleQuickAction('Buy NIM') },
     { icon: 'gift-card', label: 'Gift Cards', action: () => handleQuickAction('Gift Cards') },
     { icon: 'airtime', label: 'Airtime', action: () => handleQuickAction('Airtime') },
     { icon: 'bill', label: 'Pay Bills', action: () => handleQuickAction('Pay Bills') },

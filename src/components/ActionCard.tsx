@@ -7,8 +7,7 @@ import { recordTransaction, createOrder, validateOrder } from '@/lib/api-client'
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
-import SwapInterface from './SwapInterface';
-import BuyNimInterface from './BuyNimInterface';
+
 import type { ActionCard as ActionCardType } from '@/types';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -244,17 +243,6 @@ export default function ActionCard({ action }: ActionCardProps) {
     return <BalanceDisplay walletAddress={wallet.address || ''} />;
   }
 
-  // Handle Crypto Swap - show swap interface
-  if (action.type === 'crypto-swap') {
-    return <SwapInterface />;
-  }
-
-  // Handle Buy NIM - show Coinify buy interface
-  if (action.type === 'buy-nim') {
-    return <BuyNimInterface />;
-  }
-
-  // Handle Support - show support form button
   if (action.type === 'support') {
     return (
       <div className="glass dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
@@ -286,39 +274,6 @@ export default function ActionCard({ action }: ActionCardProps) {
         ) : (
           <p className="text-sm text-gray-600 dark:text-white/65">Support form coming soon! Please check back later.</p>
         )}
-      </div>
-    );
-  }
-
-  // Handle Staking - redirect to stake tab
-  if (action.type === 'stake' || action.type === 'unstake' || action.type === 'withdraw') {
-    const isWithdraw = action.type === 'withdraw';
-    const isUnstake = action.type === 'unstake';
-    return (
-      <div className="bg-white dark:bg-white/[0.035] border-2 border-amber-300 dark:border-[#F5A623]/20 rounded-2xl p-4 max-w-sm bg-gradient-to-br from-amber-50/50 to-transparent dark:from-[#F5A623]/5 backdrop-blur-xl">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-[#F5A623]/10 flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-700 dark:text-[#F5A623]">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-gray-900 dark:text-white">
-              {isWithdraw ? 'Withdraw Stake' : isUnstake ? 'Manage Staking' : 'Earn Staking Rewards'}
-            </p>
-            <p className="text-[10px] font-mono text-gray-500 dark:text-white/55">
-              {isWithdraw ? 'WITHDRAW UNLOCKED NIM' : isUnstake ? 'UNSTAKE & WITHDRAW' : '~8% APY · NON-CUSTODIAL'}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setActiveTab('stake')}
-          className="w-full py-2.5 px-4 rounded-xl bg-amber-600 dark:bg-[#F5A623] text-white font-semibold hover:bg-amber-700 dark:hover:bg-[#FBBF4D] transition-colors"
-        >
-          Go to Stake Tab
-        </button>
       </div>
     );
   }
