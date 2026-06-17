@@ -462,9 +462,9 @@ export default function ChatPage() {
               <Icon name="robot" size={14} strokeWidth={2.2} />
             </div>
             <div className="bg-gray-100 dark:bg-white/[0.07] border border-gray-200 dark:border-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-white/40 dot-typing-1 inline-block" />
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-white/40 dot-typing-2 inline-block" />
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-white/40 dot-typing-3 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-1 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-2 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-3 inline-block" />
             </div>
           </div>
         )}
