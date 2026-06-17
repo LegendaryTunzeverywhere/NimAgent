@@ -6,7 +6,7 @@ import Logo from './Logo';
 import SettingsModal from './SettingsModal';
 
 export default function Navigation() {
-  const { wallet, theme, network, setTheme, setNetwork } = useAppStore();
+  const { wallet, theme, setTheme } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -58,9 +58,7 @@ export default function Navigation() {
         open={showSettings}
         onClose={() => setShowSettings(false)}
         theme={theme}
-        network={network}
         onThemeChange={setTheme}
-        onNetworkChange={setNetwork}
       />
     </>
   );
