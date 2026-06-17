@@ -51,7 +51,6 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
   }, [walletAddress]);
 
   const handleSend = () => sendMessageToAI('I want to send NIM', walletAddress || undefined);
-  const handleSwap = () => addMessage({ role: 'ai', content: 'Here\'s the swap interface — exchange NIM for BTC at live rates.', action: { type: 'crypto-swap' } });
   const handleShowQR = () => sendMessageToAI('Show my address', walletAddress || undefined);
 
   if (loading) {
@@ -119,12 +118,6 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
               className="btn-gold flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-1.5"
             >
               <Icon name="send" size={14} strokeWidth={2.2} /> Send
-            </button>
-            <button
-              onClick={handleSwap}
-              className="flex-1 py-2 rounded-lg bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white text-sm font-semibold hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-1.5"
-            >
-              <Icon name="swap" size={14} strokeWidth={2.2} /> Swap
             </button>
           </div>
         </div>
