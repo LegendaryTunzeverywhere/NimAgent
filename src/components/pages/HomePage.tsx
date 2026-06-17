@@ -302,8 +302,6 @@ export default function HomePage() {
     'Send NIM': '#F5A623',
     'Generate QR': '#F5A623',
     'Scan QR': '#F5A623',
-    'Crypto Swap': '#F5A623',
-    'Buy NIM': '#2B6BD6', // Blue like other commerce services
     'Gift Cards': '#2B6BD6',
     'Airtime': '#2B6BD6',
     'Pay Bills': '#2B6BD6',
@@ -432,7 +430,7 @@ export default function HomePage() {
               See all
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {quickActions.map((action) => {
               const accent = actionAccents[action.label] || '#F5A623';
               return (
