@@ -22,6 +22,7 @@ let csrfToken = '';
 interface CachedSignature {
   nonce: string;
   signature: string;
+  publicKey: string;
   expiresAt: string;
 }
 const signatureCache: Record<string, CachedSignature> = {};
@@ -56,17 +57,20 @@ async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; c
 /**
  * Sign a challenge using the wallet
  */
-async function signChallenge(challenge: string): Promise<string> {
+async function signChallenge(challenge: string): Promise<{ signature: string; publicKey: string }> {
   // Import wallet signMessage function dynamically
   const { signMessage } = await import('./wallet');
   const result = await signMessage(challenge);
-  return result.signature;
+  if (!result.publicKey) {
+    throw new Error('Public key not returned from wallet');
+  }
+  return { signature: result.signature, publicKey: result.publicKey };
 }
 
 /**
  * Get or create a valid signature for a wallet address
  */
-async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string }> {
+async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string }> {
   const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
   
   // Check cache for valid signature
@@ -79,12 +83,12 @@ async function getSignature(walletAddress: string): Promise<{ nonce: string; sig
   const { nonce, challenge, expiresAt } = await fetchChallenge(cleanAddress);
   
   // Sign challenge
-  const signature = await signChallenge(challenge);
+  const { signature, publicKey } = await signChallenge(challenge);
   
   // Cache the signature
-  signatureCache[cleanAddress] = { nonce, signature, expiresAt };
+  signatureCache[cleanAddress] = { nonce, signature, publicKey, expiresAt };
   
-  return { nonce, signature };
+  return { nonce, signature, publicKey };
 }
 
 /**
@@ -106,23 +110,23 @@ async function getHeaders(method: string, walletAddress?: string): Promise<Heade
     'Content-Type': 'application/json',
   };
 
+  // Add signature headers if wallet address is provided for any method
+  if (walletAddress) {
+    try {
+      const { nonce, signature, publicKey } = await getSignature(walletAddress);
+      headers['X-Wallet-Address'] = walletAddress;
+      headers['X-Nonce'] = nonce;
+      headers['X-Signature'] = signature;
+      headers['X-Public-Key'] = publicKey;
+    } catch (err) {
+      console.warn('[API Client] Failed to get signature, proceeding without it:', err);
+    }
+  }
+
   // Add CSRF token for state-changing requests
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     const token = await fetchCsrfToken();
     headers['X-CSRF-Token'] = token;
-    
-    // Add signature headers if wallet address is provided
-    if (walletAddress) {
-      try {
-        const { nonce, signature } = await getSignature(walletAddress);
-        headers['X-Wallet-Address'] = walletAddress;
-        headers['X-Nonce'] = nonce;
-        headers['X-Signature'] = signature;
-      } catch (err) {
-        console.warn('[API Client] Failed to get signature, proceeding without it:', err);
-        // Don't block the request if signature fails (optional for now)
-      }
-    }
   }
 
   return headers;
@@ -346,7 +350,7 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
   }
   
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
   });
   
   if (!res.ok) {
@@ -367,7 +371,7 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
   }
   
   const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
   });
   
   if (!res.ok) {
@@ -701,7 +705,8 @@ export async function getLeaderboard(limit: number = 20): Promise<{
   leaderboard: Array<{
     wallet: string;
     referrals: number;
-    total: number;
+    totalInvited: number;
+    totalEarned: number;
   }>;
   threshold: number;
 }> {
@@ -711,6 +716,32 @@ export async function getLeaderboard(limit: number = 20): Promise<{
   
   if (!res.ok) {
     throw new Error('Failed to fetch leaderboard');
+  }
+  
+  return res.json();
+}
+
+export async function getReferrals(walletAddress: string): Promise<{
+  success: boolean;
+  referrals: Array<{
+    id: number;
+    referred_wallet: string;
+    total_spent_usd: number;
+    is_qualified: boolean;
+    qualified_at: string | null;
+    created_at: string;
+  }>;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
+  const res = await fetch(`${API_URL}/referrals?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: await getHeaders('GET'),
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch referrals');
   }
   
   return res.json();

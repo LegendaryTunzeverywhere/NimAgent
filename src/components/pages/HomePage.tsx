@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
-import { getReferralLink, getReferralCount, getReferralStatus, trackReferral, getLeaderboard } from '@/lib/api-client';
+import { getReferralLink, getReferralCount, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
 
 interface QuickAction {
   icon: IconName;
@@ -21,7 +21,7 @@ const TX_COLOR_MAP: Record<string, string> = {
   warning: '#F5A623',
   info: '#2B6BD6',
   gold: '#F5A623',
-  purple: '#2B6BD6',
+  purple: '#8e1caaff',
   blue: '#2B6BD6',
 };
 
@@ -56,6 +56,12 @@ export default function HomePage() {
   const [totalReferrals, setTotalReferrals] = useState<number>(0);
   const [qualifiedReferrals, setQualifiedReferrals] = useState<number>(0);
   const [referralStatus, setReferralStatus] = useState<any>(null);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [loadingReferral, setLoadingReferral] = useState(false);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy
@@ -298,40 +304,34 @@ export default function HomePage() {
 
   const handleQuickAction = async (actionType: string) => {
     if (actionType === 'Referral Link') {
-      // Handle referral link action
-      setActiveTab('chat');
-      
-      let statusMessage = '';
-      if (referralStatus?.isReferred) {
-        if (referralStatus.qualified) {
-          statusMessage = `\n\n🎉 You've qualified your referral by spending over $100!`;
-        } else {
-          statusMessage = `\n\nYou've spent $${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far. Only $${referralStatus.remaining?.toFixed(2) || '100.00'} more to qualify your referral!`;
+      // Open referral modal and fetch referrals
+      setShowReferralModal(true);
+      setLoadingReferral(true);
+      try {
+        if (wallet.address) {
+          const data = await getReferrals(wallet.address);
+          setReferrals(data.referrals || []);
         }
+      } catch (error) {
+        console.error('Failed to fetch referrals:', error);
+      } finally {
+        setLoadingReferral(false);
       }
-
-      addMessage({
-        role: 'ai',
-        content: `🎁 Share your referral link to earn rewards! Here it is: ${referralLink}\n\nYou have ${qualifiedReferrals} qualified referral${qualifiedReferrals !== 1 ? 's' : ''} (${totalReferrals} total)${statusMessage}`,
-        action: {
-          type: 'referral',
-          referralLink,
-          referralCount: qualifiedReferrals,
-        }
-      });
       return;
     }
     
     if (actionType === 'Leaderboard') {
-      // Handle leaderboard action
-      setActiveTab('chat');
-      addMessage({
-        role: 'ai',
-        content: '🏆 Let me show you the current leaderboard!',
-        action: {
-          type: 'leaderboard',
-        }
-      });
+      // Open leaderboard modal and fetch data
+      setLoadingLeaderboard(true);
+      try {
+        const data = await getLeaderboard();
+        setLeaderboard(data.leaderboard || []);
+      } catch (error) {
+        console.error('Failed to fetch leaderboard:', error);
+      } finally {
+        setLoadingLeaderboard(false);
+      }
+      setShowLeaderboardModal(true);
       return;
     }
     
@@ -478,29 +478,39 @@ export default function HomePage() {
 
       {/* Stats Cards */}
       {wallet.connected && (
-        <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1 -mt-2">
-          <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
-            <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
-              {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
+        <>
+          <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1 -mt-2">
+            <div className="card-premium rounded-2xl p-5 text-center">
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
+              <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
+                {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
+              </p>
+            </div>
+            <div className="card-premium rounded-2xl p-5 text-center">
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
+              <p className="text-xs text-gray-500 dark:text-white/65 mt-1">
+                ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
+              </p>
+            </div>
+            <div className="card-premium rounded-2xl p-5 text-center">
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Network</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white capitalize">{network}</p>
+              <p className="text-xs text-success mt-1 flex items-center justify-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" /> Live
+              </p>
+            </div>
+          </div>
+          
+          {/* Markup Notice */}
+          <div className="mt-4 card-premium rounded-2xl p-4 text-center animate-fade-up-delay-2">
+            <p className="text-[11px] text-gray-600 dark:text-white/70 flex items-center justify-center gap-1">
+              <Icon name="info" size={12} className="text-amber-600 dark:text-gold" />
+              Gift cards, Airtime and bills services include a small 0.5% markup to cover operational costs
             </p>
           </div>
-          <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
-            <p className="text-xs text-gray-500 dark:text-white/65 mt-1">
-              ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
-            </p>
-          </div>
-          <div className="card-premium rounded-2xl p-5 text-center">
-            <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Network</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white capitalize">{network}</p>
-            <p className="text-xs text-success mt-1 flex items-center justify-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" /> Live
-            </p>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Quick Actions */}
@@ -520,12 +530,18 @@ export default function HomePage() {
           <div className="grid grid-cols-4 gap-3">
             {quickActions.map((action) => {
               const accent = actionAccents[action.label] || '#F5A623';
+              const isReferral = action.label === 'Referral Link';
               return (
                 <button
                   key={action.label}
-                  className="group card-premium rounded-2xl flex flex-col items-center justify-center py-4 gap-2 hover:-translate-y-1 transition-all duration-300"
+                  className="group card-premium rounded-2xl flex flex-col items-center justify-center py-4 gap-2 hover:-translate-y-1 transition-all duration-300 relative"
                   onClick={action.action}
                 >
+                  {isReferral && qualifiedReferrals > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 text-white text-[9px] font-bold flex items-center justify-center shadow-md">
+                      {qualifiedReferrals}
+                    </span>
+                  )}
                   <span
                     className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                     style={{
@@ -714,6 +730,231 @@ export default function HomePage() {
                   Connect Wallet to Start
                 </>
               )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Referral Modal */}
+      {showReferralModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowReferralModal(false)}>
+          <div className="max-w-md w-full card-premium rounded-3xl p-6 animate-fade-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
+                  <Icon name="gift" size={18} className="text-amber-600 dark:text-gold" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Your Referral Link</h2>
+                  <p className="text-xs text-gray-500 dark:text-white/55">Share to earn rewards!</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReferralModal(false)}
+                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              >
+                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Referral Stats */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="card-premium rounded-2xl p-4 text-center">
+                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Total Referrals</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{totalReferrals}</p>
+              </div>
+              <div className="card-premium rounded-2xl p-4 text-center">
+                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Qualified</p>
+                <p className="text-xl font-bold text-success">{qualifiedReferrals}</p>
+              </div>
+            </div>
+
+            {/* Referral Link Copy */}
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-2">Your Link</p>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-gray-100 dark:bg-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white/70 font-mono overflow-x-auto border border-gray-200 dark:border-white/10">
+                  {referralLink}
+                </div>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(referralLink);
+                    alert('Referral link copied!');
+                  }}
+                  className="btn-gold px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"
+                >
+                  <Icon name="copy" size={12} />
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            {/* Referral Status */}
+            {referralStatus?.isReferred && (
+              <div className="card-premium rounded-2xl p-4 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon name="info" size={14} className="text-amber-600 dark:text-gold" />
+                  <p className="text-xs font-semibold text-gray-700 dark:text-white/70">Your Referral Progress</p>
+                </div>
+                {referralStatus.qualified ? (
+                  <p className="text-sm text-green-600 dark:text-success font-semibold">
+                    🎉 You've qualified your referral by spending over $100!
+                  </p>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-700 dark:text-white/70 mb-2">
+                      You've spent $${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far.
+                    </p>
+                    <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-600 dark:bg-gold transition-all"
+                        style={{ width: `${Math.min(((referralStatus.totalSpent || 0) / 100) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-white/55 mt-1">
+                      Only $${referralStatus.remaining?.toFixed(2) || '100.00'} more to qualify!
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Referral List */}
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-3">Your Referrals</p>
+              {loadingReferral ? (
+                <div className="text-center py-4">
+                  <div className="w-8 h-8 mx-auto border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+                  <p className="text-sm text-gray-600 dark:text-white/60 mt-2">Loading referrals...</p>
+                </div>
+              ) : referrals.length === 0 ? (
+                <div className="card-premium rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center mb-3 text-gray-400">
+                    <Icon name="gift" size={24} />
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-white/60 mb-1">No referrals yet</p>
+                  <p className="text-xs text-gray-500 dark:text-white/55">Share your link to start earning!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {referrals.map((referral: any) => (
+                    <div
+                      key={referral.id}
+                      className="card-premium rounded-2xl p-3 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400">
+                          <Icon name="wallet" size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
+                            {referral.referred_wallet.slice(0, 10)}...{referral.referred_wallet.slice(-4)}
+                          </p>
+                          <p className="text-[10px] text-gray-500 dark:text-white/55">
+                            Spent: ${(referral.total_spent_usd || 0).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {referral.is_qualified ? (
+                          <div className="flex items-center gap-1 text-xs font-semibold text-success bg-success/10 px-2 py-1 rounded-full">
+                            <Icon name="check" size={10} />
+                            Qualified
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-gray-500 dark:text-white/55">Pending</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowReferralModal(false)}
+              className="w-full btn-gold rounded-2xl py-3 text-sm font-bold"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Leaderboard Modal */}
+      {showLeaderboardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowLeaderboardModal(false)}>
+          <div className="max-w-md w-full card-premium rounded-3xl p-6 animate-fade-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
+                  <Icon name="trophy" size={18} className="text-amber-600 dark:text-gold" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Referral Leaderboard</h2>
+                  <p className="text-xs text-gray-500 dark:text-white/55">Top referrers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLeaderboardModal(false)}
+                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              >
+                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
+              </button>
+            </div>
+
+            {loadingLeaderboard ? (
+              <div className="text-center py-10">
+                <div className="w-10 h-10 mx-auto mb-3 border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+                <p className="text-sm text-gray-600 dark:text-white/60">Loading leaderboard...</p>
+              </div>
+            ) : leaderboard.length > 0 ? (
+              <div className="space-y-2 mb-6">
+                {leaderboard.map((entry, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                      index === 0 ? 'bg-amber-100 text-amber-600 dark:bg-gold/15 dark:text-gold' :
+                      index === 1 ? 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/70' :
+                      index === 2 ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400' :
+                      'bg-gray-200 text-gray-500 dark:bg-white/15 dark:text-white/55'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
+                        {entry.wallet.slice(0, 6)}...{entry.wallet.slice(-4)}
+                      </p>
+                      <p className="text-[10px] text-gray-500 dark:text-white/55">
+                        Invited: {entry.totalInvited} • Qualified: {entry.referrals}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-green-600 dark:text-success">
+                        ${entry.totalEarned.toFixed(2)}
+                      </p>
+                      <p className="text-[10px] text-gray-500 dark:text-white/55">Earned</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-white/65">
+                  <Icon name="trophy" size={24} />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-white/60">No referrals yet!</p>
+                <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Be the first to refer someone!</p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowLeaderboardModal(false)}
+              className="w-full btn-gold rounded-2xl py-3 text-sm font-bold"
+            >
+              Done
             </button>
           </div>
         </div>

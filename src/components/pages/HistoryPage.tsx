@@ -44,6 +44,7 @@ export default function HistoryPage() {
   // Date range filter state
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [showDateFilter, setShowDateFilter] = useState(false);
 
   const fetchTransactions = useCallback(async (showLoading = false) => {
     if (!wallet.address) return;
@@ -305,25 +306,41 @@ export default function HistoryPage() {
           <Icon name="history" size={20} className="text-amber-600 dark:text-gold" />
           Transaction History
         </h1>
-        {wallet.connected && (
-          <button
-            onClick={() => fetchTransactions(true)}
-            disabled={loading}
-            className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors disabled:opacity-50"
-          >
-            <svg
-              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-              className={loading ? 'animate-spin' : ''}
-            >
-              <path d="M21 2v6h-6" />
-              <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-              <path d="M3 22v-6h6" />
-              <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-            </svg>
-            {loading ? 'Loading' : 'Refresh'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {wallet.connected && (
+            <>
+              {/* Date Filter Button */}
+              <button
+                onClick={() => setShowDateFilter(true)}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
+                  startDate || endDate 
+                  ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-md' 
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/10'
+                }`}
+                title="Filter by Date"
+              >
+                <Icon name="wallet" size={18} />
+              </button>
+              <button
+                onClick={() => fetchTransactions(true)}
+                disabled={loading}
+                className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors disabled:opacity-50"
+              >
+                <svg
+                  width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                  className={loading ? 'animate-spin' : ''}
+                >
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                {loading ? 'Loading' : 'Refresh'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filter Pills with Scroll Indicators */}
@@ -401,118 +418,134 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Date Range Filter */}
-      {wallet.connected && (
-        <div className="card-premium rounded-2xl p-3 space-y-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Icon name="history" size={16} className="text-amber-600 dark:text-gold" />
-            <p className="text-xs font-semibold text-gray-700 dark:text-white/80">Date Range (max 4 months)</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] text-gray-500 dark:text-white/60">From</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    const newStart = e.target.value;
-                    // Enforce max 4 months range
-                    if (endDate && newStart) {
-                      const start = new Date(newStart);
-                      const end = new Date(endDate);
-                      const maxEnd = new Date(start);
-                      maxEnd.setMonth(maxEnd.getMonth() + 4);
-                      if (end > maxEnd) {
-                        setEndDate(maxEnd.toISOString().split('T')[0]);
-                      }
-                    }
-                    setStartDate(newStart);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
-                />
+      {/* Date Filter Modal */}
+      {showDateFilter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowDateFilter(false)}>
+          <div className="max-w-md w-full card-premium rounded-3xl p-5 animate-fade-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Icon name="wallet" size={20} className="text-amber-600 dark:text-gold" />
+                <p className="text-sm font-bold text-gray-900 dark:text-white">Date Range Filter</p>
               </div>
+              <button
+                onClick={() => setShowDateFilter(false)}
+                className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              >
+                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
+              </button>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-gray-500 dark:text-white/60">To</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    const newEnd = e.target.value;
-                    // Enforce max 4 months range
-                    if (startDate && newEnd) {
-                      const start = new Date(startDate);
-                      const end = new Date(newEnd);
-                      const minStart = new Date(end);
-                      minStart.setMonth(minStart.getMonth() - 4);
-                      if (start < minStart) {
-                        setStartDate(minStart.toISOString().split('T')[0]);
-                      }
-                    }
-                    setEndDate(newEnd);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
-                />
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 dark:text-white/60">From</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        const newStart = e.target.value;
+                        // Enforce max 4 months range
+                        if (endDate && newStart) {
+                          const start = new Date(newStart);
+                          const end = new Date(endDate);
+                          const maxEnd = new Date(start);
+                          maxEnd.setMonth(maxEnd.getMonth() + 4);
+                          if (end > maxEnd) {
+                            setEndDate(maxEnd.toISOString().split('T')[0]);
+                          }
+                        }
+                        setStartDate(newStart);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 dark:text-white/60">To</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => {
+                        const newEnd = e.target.value;
+                        // Enforce max 4 months range
+                        if (startDate && newEnd) {
+                          const start = new Date(startDate);
+                          const end = new Date(newEnd);
+                          const minStart = new Date(end);
+                          minStart.setMonth(minStart.getMonth() - 4);
+                          if (start < minStart) {
+                            setStartDate(minStart.toISOString().split('T')[0]);
+                          }
+                        }
+                        setEndDate(newEnd);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                    />
+                  </div>
+                </div>
               </div>
+              {/* Quick preset buttons */}
+              <div className="flex gap-1.5 flex-wrap">
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    const weekAgo = new Date(now);
+                    weekAgo.setDate(now.getDate() - 7);
+                    setStartDate(weekAgo.toISOString().split('T')[0]);
+                    setEndDate(now.toISOString().split('T')[0]);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                >
+                  Last 7 days
+                </button>
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    const monthAgo = new Date(now);
+                    monthAgo.setMonth(now.getMonth() - 1);
+                    setStartDate(monthAgo.toISOString().split('T')[0]);
+                    setEndDate(now.toISOString().split('T')[0]);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                >
+                  Last 30 days
+                </button>
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    const fourMonthsAgo = new Date(now);
+                    fourMonthsAgo.setMonth(now.getMonth() - 4);
+                    setStartDate(fourMonthsAgo.toISOString().split('T')[0]);
+                    setEndDate(now.toISOString().split('T')[0]);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                >
+                  Last 4 months
+                </button>
+                <button
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                >
+                  Reset
+                </button>
+              </div>
+              {/* Apply button */}
+              <button
+                onClick={() => {
+                  fetchTransactions(true);
+                  setShowDateFilter(false);
+                }}
+                className="w-full py-2.5 rounded-xl text-xs font-semibold bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold-bright transition-all"
+              >
+                Apply Filter
+              </button>
             </div>
           </div>
-          {/* Quick preset buttons */}
-          <div className="flex gap-1.5 flex-wrap">
-            <button
-              onClick={() => {
-                const now = new Date();
-                const weekAgo = new Date(now);
-                weekAgo.setDate(now.getDate() - 7);
-                setStartDate(weekAgo.toISOString().split('T')[0]);
-                setEndDate(now.toISOString().split('T')[0]);
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
-            >
-              Last 7 days
-            </button>
-            <button
-              onClick={() => {
-                const now = new Date();
-                const monthAgo = new Date(now);
-                monthAgo.setMonth(now.getMonth() - 1);
-                setStartDate(monthAgo.toISOString().split('T')[0]);
-                setEndDate(now.toISOString().split('T')[0]);
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
-            >
-              Last 30 days
-            </button>
-            <button
-              onClick={() => {
-                const now = new Date();
-                const fourMonthsAgo = new Date(now);
-                fourMonthsAgo.setMonth(now.getMonth() - 4);
-                setStartDate(fourMonthsAgo.toISOString().split('T')[0]);
-                setEndDate(now.toISOString().split('T')[0]);
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
-            >
-              Last 4 months
-            </button>
-            <button
-              onClick={() => {
-                setStartDate('');
-                setEndDate('');
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
-            >
-              Reset
-            </button>
-          </div>
-          {/* Apply button */}
-          <button
-            onClick={() => fetchTransactions(true)}
-            className="w-full py-2 rounded-xl text-xs font-semibold bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold-bright transition-all"
-          >
-            Apply Filter
-          </button>
         </div>
       )}
 

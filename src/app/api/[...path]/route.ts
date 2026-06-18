@@ -45,11 +45,13 @@ function createProxyHeaders(request: NextRequest) {
   const walletAddress = request.headers.get('x-wallet-address');
   const nonce = request.headers.get('x-nonce');
   const signature = request.headers.get('x-signature');
+  const publicKey = request.headers.get('x-public-key');
   
-  if (walletAddress && nonce && signature) {
+  if (walletAddress && nonce && signature && publicKey) {
     headers['x-wallet-address'] = walletAddress;
     headers['x-nonce'] = nonce;
     headers['x-signature'] = signature;
+    headers['x-public-key'] = publicKey;
   }
 
   // Forward cookies from frontend to backend
