@@ -31,7 +31,6 @@ const TRANSACTION_COLORS: Record<string, string> = {
   'gift-card': '#2B6BD6',
   airtime: '#2B6BD6',
   bill: '#2B6BD6',
-  swap: '#F5A623',
 };
 
 export default function HistoryPage() {
@@ -42,6 +41,9 @@ export default function HistoryPage() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<number>(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  // Date range filter state
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   const fetchTransactions = useCallback(async (showLoading = false) => {
     if (!wallet.address) return;
@@ -60,10 +62,16 @@ export default function HistoryPage() {
       
       // Use BFF proxy (same-origin request)
       
+      // Build query params with date filters
+      const params = new URLSearchParams();
+      params.set('wallet', normalizedAddress);
+      if (startDate) params.set('start_date', startDate);
+      if (endDate) params.set('end_date', endDate);
+      
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`),
-        fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`)
+        fetch(`/api/transactions?${params.toString()}`),
+        fetch(`/api/orders?${params.toString()}`)
       ]);
       
       let allTransactions: Transaction[] = [];
@@ -170,7 +178,7 @@ export default function HistoryPage() {
         setLoading(false);
       }
     }
-  }, [wallet.address, isInitialLoad]);
+  }, [wallet.address, isInitialLoad, startDate, endDate]);
 
   useEffect(() => {
     if (wallet.connected && wallet.address) {
@@ -393,6 +401,121 @@ export default function HistoryPage() {
         </div>
       </div>
 
+      {/* Date Range Filter */}
+      {wallet.connected && (
+        <div className="card-premium rounded-2xl p-3 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="history" size={16} className="text-amber-600 dark:text-gold" />
+            <p className="text-xs font-semibold text-gray-700 dark:text-white/80">Date Range (max 4 months)</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] text-gray-500 dark:text-white/60">From</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    const newStart = e.target.value;
+                    // Enforce max 4 months range
+                    if (endDate && newStart) {
+                      const start = new Date(newStart);
+                      const end = new Date(endDate);
+                      const maxEnd = new Date(start);
+                      maxEnd.setMonth(maxEnd.getMonth() + 4);
+                      if (end > maxEnd) {
+                        setEndDate(maxEnd.toISOString().split('T')[0]);
+                      }
+                    }
+                    setStartDate(newStart);
+                  }}
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-gray-500 dark:text-white/60">To</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    const newEnd = e.target.value;
+                    // Enforce max 4 months range
+                    if (startDate && newEnd) {
+                      const start = new Date(startDate);
+                      const end = new Date(newEnd);
+                      const minStart = new Date(end);
+                      minStart.setMonth(minStart.getMonth() - 4);
+                      if (start < minStart) {
+                        setStartDate(minStart.toISOString().split('T')[0]);
+                      }
+                    }
+                    setEndDate(newEnd);
+                  }}
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                />
+              </div>
+            </div>
+          </div>
+          {/* Quick preset buttons */}
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              onClick={() => {
+                const now = new Date();
+                const weekAgo = new Date(now);
+                weekAgo.setDate(now.getDate() - 7);
+                setStartDate(weekAgo.toISOString().split('T')[0]);
+                setEndDate(now.toISOString().split('T')[0]);
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+            >
+              Last 7 days
+            </button>
+            <button
+              onClick={() => {
+                const now = new Date();
+                const monthAgo = new Date(now);
+                monthAgo.setMonth(now.getMonth() - 1);
+                setStartDate(monthAgo.toISOString().split('T')[0]);
+                setEndDate(now.toISOString().split('T')[0]);
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+            >
+              Last 30 days
+            </button>
+            <button
+              onClick={() => {
+                const now = new Date();
+                const fourMonthsAgo = new Date(now);
+                fourMonthsAgo.setMonth(now.getMonth() - 4);
+                setStartDate(fourMonthsAgo.toISOString().split('T')[0]);
+                setEndDate(now.toISOString().split('T')[0]);
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+            >
+              Last 4 months
+            </button>
+            <button
+              onClick={() => {
+                setStartDate('');
+                setEndDate('');
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+            >
+              Reset
+            </button>
+          </div>
+          {/* Apply button */}
+          <button
+            onClick={() => fetchTransactions(true)}
+            className="w-full py-2 rounded-xl text-xs font-semibold bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold-bright transition-all"
+          >
+            Apply Filter
+          </button>
+        </div>
+      )}
+
       {/* Transactions List */}
       {wallet.connected ? (
         <>
@@ -580,29 +703,6 @@ export default function HistoryPage() {
               </p>
             </div>
           )}
-
-          {/* Stats Summary */}
-          {filteredTransactions.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Total Sent</p>
-                <p className="text-lg font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 dark:text-white/65">NIM</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Total Received</p>
-                <p className="text-lg font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 dark:text-white/65">NIM</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-xs text-gray-500 dark:text-white/55 mb-1">Net Change</p>
-                <p className={`text-lg font-bold tabular-nums ${stats.netChange >= 0 ? 'text-success' : 'text-error'}`}>
-                  {stats.netChange >= 0 ? '+' : ''}{stats.netChange.toFixed(2)}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-white/65">NIM</p>
-              </div>
-            </div>
-          )}
         </>
       ) : (
         <div className="card-premium rounded-2xl p-10 text-center">
@@ -613,6 +713,31 @@ export default function HistoryPage() {
           <p className="text-xs text-gray-500 dark:text-white/55">
             Connect your wallet to view your transaction history
           </p>
+        </div>
+      )}
+
+      {/* Stats Summary - Compact (at bottom) */}
+      {wallet.connected && filteredTransactions.length > 0 && (
+        <div className="card-premium rounded-2xl p-3">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Total Sent</p>
+              <p className="text-base font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
+              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Total Received</p>
+              <p className="text-base font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
+              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Net Change</p>
+              <p className={`text-base font-bold tabular-nums ${stats.netChange >= 0 ? 'text-success' : 'text-error'}`}>
+                {stats.netChange >= 0 ? '+' : ''}{stats.netChange.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
