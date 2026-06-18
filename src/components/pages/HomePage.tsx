@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
+import { getReferralLink, getReferralCount, getReferralStatus, trackReferral, getLeaderboard } from '@/lib/api-client';
 
 interface QuickAction {
   icon: IconName;
@@ -50,6 +51,11 @@ export default function HomePage() {
   const [sentToday, setSentToday] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string>('');
+  const [referralCount, setReferralCount] = useState<number>(0);
+  const [totalReferrals, setTotalReferrals] = useState<number>(0);
+  const [qualifiedReferrals, setQualifiedReferrals] = useState<number>(0);
+  const [referralStatus, setReferralStatus] = useState<any>(null);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy
@@ -78,6 +84,45 @@ export default function HomePage() {
       fetchBalance();
     }
   }, [wallet.connected, wallet.address, wallet.balance, fetchBalance]);
+
+  useEffect(() => {
+    // Handle referral tracking and fetch referral info
+    const fetchReferralInfo = async () => {
+      if (!wallet.address) return;
+      
+      // Check URL for referral code and track it
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      
+      if (refCode) {
+        try {
+          await trackReferral(wallet.address, refCode);
+        } catch (error) {
+          console.error('Failed to track referral:', error);
+        }
+      }
+      
+      // Fetch referral link and count, and status
+      try {
+        const [linkData, statusData] = await Promise.all([
+          getReferralLink(wallet.address),
+          getReferralStatus(wallet.address)
+        ]);
+        
+        setReferralLink(linkData.referralLink);
+        setReferralCount(linkData.referralCount || 0);
+        setTotalReferrals(linkData.totalReferrals || 0);
+        setQualifiedReferrals(linkData.qualifiedReferrals || 0);
+        setReferralStatus(statusData);
+      } catch (error) {
+        console.error('Failed to fetch referral info:', error);
+      }
+    };
+    
+    if (wallet.connected && wallet.address) {
+      fetchReferralInfo();
+    }
+  }, [wallet.connected, wallet.address]);
 
   useEffect(() => {
     // Fetch recent transactions when wallet connects
@@ -252,6 +297,44 @@ export default function HomePage() {
   };
 
   const handleQuickAction = async (actionType: string) => {
+    if (actionType === 'Referral Link') {
+      // Handle referral link action
+      setActiveTab('chat');
+      
+      let statusMessage = '';
+      if (referralStatus?.isReferred) {
+        if (referralStatus.qualified) {
+          statusMessage = `\n\n🎉 You've qualified your referral by spending over $100!`;
+        } else {
+          statusMessage = `\n\nYou've spent $${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far. Only $${referralStatus.remaining?.toFixed(2) || '100.00'} more to qualify your referral!`;
+        }
+      }
+
+      addMessage({
+        role: 'ai',
+        content: `🎁 Share your referral link to earn rewards! Here it is: ${referralLink}\n\nYou have ${qualifiedReferrals} qualified referral${qualifiedReferrals !== 1 ? 's' : ''} (${totalReferrals} total)${statusMessage}`,
+        action: {
+          type: 'referral',
+          referralLink,
+          referralCount: qualifiedReferrals,
+        }
+      });
+      return;
+    }
+    
+    if (actionType === 'Leaderboard') {
+      // Handle leaderboard action
+      setActiveTab('chat');
+      addMessage({
+        role: 'ai',
+        content: '🏆 Let me show you the current leaderboard!',
+        action: {
+          type: 'leaderboard',
+        }
+      });
+      return;
+    }
+    
     setActiveTab('chat');
     
     // Handle Scan QR directly without going through AI
@@ -294,6 +377,8 @@ export default function HomePage() {
     { icon: 'gift-card', label: 'Gift Cards', action: () => handleQuickAction('Gift Cards') },
     { icon: 'airtime', label: 'Airtime', action: () => handleQuickAction('Airtime') },
     { icon: 'bill', label: 'Pay Bills', action: () => handleQuickAction('Pay Bills') },
+    { icon: 'gift', label: 'Referral Link', action: () => handleQuickAction('Referral Link') },
+    { icon: 'trophy', label: 'Leaderboard', action: () => handleQuickAction('Leaderboard') },
   ];
 
   // Per-action accent colors for the quick-action tiles
@@ -302,9 +387,11 @@ export default function HomePage() {
     'Send NIM': '#F5A623',
     'Generate QR': '#F5A623',
     'Scan QR': '#F5A623',
-    'Gift Cards': '#2B6BD6',
+    'Gift Cards': '#F5A623',
     'Airtime': '#2B6BD6',
     'Pay Bills': '#2B6BD6',
+    'Referral Link': '#2B6BD6',
+    'Leaderboard': '#2B6BD6',
   };
 
   const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
@@ -430,7 +517,7 @@ export default function HomePage() {
               See all
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {quickActions.map((action) => {
               const accent = actionAccents[action.label] || '#F5A623';
               return (

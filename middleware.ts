@@ -4,10 +4,26 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
+  // HTTPS Enforcement (redirect HTTP to HTTPS in production)
+  if (process.env.NODE_ENV === 'production' && !request.headers.get('x-forwarded-proto')?.includes('https')) {
+    const url = request.nextUrl.clone();
+    url.protocol = 'https';
+    return NextResponse.redirect(url, 301);
+  }
+
   // Set security headers (applies to all routes)
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // HSTS Header (HTTP Strict Transport Security)
+  // max-age=31536000 = 1 year
+  // includeSubDomains = apply to all subdomains
+  // preload = allow preloading in browsers (optional but recommended)
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains; preload'
+  );
   
   // Content Security Policy - allows camera access for QR scanning and price feed connections
   const csp = [
@@ -30,7 +46,6 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)

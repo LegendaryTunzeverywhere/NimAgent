@@ -15,6 +15,78 @@ const API_URL = '/api'; // BFF proxy endpoint (same-origin)
 
 import type { ActionCard } from '@/types';
 
+// Cache CSRF token to avoid fetching it multiple times
+let csrfToken = '';
+
+// Cache signature challenges
+interface CachedSignature {
+  nonce: string;
+  signature: string;
+  expiresAt: string;
+}
+const signatureCache: Record<string, CachedSignature> = {};
+
+/**
+ * Fetch CSRF token from backend
+ */
+async function fetchCsrfToken(): Promise<string> {
+  if (csrfToken) return csrfToken;
+
+  const res = await fetch(`${API_URL}/csrf-token`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch CSRF token');
+  }
+
+  const data = await res.json();
+  csrfToken = data.csrfToken || '';
+  return csrfToken;
+}
+
+/**
+ * Fetch a signature challenge for a wallet address
+ */
+async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; challenge: string; expiresAt: string }> {
+  const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch challenge');
+  }
+  return res.json();
+}
+
+/**
+ * Sign a challenge using the wallet
+ */
+async function signChallenge(challenge: string): Promise<string> {
+  // Import wallet signMessage function dynamically
+  const { signMessage } = await import('./wallet');
+  const result = await signMessage(challenge);
+  return result.signature;
+}
+
+/**
+ * Get or create a valid signature for a wallet address
+ */
+async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string }> {
+  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
+  
+  // Check cache for valid signature
+  const cached = signatureCache[cleanAddress];
+  if (cached && new Date(cached.expiresAt) > new Date()) {
+    return cached;
+  }
+  
+  // Fetch new challenge
+  const { nonce, challenge, expiresAt } = await fetchChallenge(cleanAddress);
+  
+  // Sign challenge
+  const signature = await signChallenge(challenge);
+  
+  // Cache the signature
+  signatureCache[cleanAddress] = { nonce, signature, expiresAt };
+  
+  return { nonce, signature };
+}
+
 /**
  * FIX 4 FRONTEND: Validate NIM address format client-side
  * Prevents sending invalid addresses to backend
@@ -27,12 +99,33 @@ function isValidNimAddress(address: string): boolean {
 
 /**
  * Get headers for API requests
- * No API key needed - handled by BFF layer on server
+ * Includes CSRF token and signature headers for state-changing requests
  */
-function getHeaders(): HeadersInit {
-  return {
+async function getHeaders(method: string, walletAddress?: string): Promise<HeadersInit> {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
+
+  // Add CSRF token for state-changing requests
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const token = await fetchCsrfToken();
+    headers['X-CSRF-Token'] = token;
+    
+    // Add signature headers if wallet address is provided
+    if (walletAddress) {
+      try {
+        const { nonce, signature } = await getSignature(walletAddress);
+        headers['X-Wallet-Address'] = walletAddress;
+        headers['X-Nonce'] = nonce;
+        headers['X-Signature'] = signature;
+      } catch (err) {
+        console.warn('[API Client] Failed to get signature, proceeding without it:', err);
+        // Don't block the request if signature fails (optional for now)
+      }
+    }
+  }
+
+  return headers;
 }
 
 export interface ChatMessage {
@@ -81,7 +174,7 @@ export async function chatWithAgent(
 ): Promise<ChatResponse> {
   const res = await fetch(`${API_URL}/agent/chat`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST', walletAddress),
     body: JSON.stringify({ message, history, walletAddress }),
   });
   
@@ -105,7 +198,7 @@ export async function recordTransaction(data: {
 }): Promise<Transaction> {
   const res = await fetch(`${API_URL}/transactions`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST'),
     body: JSON.stringify(data),
   });
   
@@ -127,7 +220,7 @@ export async function validateOrder(data: {
 }): Promise<{ valid: boolean; error?: string; quoteId?: string; expiresAt?: string; [key: string]: any }> {
   const res = await fetch(`${API_URL}/orders/validate`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST', data.walletAddress),
     body: JSON.stringify(data),
   });
   
@@ -152,7 +245,7 @@ export async function createOrder(data: {
 }): Promise<any> {
   const res = await fetch(`${API_URL}/orders`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST', data.walletAddress),
     body: JSON.stringify(data),
   });
 
@@ -176,7 +269,7 @@ export async function getOrders(walletAddress: string): Promise<Order[]> {
   }
   
   const res = await fetch(`${API_URL}/orders?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -197,7 +290,7 @@ export async function getBalances(address: string): Promise<{
 }> {
   const cleanAddress = address.replace(/\s/g, '');
   const res = await fetch(`${API_URL}/balances/${cleanAddress}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -232,7 +325,7 @@ export async function saveChatMessage(data: {
   
   const res = await fetch(`${API_URL}/chat/history`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST', data.walletAddress),
     body: JSON.stringify(data),
   });
   
@@ -253,7 +346,7 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
   }
   
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -274,7 +367,7 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
   }
   
   const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -296,7 +389,7 @@ export async function deleteChatSession(sessionId: string, walletAddress: string
   
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     method: 'DELETE',
-    headers: getHeaders(),
+    headers: await getHeaders('DELETE', walletAddress),
   });
   
   if (!res.ok) {
@@ -330,7 +423,7 @@ export async function getSavedAddresses(walletAddress: string): Promise<SavedAdd
   }
   
   const res = await fetch(`${API_URL}/saved-addresses?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -361,7 +454,7 @@ export async function saveAddress(data: {
   
   const res = await fetch(`${API_URL}/saved-addresses`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: await getHeaders('POST', data.wallet),
     body: JSON.stringify(data),
   });
   
@@ -396,7 +489,7 @@ export async function updateSavedAddress(
   
   const res = await fetch(`${API_URL}/saved-addresses/${id}`, {
     method: 'PUT',
-    headers: getHeaders(),
+    headers: await getHeaders('PUT', wallet),
     body: JSON.stringify({ 
       wallet, 
       ...updates
@@ -429,7 +522,7 @@ export async function deleteSavedAddress(id: string, wallet: string): Promise<vo
   
   const res = await fetch(`${API_URL}/saved-addresses/${id}?wallet=${encodeURIComponent(wallet)}`, {
     method: 'DELETE',
-    headers: getHeaders(),
+    headers: await getHeaders('DELETE', wallet),
   });
   
   if (!res.ok) {
@@ -453,7 +546,7 @@ export async function findAddressByNickname(wallet: string, nickname: string): P
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/find?wallet=${encodeURIComponent(wallet)}&nickname=${encodeURIComponent(nickname)}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   const result = await res.json();
@@ -474,7 +567,7 @@ export async function getFrequentAddresses(wallet: string, limit: number = 5): P
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/frequent?wallet=${encodeURIComponent(wallet)}&limit=${limit}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
@@ -499,11 +592,125 @@ export async function getCountryServices(
   type?: 'bill' | 'airtime' | 'giftcard' | 'all'
 ): Promise<any> {
   const res = await fetch(`${API_URL}/services/${country.toUpperCase()}${type ? `?type=${type}` : ''}`, {
-    headers: getHeaders(),
+    headers: await getHeaders('GET'),
   });
   
   if (!res.ok) {
     throw new Error('Failed to fetch country services');
+  }
+  
+  return res.json();
+}
+
+// ============================================================================
+// REFERRAL SYSTEM API
+// ============================================================================
+
+export async function getReferralLink(walletAddress: string): Promise<{
+  success: boolean;
+  referralLink: string;
+  referralCode: string;
+  referralCount: number;
+  totalReferrals: number;
+  qualifiedReferrals: number;
+  threshold: number;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
+  const res = await fetch(`${API_URL}/referrals/link?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: await getHeaders('GET'),
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch referral link');
+  }
+  
+  return res.json();
+}
+
+export async function getReferralCount(walletAddress: string): Promise<{
+  success: boolean;
+  count: number;
+  total: number;
+  qualified: number;
+  threshold: number;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
+  const res = await fetch(`${API_URL}/referrals/count?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: await getHeaders('GET'),
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch referral count');
+  }
+  
+  return res.json();
+}
+
+export async function getReferralStatus(walletAddress: string): Promise<{
+  success: boolean;
+  isReferred: boolean;
+  referrer: string | null;
+  totalSpent: number;
+  qualified: boolean;
+  remaining: number;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
+  const res = await fetch(`${API_URL}/referrals/status?wallet=${encodeURIComponent(walletAddress)}`, {
+    headers: await getHeaders('GET'),
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch referral status');
+  }
+  
+  return res.json();
+}
+
+export async function trackReferral(referredWallet: string, referralCode: string): Promise<{
+  success: boolean;
+  error?: string;
+  referral?: any;
+}> {
+  if (!isValidNimAddress(referredWallet)) {
+    throw new Error('Invalid NIM wallet address format for referredWallet');
+  }
+  
+  const res = await fetch(`${API_URL}/referrals/track`, {
+    method: 'POST',
+    headers: await getHeaders('POST', referredWallet),
+    body: JSON.stringify({
+      referredWallet,
+      referralCode,
+    }),
+  });
+  
+  return res.json();
+}
+
+export async function getLeaderboard(limit: number = 20): Promise<{
+  success: boolean;
+  leaderboard: Array<{
+    wallet: string;
+    referrals: number;
+    total: number;
+  }>;
+  threshold: number;
+}> {
+  const res = await fetch(`${API_URL}/referrals/leaderboard?limit=${limit}`, {
+    headers: await getHeaders('GET'),
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch leaderboard');
   }
   
   return res.json();

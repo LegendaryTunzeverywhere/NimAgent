@@ -27,6 +27,62 @@ if (!API_SECRET) {
 }
 
 /**
+ * Helper to create headers with forwarded CSRF token and cookies
+ */
+function createProxyHeaders(request: NextRequest) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'x-api-key': API_SECRET as string,
+  };
+
+  // Forward X-CSRF-Token header if present
+  const csrfToken = request.headers.get('x-csrf-token');
+  if (csrfToken) {
+    headers['x-csrf-token'] = csrfToken;
+  }
+
+  // Forward signature headers if present
+  const walletAddress = request.headers.get('x-wallet-address');
+  const nonce = request.headers.get('x-nonce');
+  const signature = request.headers.get('x-signature');
+  
+  if (walletAddress && nonce && signature) {
+    headers['x-wallet-address'] = walletAddress;
+    headers['x-nonce'] = nonce;
+    headers['x-signature'] = signature;
+  }
+
+  // Forward cookies from frontend to backend
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader) {
+    headers['cookie'] = cookieHeader;
+  }
+
+  return headers;
+}
+
+/**
+ * Helper to copy headers from backend response to Next.js response
+ */
+function copyResponseHeaders(backendResponse: Response, nextResponse: NextResponse) {
+  // Forward set-cookie headers
+  const setCookieHeaders = backendResponse.headers.get('set-cookie');
+  if (setCookieHeaders) {
+    // Handle multiple set-cookie headers
+    const cookies = backendResponse.headers.getSetCookie();
+    cookies.forEach(cookie => {
+      nextResponse.headers.append('set-cookie', cookie);
+    });
+  }
+
+  // Forward other relevant headers
+  const cacheControl = backendResponse.headers.get('cache-control');
+  if (cacheControl) {
+    nextResponse.headers.set('cache-control', cacheControl);
+  }
+}
+
+/**
  * Handle GET requests
  */
 export async function GET(
@@ -50,10 +106,8 @@ export async function GET(
 
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_SECRET,
-      },
+      headers: createProxyHeaders(request),
+      credentials: 'include', // Important for cookies
     });
 
     console.log('[BFF] Response status:', response.status);
@@ -62,20 +116,21 @@ export async function GET(
     if (!response.ok) {
       const text = await response.text();
       console.error('[BFF] Backend error status:', response.status);
-      return NextResponse.json(
+      const errorResponse = NextResponse.json(
         { error: 'Backend request failed', status: response.status },
         { status: response.status }
       );
+      copyResponseHeaders(response, errorResponse);
+      return errorResponse;
     }
 
     const data = await response.json();
 
-    return NextResponse.json(data, {
+    const nextResponse = NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Cache-Control': 'no-store, must-revalidate',
-      },
     });
+    copyResponseHeaders(response, nextResponse);
+    return nextResponse;
   } catch (error: any) {
     console.error('[BFF] GET error:', error.message);
     return NextResponse.json(
@@ -109,11 +164,9 @@ export async function POST(
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_SECRET,
-      },
+      headers: createProxyHeaders(request),
       body: JSON.stringify(body),
+      credentials: 'include', // Important for cookies
     });
 
     // Log non-2xx responses before parsing
@@ -123,28 +176,28 @@ export async function POST(
       // Try to parse as JSON, fallback to text error
       try {
         const errorData = JSON.parse(text);
-        return NextResponse.json(errorData, {
+        const errorResponse = NextResponse.json(errorData, {
           status: response.status,
-          headers: {
-            'Cache-Control': 'no-store, must-revalidate',
-          },
         });
+        copyResponseHeaders(response, errorResponse);
+        return errorResponse;
       } catch {
-        return NextResponse.json(
+        const errorResponse = NextResponse.json(
           { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
           { status: response.status }
         );
+        copyResponseHeaders(response, errorResponse);
+        return errorResponse;
       }
     }
 
     const data = await response.json();
 
-    return NextResponse.json(data, {
+    const nextResponse = NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Cache-Control': 'no-store, must-revalidate',
-      },
     });
+    copyResponseHeaders(response, nextResponse);
+    return nextResponse;
   } catch (error: any) {
     console.error('[BFF] POST error:', error.message);
     return NextResponse.json(
@@ -178,20 +231,17 @@ export async function DELETE(
 
     const response = await fetch(url, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_SECRET,
-      },
+      headers: createProxyHeaders(request),
+      credentials: 'include', // Important for cookies
     });
 
     const data = await response.json();
 
-    return NextResponse.json(data, {
+    const nextResponse = NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Cache-Control': 'no-store, must-revalidate',
-      },
     });
+    copyResponseHeaders(response, nextResponse);
+    return nextResponse;
   } catch (error: any) {
     console.error('[BFF] DELETE error:', error.message);
     return NextResponse.json(
@@ -224,11 +274,9 @@ export async function PUT(
 
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_SECRET,
-      },
+      headers: createProxyHeaders(request),
       body: JSON.stringify(body),
+      credentials: 'include', // Important for cookies
     });
 
     if (!response.ok) {
@@ -236,28 +284,28 @@ export async function PUT(
       console.error('[BFF] Backend PUT error:', response.status, text.slice(0, 500));
       try {
         const errorData = JSON.parse(text);
-        return NextResponse.json(errorData, {
+        const errorResponse = NextResponse.json(errorData, {
           status: response.status,
-          headers: {
-            'Cache-Control': 'no-store, must-revalidate',
-          },
         });
+        copyResponseHeaders(response, errorResponse);
+        return errorResponse;
       } catch {
-        return NextResponse.json(
+        const errorResponse = NextResponse.json(
           { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
           { status: response.status }
         );
+        copyResponseHeaders(response, errorResponse);
+        return errorResponse;
       }
     }
 
     const data = await response.json();
 
-    return NextResponse.json(data, {
+    const nextResponse = NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Cache-Control': 'no-store, must-revalidate',
-      },
     });
+    copyResponseHeaders(response, nextResponse);
+    return nextResponse;
   } catch (error: any) {
     console.error('[BFF] PUT error:', error.message);
     return NextResponse.json(

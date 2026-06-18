@@ -8,8 +8,10 @@
     "start": "next start -p 3001",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "backend": "cd n_server/server && npm run dev",
-    "backend:install": "cd n_server/server && npm install",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "backend": "cd server && npm run dev",
+    "backend:install": "cd server && npm install",
     "setup": "npm install && npm run backend:install"
   },
   "dependencies": {

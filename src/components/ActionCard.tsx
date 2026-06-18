@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
-import { recordTransaction, createOrder, validateOrder } from '@/lib/api-client';
+import { recordTransaction, createOrder, validateOrder, getLeaderboard } from '@/lib/api-client';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
@@ -24,7 +24,7 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage, messages, updateActionState, setActiveTab, sendMessageToAI } = useAppStore();
+  const { wallet, addMessage, messages, updateActionState, sendMessageToAI } = useAppStore();
   
   // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
   const [loading, setLoading] = useState(false);
@@ -42,6 +42,28 @@ export default function ActionCard({ action }: ActionCardProps) {
       ? { min: action.minAmount, max: action.maxAmount, currency: action.currency || 'USD' }
       : null
   );
+  
+  // Referral/Leaderboard hooks
+  const [copied, setCopied] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  
+  // Leaderboard effect
+  useEffect(() => {
+    if (action.type === 'leaderboard') {
+      const fetchLeaderboard = async () => {
+        try {
+          const data = await getLeaderboard(20);
+          setLeaderboard(data.leaderboard || []);
+        } catch (err) {
+          console.error('Failed to fetch leaderboard:', err);
+        } finally {
+          setLeaderboardLoading(false);
+        }
+      };
+      fetchLeaderboard();
+    }
+  }, [action.type]);
   
   // Find the index of this message in the messages array
   const messageIndex = messages.findIndex(msg => msg.action === action);
@@ -220,6 +242,148 @@ export default function ActionCard({ action }: ActionCardProps) {
       });
     }
   }, [wallet.address, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle Referral Link
+  if (action.type === 'referral') {
+    const referralLink = action.referralLink || '';
+    const referralCount = action.referralCount || 0;
+    
+    const copyLink = () => {
+      navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+    
+    const shareLink = async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Join NimAgent',
+            text: 'Use my referral link to join NimAgent!',
+            url: referralLink,
+          });
+        } catch (err) {
+          console.log('Error sharing:', err);
+          copyLink();
+        }
+      } else {
+        copyLink();
+      }
+    };
+    
+    return (
+      <div className="glass dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-700 dark:text-green-400">
+              <path d="M9 12l2 2 4-4" />
+              <path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">Your Referral Link</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/55 font-mono uppercase">
+              {referralCount} REFERRAL{referralCount !== 1 ? 'S' : ''}
+            </p>
+          </div>
+        </div>
+        
+        <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 mb-3">
+          <p className="text-[11px] text-gray-600 dark:text-white/60 font-mono break-all">
+            {referralLink}
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <button
+            onClick={copyLink}
+            className="flex-1 rounded-xl py-2.5 px-4 text-sm font-semibold text-white bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 transition-colors flex items-center justify-center gap-2"
+          >
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+          <button
+            onClick={shareLink}
+            className="rounded-xl py-2.5 px-4 text-sm font-semibold bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-white/80 border border-gray-300 dark:border-white/20 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+              <polyline points="16,6 12,2 8,6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle Leaderboard
+  if (action.type === 'leaderboard') {
+    return (
+      <div className="glass dark:bg-white/[0.035] border-2 border-gray-200 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-700 dark:text-purple-400">
+              <path d="M6 9H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2v-9a2 2 0 00-2-2h-2" />
+              <path d="M9 22V9a3 3 0 016 0v13" />
+              <path d="M12 12l-1.5 2.5 1.5 2.5L15 17" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">Referral Leaderboard</p>
+            <p className="text-[10px] text-gray-500 dark:text-white/55 font-mono uppercase">
+              TOP REFERRERS
+            </p>
+          </div>
+        </div>
+        
+        {leaderboardLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-purple-300 dark:border-purple-800 border-t-purple-700 dark:border-t-purple-400 rounded-full animate-spin" />
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-600 dark:text-white/65 mb-1">No referrals yet</p>
+            <p className="text-xs text-gray-500 dark:text-white/45">Be the first to refer friends!</p>
+            <p className="text-[10px] text-gray-400 dark:text-white/40 mt-2">
+              * Referrals count only after $100 spend
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {leaderboard.map((entry, idx) => {
+              const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10"
+                >
+                  <span className="text-lg font-bold w-6 text-center">{rankEmoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-mono text-gray-900 dark:text-white truncate">
+                      {entry.wallet_address?.substring(0, 8)}...{entry.wallet_address?.substring(entry.wallet_address.length - 6)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-gray-700 dark:text-white/80">
+                      {entry.total_qualified || entry.referrals || 0}
+                    </span>
+                    {(entry.total_referrals || entry.total) && (entry.total_referrals || entry.total) > (entry.total_qualified || entry.referrals || 0) && (
+                      <span className="text-[10px] text-gray-500 dark:text-white/55 ml-1">
+                        /{entry.total_referrals || entry.total}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="text-[10px] text-gray-400 dark:text-white/40 text-center pt-1">
+              * Qualified referrals shown (after $100 spend)
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Filter out action types that don't need an action card UI
   const NON_CARD_ACTIONS = ['save-address', 'save-contact', 'update-contact', 'delete-contact', 'lookup-contact'];
@@ -546,7 +710,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
         // Trigger the wallet popup FIRST, directly from the click gesture, so
         // the browser doesn't block it. Order validation already ran on mount.
-        const serviceAddress = process.env.NEXT_PUBLIC_SERVICE_ADDRESS || action.recipient || 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000';
+        const serviceAddress = process.env.NEXT_PUBLIC_SERVICE_ADDRESS || action.recipient || 'NQ18 TAQ8 CL7P K505 LE2M C78A 1YQC 1CH1 6Y4G';
         
         console.log('[ActionCard] Processing order:', {
           type: action.type,

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Mono } from 'next/font/google';
 import './globals.css';
+import CsrfPrefetcher from '@/components/csrf-prefetcher';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -52,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${spaceMono.variable}`} suppressHydrationWarning={true}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -82,11 +83,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen overflow-x-hidden">
+        <CsrfPrefetcher />
         {/* Ambient background — flat base + subtle grid, fixed behind everything */}
         <div className="bg-mesh" aria-hidden="true" />
         <div className="bg-grid" aria-hidden="true" />
         {children}
-</body>
+      </body>
     </html>
   );
 }

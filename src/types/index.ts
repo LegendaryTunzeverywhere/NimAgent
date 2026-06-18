@@ -39,7 +39,7 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
@@ -76,6 +76,12 @@ export interface ActionCard {
   failed?: boolean;
   txHash?: string;
   locked?: boolean;      // Amount locked — cannot be changed by sender (payment request)
+  // Referral fields
+  referralLink?: string;
+  referralCount?: number;
+  qualifiedReferralCount?: number;
+  // Leaderboard fields
+  leaderboard?: Array<{ wallet_address: string; total_qualified?: number; total_referrals?: number; rank?: number }>;
 }
 
 export interface QuickAction {
