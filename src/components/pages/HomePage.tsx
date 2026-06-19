@@ -62,6 +62,7 @@ export default function HomePage() {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loadingReferral, setLoadingReferral] = useState(false);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [copyToastVisible, setCopyToastVisible] = useState(false);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy
@@ -779,12 +780,26 @@ export default function HomePage() {
                 <button
                   onClick={async () => {
                     await navigator.clipboard.writeText(referralLink);
-                    alert('Referral link copied!');
+                    setCopyToastVisible(true);
+                    setTimeout(() => setCopyToastVisible(false), 2000);
                   }}
-                  className="btn-gold px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
+                    copyToastVisible 
+                      ? 'bg-green-500 hover:bg-green-600 text-white' 
+                      : 'btn-gold'
+                  }`}
                 >
-                  <Icon name="copy" size={12} />
-                  Copy
+                  {copyToastVisible ? (
+                    <>
+                      <Icon name="check" size={12} />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="copy" size={12} />
+                      Copy
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -956,6 +971,19 @@ export default function HomePage() {
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Copy Toast */}
+      {copyToastVisible && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-2xl shadow-2xl border border-gray-700 dark:border-white/10 animate-fade-up">
+          <div className="w-8 h-8 rounded-full bg-green-500/20 dark:bg-green-500/15 flex items-center justify-center">
+            <Icon name="check" size={16} className="text-green-500" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Referral Link Copied!</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600">Share it with friends to earn rewards</p>
           </div>
         </div>
       )}

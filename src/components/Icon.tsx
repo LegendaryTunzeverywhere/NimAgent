@@ -42,7 +42,8 @@ export type IconName =
   | 'refresh'
   | 'settings'
   | 'gift'
-  | 'trophy';
+  | 'trophy'
+  | 'share';
 
 interface IconProps {
   name: IconName;
@@ -363,6 +364,15 @@ export default function Icon({ name, size = 20, className = '', strokeWidth = 1.
           <path d="M6 9H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2" />
           <path d="M9 22V9a3 3 0 0 1 6 0v13" />
           <path d="M12 12l-1.5 2.5 1.5 2.5L15 17" />
+        </svg>
+      );
+
+    case 'share':
+      return (
+        <svg {...common}>
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" y1="2" x2="12" y2="15" />
         </svg>
       );
 

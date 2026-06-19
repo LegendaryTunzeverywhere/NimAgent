@@ -7,6 +7,7 @@ import { recordTransaction, createOrder, validateOrder, getLeaderboard } from '@
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
+import Icon from './Icon';
 
 import type { ActionCard as ActionCardType } from '@/types';
 
@@ -287,19 +288,29 @@ export default function ActionCard({ action }: ActionCardProps) {
         <div className="flex gap-2">
           <button
             onClick={copyLink}
-            className="flex-1 rounded-xl py-2.5 px-4 text-sm font-semibold text-white bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 transition-colors flex items-center justify-center gap-2"
+            className={`flex-1 rounded-xl py-2.5 px-4 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              copied 
+                ? 'bg-green-500 hover:bg-green-600 text-white' 
+                : 'bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 text-white'
+            }`}
           >
-            {copied ? 'Copied!' : 'Copy Link'}
+            {copied ? (
+              <>
+                <Icon name="check" size={14} />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Icon name="copy" size={14} />
+                Copy Link
+              </>
+            )}
           </button>
           <button
             onClick={shareLink}
             className="rounded-xl py-2.5 px-4 text-sm font-semibold bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-white/80 border border-gray-300 dark:border-white/20 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-              <polyline points="16,6 12,2 8,6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
-            </svg>
+            <Icon name="share" size={14} />
           </button>
         </div>
       </div>
