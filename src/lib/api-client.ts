@@ -786,4 +786,56 @@ export async function getReferrals(walletAddress: string): Promise<{
   return res.json();
 }
 
+// ============================================================================
+// AUTH / SESSION API
+// ============================================================================
+
+export async function loginWithWallet(walletAddress: string): Promise<{
+  success: boolean;
+  walletAddress: string;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+
+  // Get challenge
+  const challenge = await fetchChallenge(walletAddress);
+  
+  // Sign challenge
+  const { signature, publicKey } = await signChallenge(challenge.challenge);
+
+  // Login with signature
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      walletAddress,
+      signature,
+      publicKey,
+      nonce: challenge.nonce,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || 'Login failed');
+  }
+
+  return res.json();
+}
+
+export async function logout(): Promise<void> {
+  const res = await fetch(`${API_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Logout failed');
+  }
+}
+
 
