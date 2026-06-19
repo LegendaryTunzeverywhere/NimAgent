@@ -25,7 +25,25 @@ interface CachedSignature {
   publicKey: string;
   expiresAt: string;
 }
-const signatureCache: Record<string, CachedSignature> = {};
+// Load signature cache from localStorage
+const signatureCache: Record<string, CachedSignature> = (() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('nimagent-signature-cache');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+})();
+
+// Helper to save signature cache to localStorage
+function saveSignatureCache() {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('nimagent-signature-cache', JSON.stringify(signatureCache));
+  }
+}
 
 /**
  * Fetch CSRF token from backend
@@ -85,8 +103,9 @@ async function getSignature(walletAddress: string): Promise<{ nonce: string; sig
   // Sign challenge
   const { signature, publicKey } = await signChallenge(challenge);
   
-  // Cache the signature
+  // Cache the signature and save to localStorage
   signatureCache[cleanAddress] = { nonce, signature, publicKey, expiresAt };
+  saveSignatureCache();
   
   return { nonce, signature, publicKey };
 }

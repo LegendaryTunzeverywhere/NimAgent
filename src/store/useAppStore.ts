@@ -94,6 +94,14 @@ export const useAppStore = create<AppState>()(
       },
 
       disconnectWallet: () => {
+        // Clear signature cache from localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('nimagent-signature-cache');
+          } catch (e) {
+            console.warn('Failed to clear signature cache:', e);
+          }
+        }
         set({
           wallet: {
             address: null,
