@@ -15,8 +15,9 @@ const API_URL = '/api'; // BFF proxy endpoint (same-origin)
 
 import type { ActionCard } from '@/types';
 
-// Cache CSRF token to avoid fetching it multiple times
+// Cache CSRF token (with expiry)
 let csrfToken = '';
+let csrfTokenExpiry = 0;
 
 // Cache signature challenges
 interface CachedSignature {
@@ -48,8 +49,9 @@ function saveSignatureCache() {
 /**
  * Fetch CSRF token from backend
  */
-async function fetchCsrfToken(): Promise<string> {
-  if (csrfToken) return csrfToken;
+async function fetchCsrfToken(force = false): Promise<string> {
+  const now = Date.now();
+  if (!force && csrfToken && now < csrfTokenExpiry) return csrfToken;
 
   const res = await fetch(`${API_URL}/csrf-token`, {
     credentials: 'include'
@@ -60,6 +62,7 @@ async function fetchCsrfToken(): Promise<string> {
 
   const data = await res.json();
   csrfToken = data.csrfToken || '';
+  csrfTokenExpiry = now + (30 * 60 * 1000); // 30 minutes expiry
   return csrfToken;
 }
 
