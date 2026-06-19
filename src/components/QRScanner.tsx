@@ -25,7 +25,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const handleQRDetectedRef = useRef<(data: string) => Promise<void>>(async () => {});
 
   const stopScanning = useCallback(() => {
-    console.log('[QRScanner] Stopping scanning...');
     setIsScanning(false);
     
     if (scanIntervalRef.current) {
@@ -38,7 +37,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       const currentStream = videoRef.current.srcObject as MediaStream;
       currentStream.getTracks().forEach(track => {
         track.stop();
-        console.log('[QRScanner] Stopped track:', track.kind, track.label);
       });
       videoRef.current.srcObject = null;
     }
@@ -57,7 +55,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
   const startScanning = async () => {
     try {
-      console.log('[QRScanner] Starting scan...');
       stopScanning(); // Ensure any previous scan is stopped first
       setError(null);
       setScanSuccess(false);
@@ -87,15 +84,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         { video: true }
       ];
 
-      console.log('[QRScanner] Attempting to get camera stream...');
       for (let i = 0; i < constraintSets.length; i++) {
         try {
-          console.log(`[QRScanner] Trying constraint set ${i + 1}:`, constraintSets[i]);
           mediaStream = await navigator.mediaDevices.getUserMedia(constraintSets[i]);
-          console.log('[QRScanner] Successfully got stream with constraints:', constraintSets[i]);
           break;
         } catch (e) {
-          console.warn(`[QRScanner] Constraint set ${i + 1} failed:`, e);
           // try next set
         }
       }
@@ -118,11 +111,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         // Wait for video to be ready
         await new Promise<void>((resolve, reject) => {
           const handleLoaded = () => {
-            console.log('[QRScanner] Video loaded, ready to play');
             resolve();
           };
           const handleError = (e: Event) => {
-            console.error('[QRScanner] Video error:', e);
             reject(e);
           };
           
@@ -141,12 +132,10 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         // play() returns a Promise — must be awaited on iOS Safari
         try {
           await videoElement.play();
-          console.log('[QRScanner] Video playing successfully');
         } catch (e) {
-          console.warn('[QRScanner] Autoplay blocked, user interaction needed:', e);
           // Try playing again on user interaction
           const playOnClick = () => {
-            videoElement.play().catch(err => console.warn('[QRScanner] Play failed on click:', err));
+            videoElement.play().catch(() => {});
             document.body.removeEventListener('click', playOnClick);
           };
           document.body.addEventListener('click', playOnClick, { once: true });
@@ -157,7 +146,6 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         }, 150); // More frequent scanning for better detection
       }
     } catch (err: any) {
-      console.error('[QRScanner] Camera access error:', err);
       const msg = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
         ? 'Camera permission denied. Please allow camera access in your browser settings and try again.'
         : err?.name === 'NotFoundError'
@@ -208,13 +196,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         }
         
         if (code && code.data) {
-          console.log('[QRScanner] QR code detected:', code.data);
           // QR code detected! Stop scanning first, then handle
           stopScanning();
           handleQRDetectedRef.current(code.data);
         }
       } catch (e) {
-        console.error('[QRScanner] Error scanning frame:', e);
+        // Silent failure
       }
     };
   }, [isScanning, stopScanning]);

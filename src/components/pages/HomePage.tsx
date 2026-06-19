@@ -75,7 +75,7 @@ export default function HomePage() {
           setPriceChange(data.change24h || 0);
         }
       } catch (error) {
-        console.error('Failed to fetch NIM price:', error);
+        // Silent failure
       }
     };
 
@@ -104,7 +104,7 @@ export default function HomePage() {
         try {
           await trackReferral(wallet.address, refCode);
         } catch (error) {
-          console.error('Failed to track referral:', error);
+          // Silent failure
         }
       }
       
@@ -121,7 +121,7 @@ export default function HomePage() {
         setQualifiedReferrals(linkData.qualifiedReferrals || 0);
         setReferralStatus(statusData);
       } catch (error) {
-        console.error('Failed to fetch referral info:', error);
+        // Silent failure
       }
     };
     
@@ -285,7 +285,7 @@ export default function HomePage() {
         const totalSent = totalFromOrders + totalFromTransactions;
         setSentToday(totalSent);
       } catch (error) {
-        console.error('Failed to fetch recent transactions:', error);
+        // Silent failure
       }
     };
 
@@ -298,7 +298,7 @@ export default function HomePage() {
     try {
       await connectWallet();
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      // Silent failure
     }
   };
 
@@ -313,7 +313,7 @@ export default function HomePage() {
           setReferrals(data.referrals || []);
         }
       } catch (error) {
-        console.error('Failed to fetch referrals:', error);
+        // Silent failure
       } finally {
         setLoadingReferral(false);
       }
@@ -327,7 +327,7 @@ export default function HomePage() {
         const data = await getLeaderboard();
         setLeaderboard(data.leaderboard || []);
       } catch (error) {
-        console.error('Failed to fetch leaderboard:', error);
+        // Silent failure
       } finally {
         setLoadingLeaderboard(false);
       }

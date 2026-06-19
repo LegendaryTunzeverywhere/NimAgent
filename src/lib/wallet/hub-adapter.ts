@@ -54,14 +54,10 @@ export const hubAdapter: WalletAdapter = {
     if (req.data) checkoutOptions.extraData = req.data;
     if (fromAddress) checkoutOptions.sender = fromAddress;
 
-    console.log('[Hub] Initiating checkout with options:', checkoutOptions);
-    
     try {
       const result = await hub.checkout(checkoutOptions);
-      console.log('[Hub] Checkout result:', result);
       return result.hash;
     } catch (error) {
-      console.error('[Hub] Checkout error:', error);
       throw error;
     }
   },

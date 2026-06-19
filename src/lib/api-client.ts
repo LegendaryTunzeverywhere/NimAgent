@@ -51,7 +51,9 @@ function saveSignatureCache() {
 async function fetchCsrfToken(): Promise<string> {
   if (csrfToken) return csrfToken;
 
-  const res = await fetch(`${API_URL}/csrf-token`);
+  const res = await fetch(`${API_URL}/csrf-token`, {
+    credentials: 'include'
+  });
   if (!res.ok) {
     throw new Error('Failed to fetch CSRF token');
   }
@@ -65,7 +67,9 @@ async function fetchCsrfToken(): Promise<string> {
  * Fetch a signature challenge for a wallet address
  */
 async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; challenge: string; expiresAt: string }> {
-  const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`);
+  const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`, {
+    credentials: 'include'
+  });
   if (!res.ok) {
     throw new Error('Failed to fetch challenge');
   }
@@ -138,7 +142,7 @@ async function getHeaders(method: string, walletAddress?: string): Promise<Heade
       headers['X-Signature'] = signature;
       headers['X-Public-Key'] = publicKey;
     } catch (err) {
-      console.warn('[API Client] Failed to get signature, proceeding without it:', err);
+      // Silent failure - proceed without signature
     }
   }
 
@@ -198,6 +202,7 @@ export async function chatWithAgent(
   const res = await fetch(`${API_URL}/agent/chat`, {
     method: 'POST',
     headers: await getHeaders('POST', walletAddress),
+    credentials: 'include',
     body: JSON.stringify({ message, history, walletAddress }),
   });
   
@@ -222,6 +227,7 @@ export async function recordTransaction(data: {
   const res = await fetch(`${API_URL}/transactions`, {
     method: 'POST',
     headers: await getHeaders('POST'),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   
@@ -244,6 +250,7 @@ export async function validateOrder(data: {
   const res = await fetch(`${API_URL}/orders/validate`, {
     method: 'POST',
     headers: await getHeaders('POST', data.walletAddress),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   
@@ -269,6 +276,7 @@ export async function createOrder(data: {
   const res = await fetch(`${API_URL}/orders`, {
     method: 'POST',
     headers: await getHeaders('POST', data.walletAddress),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 
@@ -293,6 +301,7 @@ export async function getOrders(walletAddress: string): Promise<Order[]> {
   
   const res = await fetch(`${API_URL}/orders?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -314,6 +323,7 @@ export async function getBalances(address: string): Promise<{
   const cleanAddress = address.replace(/\s/g, '');
   const res = await fetch(`${API_URL}/balances/${cleanAddress}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -335,26 +345,24 @@ export async function saveChatMessage(data: {
 }): Promise<void> {
   // FIX 4 FRONTEND: Validate address before API call
   if (!isValidNimAddress(data.walletAddress)) {
-    console.error('[API Client] Invalid wallet address format:', data.walletAddress.slice(0, 10));
     throw new Error('Invalid NIM wallet address format');
   }
   
   // Validate sessionId format (UUID v4)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!data.sessionId || !uuidRegex.test(data.sessionId)) {
-    console.error('[API Client] Invalid sessionId format:', data.sessionId?.slice(0, 20));
     throw new Error('Invalid session ID format');
   }
   
   const res = await fetch(`${API_URL}/chat/history`, {
     method: 'POST',
     headers: await getHeaders('POST', data.walletAddress),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ error: 'Unknown error' }));
-    console.error('[API Client] Failed to save chat message:', res.status, errorBody);
     throw new Error(errorBody.error || 'Failed to save chat message');
   }
 }
@@ -370,6 +378,7 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
   
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET', walletAddress),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -391,6 +400,7 @@ export async function getChatSessions(walletAddress: string): Promise<any[]> {
   
   const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET', walletAddress),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -413,6 +423,7 @@ export async function deleteChatSession(sessionId: string, walletAddress: string
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
     method: 'DELETE',
     headers: await getHeaders('DELETE', walletAddress),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -447,6 +458,7 @@ export async function getSavedAddresses(walletAddress: string): Promise<SavedAdd
   
   const res = await fetch(`${API_URL}/saved-addresses?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -478,6 +490,7 @@ export async function saveAddress(data: {
   const res = await fetch(`${API_URL}/saved-addresses`, {
     method: 'POST',
     headers: await getHeaders('POST', data.wallet),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   
@@ -513,6 +526,7 @@ export async function updateSavedAddress(
   const res = await fetch(`${API_URL}/saved-addresses/${id}`, {
     method: 'PUT',
     headers: await getHeaders('PUT', wallet),
+    credentials: 'include',
     body: JSON.stringify({ 
       wallet, 
       ...updates
@@ -546,6 +560,7 @@ export async function deleteSavedAddress(id: string, wallet: string): Promise<vo
   const res = await fetch(`${API_URL}/saved-addresses/${id}?wallet=${encodeURIComponent(wallet)}`, {
     method: 'DELETE',
     headers: await getHeaders('DELETE', wallet),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -570,6 +585,7 @@ export async function findAddressByNickname(wallet: string, nickname: string): P
   
   const res = await fetch(`${API_URL}/saved-addresses/find?wallet=${encodeURIComponent(wallet)}&nickname=${encodeURIComponent(nickname)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   const result = await res.json();
@@ -591,6 +607,7 @@ export async function getFrequentAddresses(wallet: string, limit: number = 5): P
   
   const res = await fetch(`${API_URL}/saved-addresses/frequent?wallet=${encodeURIComponent(wallet)}&limit=${limit}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -616,6 +633,7 @@ export async function getCountryServices(
 ): Promise<any> {
   const res = await fetch(`${API_URL}/services/${country.toUpperCase()}${type ? `?type=${type}` : ''}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -644,6 +662,7 @@ export async function getReferralLink(walletAddress: string): Promise<{
   
   const res = await fetch(`${API_URL}/referrals/link?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -666,6 +685,7 @@ export async function getReferralCount(walletAddress: string): Promise<{
   
   const res = await fetch(`${API_URL}/referrals/count?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -689,6 +709,7 @@ export async function getReferralStatus(walletAddress: string): Promise<{
   
   const res = await fetch(`${API_URL}/referrals/status?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -710,6 +731,7 @@ export async function trackReferral(referredWallet: string, referralCode: string
   const res = await fetch(`${API_URL}/referrals/track`, {
     method: 'POST',
     headers: await getHeaders('POST', referredWallet),
+    credentials: 'include',
     body: JSON.stringify({
       referredWallet,
       referralCode,
@@ -731,6 +753,7 @@ export async function getLeaderboard(limit: number = 20): Promise<{
 }> {
   const res = await fetch(`${API_URL}/referrals/leaderboard?limit=${limit}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {
@@ -757,6 +780,7 @@ export async function getReferrals(walletAddress: string): Promise<{
   
   const res = await fetch(`${API_URL}/referrals?wallet=${encodeURIComponent(walletAddress)}`, {
     headers: await getHeaders('GET'),
+    credentials: 'include',
   });
   
   if (!res.ok) {

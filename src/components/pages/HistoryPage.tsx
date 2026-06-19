@@ -58,8 +58,7 @@ export default function HistoryPage() {
       // Normalize wallet address - remove spaces for consistent querying
       const normalizedAddress = wallet.address.replace(/\s/g, '');
       
-      console.log('[HistoryPage] Fetching for wallet:', wallet.address);
-      console.log('[HistoryPage] Normalized:', normalizedAddress);
+      // No logs
       
       // Use BFF proxy (same-origin request)
       
@@ -82,7 +81,7 @@ export default function HistoryPage() {
         const transData = await transactionsRes.json();
         const rawTransactions = transData.transactions || [];
         
-        console.log('[HistoryPage] Raw transactions from API:', rawTransactions.length);
+        // No logs
         
         // Determine transaction type based on wallet address
         const processedTransactions = rawTransactions.map((tx: any) => {
@@ -91,13 +90,7 @@ export default function HistoryPage() {
           const cleanFromAddr = tx.from_address?.replace(/\s/g, '').toLowerCase();
           const cleanToAddr = tx.to_address?.replace(/\s/g, '').toLowerCase();
           
-          console.log('[HistoryPage] Processing tx:', {
-            id: tx.id,
-            from: cleanFromAddr?.slice(0, 10),
-            to: cleanToAddr?.slice(0, 10),
-            wallet: cleanWalletAddr?.slice(0, 10),
-            originalType: tx.type
-          });
+          // No logs
           
           // Preserve special transaction types (stake, unstake, orders)
           // Only override if type is null/undefined
@@ -105,7 +98,6 @@ export default function HistoryPage() {
           
           // Don't override stake/unstake/withdraw/order types
           if (type && ['gift-card', 'airtime', 'bill'].includes(type)) {
-            console.log('[HistoryPage] Preserving type:', type);
             return {
               ...tx,
               type,
@@ -116,18 +108,15 @@ export default function HistoryPage() {
           // If from_address matches wallet, it's a send
           if (cleanFromAddr && cleanFromAddr === cleanWalletAddr) {
             type = 'send';
-            console.log('[HistoryPage] Detected SEND (from matches wallet)');
           } 
           // If to_address matches wallet, it's a receive
           else if (cleanToAddr && cleanToAddr === cleanWalletAddr) {
             type = 'receive';
-            console.log('[HistoryPage] Detected RECEIVE (to matches wallet)');
           }
           // If type is not set and we have both addresses
           else if (!type && cleanFromAddr && cleanToAddr) {
             // Default to send if we can't determine
             type = 'send';
-            console.log('[HistoryPage] Defaulting to SEND (unclear)');
           }
           
           return {
@@ -136,7 +125,7 @@ export default function HistoryPage() {
           };
         });
         
-        console.log('[HistoryPage] Processed transaction types:', processedTransactions.map((t: any) => t.type));
+        // No logs
         
         allTransactions = processedTransactions;
       }
@@ -163,8 +152,7 @@ export default function HistoryPage() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       
-      console.log('[HistoryPage] Fetched transactions:', allTransactions.length);
-      console.log('[HistoryPage] Transaction types:', allTransactions.map(t => t.type));
+      // No logs
       
       setTransactions(allTransactions);
       // Don't reset expandedTx - preserve the expanded state
@@ -173,7 +161,7 @@ export default function HistoryPage() {
         setIsInitialLoad(false);
       }
     } catch (error) {
-      console.error('Failed to fetch transactions:', error);
+      // Silent failure
     } finally {
       if (showLoading) {
         setLoading(false);

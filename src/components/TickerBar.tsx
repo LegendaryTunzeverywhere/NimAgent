@@ -22,7 +22,7 @@ export default function TickerBar() {
           setPriceChange(typeof data.change24h === 'number' ? data.change24h : 0);
         }
       } catch (error) {
-        console.error('Failed to fetch NIM price:', error);
+        // Silent failure
       }
     };
 

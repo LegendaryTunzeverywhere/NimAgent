@@ -56,7 +56,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           const data = await getLeaderboard(20);
           setLeaderboard(data.leaderboard || []);
         } catch (err) {
-          console.error('Failed to fetch leaderboard:', err);
+          // Silent failure
         } finally {
           setLeaderboardLoading(false);
         }
@@ -114,9 +114,6 @@ export default function ActionCard({ action }: ActionCardProps) {
         // Check if price changed significantly (>2%)
         if (oldAmountLuna > 0 && Math.abs((newAmount - oldAmount) / oldAmount) > 0.02) {
           setPriceChanged(true);
-          const direction = newAmount > oldAmount ? 'increased' : 'decreased';
-          const percentChange = Math.abs(((newAmount - oldAmount) / oldAmount) * 100).toFixed(1);
-          console.log(`[Quote Refresh] Price ${direction} by ${percentChange}%: ${oldAmount.toFixed(2)} → ${newAmount.toFixed(2)} NIM`);
         }
         
         // Update amount
@@ -135,8 +132,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         setPrevalidationError(validation.error || 'Quote validation failed');
       }
     } catch (err) {
-      console.error('[Quote Refresh] Failed:', err);
-      // Don't show error to user, just log it
+      // Silent failure
     } finally {
       setRefreshing(false);
     }
@@ -152,7 +148,6 @@ export default function ActionCard({ action }: ActionCardProps) {
       
       // Auto-refresh when quote expires
       if (remaining === 0) {
-        console.log('[Quote Refresh] Quote expired, refreshing...');
         refreshQuote();
       }
       
@@ -227,14 +222,10 @@ export default function ActionCard({ action }: ActionCardProps) {
       import('@/lib/api-client').then(({ getSavedAddresses }) => {
         getSavedAddresses(wallet.address!)
           .then(contacts => {
-            console.log('[ActionCard] Fetched contacts:', contacts.length);
-            contacts.forEach((c, idx) => {
-              console.log(`[ActionCard] Contact ${idx}: ${c.nickname} -> ${c.recipient_address} (length: ${c.recipient_address?.length || 0})`);
-            });
             setSavedContacts(contacts);
           })
           .catch(err => {
-            console.error('[ActionCard] Failed to fetch contacts:', err);
+            // Silent failure
           })
           .finally(() => {
             setLoadingContacts(false);
@@ -263,7 +254,6 @@ export default function ActionCard({ action }: ActionCardProps) {
             url: referralLink,
           });
         } catch (err) {
-          console.log('Error sharing:', err);
           copyLink();
         }
       } else {
@@ -512,12 +502,6 @@ export default function ActionCard({ action }: ActionCardProps) {
                 </div>
                 <button
                   onClick={() => {
-                    console.log('[ActionCard] Send button clicked for contact:', {
-                      nickname: contact.nickname,
-                      address: contact.recipient_address,
-                      normalizedLength: normalizedAddr.length
-                    });
-                    
                     // Validate address before sending
                     if (!contact.recipient_address) {
                       addMessage({
@@ -529,8 +513,6 @@ export default function ActionCard({ action }: ActionCardProps) {
                     
                     // Normalize address (remove spaces, uppercase)
                     const normalizedAddress = contact.recipient_address.replace(/\s/g, '').toUpperCase();
-                    
-                    console.log('[ActionCard] Normalized address:', normalizedAddress, 'Length:', normalizedAddress.length);
                     
                     // Validate format (NQ + 34 alphanumeric = 36 total)
                     if (!/^NQ[0-9A-Z]{34}$/.test(normalizedAddress)) {
@@ -632,12 +614,6 @@ export default function ActionCard({ action }: ActionCardProps) {
         }
         
         // Send NIM transaction
-        console.log('[ActionCard] Initiating send transaction:', {
-          recipient: normalizedRecipient,
-          amountLuna,
-          walletAddress: wallet.address
-        });
-        
         const hash = await requestPayment(
           normalizedRecipient,
           amountLuna,
@@ -645,8 +621,6 @@ export default function ActionCard({ action }: ActionCardProps) {
           'direct',
           wallet.address // Pass wallet address to skip address selection
         );
-
-        console.log('[ActionCard] Transaction successful, hash:', hash);
 
         await recordTransaction({
           type: 'send',
@@ -765,7 +739,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               retryCount++;
               const waitTime = 20000; // Wait 20 seconds between retries
               
-              console.log(`[Confirmation Wait] Attempt ${retryCount}/${maxRetries} - waiting ${waitTime/1000}s for confirmation`);
+              // No logs
               
               // Update user with waiting message
               if (retryCount === 1) {
@@ -854,7 +828,6 @@ export default function ActionCard({ action }: ActionCardProps) {
         }
       }
     } catch (error: any) {
-      console.error('Action execution error:', error);
       
       // Mark as failed and lock the card
       setFailed(true);

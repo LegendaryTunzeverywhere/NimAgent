@@ -36,7 +36,6 @@ export const useAppStore = create<AppState>()(
       aiLoading: false,
 
       setActiveTab: (tab) => {
-        console.log('[Store] Setting active tab:', tab);
         set({ activeTab: tab });
       },
       
@@ -69,7 +68,6 @@ export const useAppStore = create<AppState>()(
           // Load last chat session or create new one
           get().loadOrCreateSession();
         } catch (error: any) {
-          console.error('[Wallet] Connection failed:', error);
           
           // Provide specific error messages
           let errorMessage = 'Failed to connect wallet';
@@ -99,7 +97,7 @@ export const useAppStore = create<AppState>()(
           try {
             localStorage.removeItem('nimagent-signature-cache');
           } catch (e) {
-            console.warn('Failed to clear signature cache:', e);
+            // Silent failure
           }
         }
         set({
@@ -165,7 +163,6 @@ export const useAppStore = create<AppState>()(
             },
           }));
         } catch (error) {
-          console.error('Balance fetch error:', error);
           set((state) => ({
             wallet: {
               ...state.wallet,
@@ -182,7 +179,6 @@ export const useAppStore = create<AppState>()(
 
         // If we have both a sessionId and messages in local storage, don't reload
         if (currentSessionId && messages.length > 0) {
-          console.log('[Store] Using cached session:', currentSessionId);
           return;
         }
 
@@ -202,11 +198,10 @@ export const useAppStore = create<AppState>()(
                     timestamp: new Date(m.created_at).getTime(),
                   })),
                 });
-                console.log('[Store] Loaded existing session:', currentSessionId);
                 return;
               }
             } catch (err) {
-              console.warn('[Store] Failed to load session, will load latest or create new');
+              // Silent failure
             }
           }
           
@@ -227,15 +222,12 @@ export const useAppStore = create<AppState>()(
                 timestamp: new Date(m.created_at).getTime(),
               })),
             });
-            console.log('[Store] Loaded latest session:', latestSession.sessionId);
           } else {
             // Create new session only if no sessions exist
             const newSessionId = generateSessionId();
             set({ currentSessionId: newSessionId, messages: [] });
-            console.log('[Store] Created new session:', newSessionId);
           }
         } catch (error) {
-          console.error('Failed to load chat session:', error);
           // Keep existing session if load fails
           if (!currentSessionId) {
             const newSessionId = generateSessionId();
@@ -248,7 +240,6 @@ export const useAppStore = create<AppState>()(
         const newSessionId = generateSessionId();
         // Set both new session ID and clear messages atomically
         set({ currentSessionId: newSessionId, messages: [] });
-        console.log('[Store] Started new session:', newSessionId, '- Messages cleared');
       },
 
       addMessage: async (message) => {
@@ -271,23 +262,8 @@ export const useAppStore = create<AppState>()(
               action: message.action,
             });
           } catch (error: any) {
-            console.error('Failed to save chat message:', error);
-            // Log details for debugging
-            console.debug('[Store] Save attempt details:', {
-              hasWalletAddress: !!wallet.address,
-              walletAddress: wallet.address?.slice(0, 10) + '...',
-              hasSessionId: !!currentSessionId,
-              sessionId: currentSessionId?.slice(0, 20) + '...',
-              role: message.role,
-              contentLength: message.content?.length,
-              hasAction: !!message.action,
-            });
+            // Silent failure
           }
-        } else {
-          console.debug('[Store] Skipping chat save - wallet or session not ready:', {
-            hasWallet: !!wallet.address,
-            hasSession: !!currentSessionId,
-          });
         }
       },
 
@@ -302,8 +278,6 @@ export const useAppStore = create<AppState>()(
               : msg
           ),
         }));
-        
-        console.log(`[Store] Updated action state for message ${messageIndex}:`, actionUpdates);
         
         // If we have the updated message with an action, save it to database
         const message = messages[messageIndex];
@@ -322,15 +296,13 @@ export const useAppStore = create<AppState>()(
               content: updatedMessage.content,
               action: updatedMessage.action,
             });
-            console.log(`[Store] Saved updated action state to database`);
           } catch (error) {
-            console.error('Failed to save updated action state:', error);
+            // Silent failure
           }
         }
       },
 
       clearMessages: () => {
-        console.log('[Store] Clearing all messages');
         set({ messages: [] });
       },
 
@@ -383,13 +355,6 @@ export const useAppStore = create<AppState>()(
                 // Validate address before saving
                 const cleanAddress = action.recipientAddress.replace(/\s/g, '').toUpperCase();
                 
-                console.log('[Store] Attempting to save contact:', {
-                  nickname: action.nickname,
-                  address: action.recipientAddress,
-                  cleanAddress: cleanAddress,
-                  cleanLength: cleanAddress.length
-                });
-                
                 // Validate address format and length
                 // Nimiq addresses: NQ + 34 alphanumeric = 36 chars total (unformatted)
                 // With spaces: 44 chars (groups of 4 separated by spaces)
@@ -432,15 +397,12 @@ export const useAppStore = create<AppState>()(
                   notes: action.notes || '',
                 });
                 
-                console.log('[Store] ✓ Contact saved successfully');
-                
                 await addMessage({
                   role: 'ai',
                   content: `✅ Saved ${action.nickname} to your contacts!`,
                 });
                 return; // Don't add action card
               } catch (err: any) {
-                console.error('[Store] Failed to save contact:', err);
                 await addMessage({
                   role: 'ai',
                   content: `Failed to save contact: ${err.message || 'Unknown error'}`,
@@ -539,7 +501,6 @@ export const useAppStore = create<AppState>()(
             action: response.action ?? undefined,
           });
         } catch (error: any) {
-          console.error('Chat error:', error);
           const isRateLimit = typeof error?.message === 'string' && error.message.includes('429');
           await addMessage({
             role: 'ai',

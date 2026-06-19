@@ -148,7 +148,7 @@ export default function ChatPage() {
         return;
       }
       await sendMessageToAI(msg, wallet.address || undefined);
-    } catch (e) { console.error('Chat error:', e); }
+    } catch (e) { /* Silent failure */ }
   }, [input, aiLoading, addMessage, sendMessageToAI, wallet.address]);
 
   useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
@@ -191,7 +191,7 @@ export default function ChatPage() {
       const r = startRecognition();
       if (!r) return;
       r.start(); setIsListening(true);
-    } catch (e: any) { console.warn('[Voice]', e?.message); setIsListening(false); }
+    } catch (e: any) { setIsListening(false); }
   }, [isListening, addMessage, startRecognition]);
 
   // ── Sessions ────────────────────────────────────────────────────────────────
