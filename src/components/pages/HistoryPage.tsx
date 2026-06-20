@@ -14,6 +14,37 @@ interface Transaction {
   status: string;
   created_at: string;
   details?: any;
+  fulfillment_data?: {
+    // Bill payments
+    token?: string;
+    tokenInfo1?: string;
+    tokenInfo2?: string;
+    tokenInfo3?: string;
+    deliveryAmount?: number;
+    deliveryAmountCurrency?: string;
+    serviceType?: string;
+    billerName?: string;
+    reference?: string;
+    // Gift cards
+    code?: string;
+    pin?: string;
+    serialNumber?: string;
+    instructionLink?: string;
+    productName?: string;
+    // Airtime
+    operatorName?: string;
+    operatorTransactionId?: string;
+    deliveredAmount?: number;
+    deliveredAmountCurrency?: string;
+    requestedAmount?: number;
+    requestedAmountCurrency?: string;
+    pinSerial?: string;
+    pinInfo?: string;
+    // Shared
+    reloadlyTransactionId?: number | string;
+    status?: string;
+    [key: string]: any;
+  };
   cashback?: {
     amount_luna: number;
     amount_nim: number;
@@ -150,6 +181,7 @@ export default function HistoryPage() {
           status: order.status,
           created_at: order.created_at,
           details: order.details,
+          fulfillment_data: order.fulfillment_data,
           cashback: order.cashback && order.cashback.length > 0 ? order.cashback[0] : undefined,
         }));
         allTransactions = [...allTransactions, ...orderTransactions];
@@ -652,6 +684,33 @@ export default function HistoryPage() {
                               <span className="text-xs text-gray-700 dark:text-white/80">{tx.details.recipientEmail}</span>
                             </div>
                           )}
+                          {tx.fulfillment_data?.code && (
+                            <div className="mt-1 rounded-xl bg-emerald-500/8 dark:bg-emerald-400/8 border border-emerald-500/15 dark:border-emerald-400/15 px-3 py-2.5 space-y-1">
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">🎟️ Code</span>
+                                <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300 tracking-wider select-all">
+                                  {tx.fulfillment_data.code}
+                                </span>
+                              </div>
+                              {tx.fulfillment_data.pin && (
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/60">PIN</span>
+                                  <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-300">
+                                    {tx.fulfillment_data.pin}
+                                  </span>
+                                </div>
+                              )}
+                              {tx.fulfillment_data.serialNumber && (
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/60">Serial</span>
+                                  <span className="text-[10px] font-mono text-emerald-700/80 dark:text-emerald-300/80">
+                                    {tx.fulfillment_data.serialNumber}
+                                  </span>
+                                </div>
+                              )}
+                              <p className="text-[10px] text-emerald-600/60 dark:text-emerald-400/50">⚠️ Keep this safe</p>
+                            </div>
+                          )}
                         </>
                       )}
                       {tx.details && tx.type === 'airtime' && (
@@ -665,7 +724,38 @@ export default function HistoryPage() {
                           {tx.details.operator && (
                             <div className="flex justify-between items-center gap-2">
                               <span className="text-xs text-gray-500 dark:text-white/55">Operator:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.details.operator}</span>
+                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.fulfillment_data?.operatorName || tx.details.operator}</span>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.deliveredAmount && (
+                            <div className="flex justify-between items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-white/55">Delivered:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">
+                                {tx.fulfillment_data.deliveredAmount} {tx.fulfillment_data.deliveredAmountCurrency || ''}
+                              </span>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.pin && (
+                            <div className="mt-1 rounded-xl bg-purple-500/8 dark:bg-purple-400/8 border border-purple-500/15 dark:border-purple-400/15 px-3 py-2.5 space-y-1">
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">🔑 PIN</span>
+                                <span className="text-xs font-mono font-bold text-purple-700 dark:text-purple-300 select-all">
+                                  {tx.fulfillment_data.pin}
+                                </span>
+                              </div>
+                              {tx.fulfillment_data.pinSerial && (
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="text-[10px] text-purple-600/70 dark:text-purple-400/60">Serial</span>
+                                  <span className="text-[10px] font-mono text-purple-700/80 dark:text-purple-300/80">{tx.fulfillment_data.pinSerial}</span>
+                                </div>
+                              )}
+                              <p className="text-[10px] text-purple-600/60 dark:text-purple-400/50">Enter this PIN to load credit</p>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.reference && (
+                            <div className="flex justify-between items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-white/55">Ref:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
                             </div>
                           )}
                         </>
@@ -682,6 +772,34 @@ export default function HistoryPage() {
                             <div className="flex justify-between items-center gap-2">
                               <span className="text-xs text-gray-500 dark:text-white/55">Account:</span>
                               <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.details.accountNumber}</span>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.token && (
+                            <div className="mt-1 rounded-xl bg-blue-500/8 dark:bg-blue-400/8 border border-blue-500/15 dark:border-blue-400/15 px-3 py-2.5 space-y-1">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">⚡ Meter Token</span>
+                                <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-300 tracking-wider">
+                                  {tx.fulfillment_data.token}
+                                </span>
+                              </div>
+                              {tx.fulfillment_data.tokenInfo1 && (
+                                <p className="text-[10px] text-blue-600/70 dark:text-blue-400/60">{tx.fulfillment_data.tokenInfo1}</p>
+                              )}
+                              <p className="text-[10px] text-blue-600/60 dark:text-blue-400/50">Enter this on your meter to load credit</p>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.deliveryAmount && (
+                            <div className="flex justify-between items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-white/55">Units:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">
+                                {tx.fulfillment_data.deliveryAmount} {tx.fulfillment_data.deliveryAmountCurrency || ''}
+                              </span>
+                            </div>
+                          )}
+                          {tx.fulfillment_data?.reference && (
+                            <div className="flex justify-between items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-white/55">Ref:</span>
+                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
                             </div>
                           )}
                         </>

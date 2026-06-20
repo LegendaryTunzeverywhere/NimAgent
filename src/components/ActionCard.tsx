@@ -799,25 +799,83 @@ export default function ActionCard({ action }: ActionCardProps) {
             let msg = `Here's your ${action.product} gift card! 🎁\n\n🎟️ Code: ${result.code}`;
             if (result.pin) msg += `\n🔐 PIN: ${result.pin}`;
             if (result.serialNumber) msg += `\n#️⃣ Serial: ${result.serialNumber}`;
+            if (result.instructionLink) msg += `\n📖 Instructions: ${result.instructionLink}`;
             if (email) msg += `\n📧 To: ${email}`;
             msg += `\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}\n\n⚠️ Keep this safe — it won't be shown again.`;
+            // Persist fulfillment data on the action so it stays in history
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                completed: true,
+                txHash: hash,
+                fulfillmentData: { code: result.code, pin: result.pin, serialNumber: result.serialNumber },
+              });
+            }
             addMessage({ role: 'ai', content: msg });
           } else if (action.type === 'gift-card') {
+            // Code not in immediate response — delivered via email or async
             let msg = `${action.product} gift card order placed! 🎁`;
+            if (result.reloadlyTransactionId) msg += `\nOrder ID: ${result.reloadlyTransactionId}`;
+            if (email) msg += `\n📧 Code will be sent to: ${email}`;
+            else msg += `\n\nℹ️ The redemption code wasn't returned immediately. Check your order history in a few minutes — it will appear there once Reloadly processes it.`;
             if (result.sandboxNote) msg += `\n\nℹ️ ${result.sandboxNote}`;
-            if (email) msg += `\n📧 Sent to: ${email}`;
             msg += `\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`;
             addMessage({ role: 'ai', content: msg });
           } else if (action.type === 'airtime') {
-            addMessage({
-              role: 'ai',
-              content: `Airtime sent! 📱\n\n${action.operator} ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount} to ${action.phone}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
-            });
+            let airtimeMsg = `Airtime sent! 📱\n\n${result.operatorName || action.operator} to ${action.phone}`;
+            if (result.deliveredAmount && result.deliveredAmountCurrency) {
+              airtimeMsg += `\n💰 Delivered: ${result.deliveredAmount} ${result.deliveredAmountCurrency}`;
+            }
+            if (result.pin) {
+              airtimeMsg += `\n\n🔑 PIN: ${result.pin}`;
+              if (result.pinSerial) airtimeMsg += `\n# Serial: ${result.pinSerial}`;
+              airtimeMsg += `\n\n⚠️ Enter this PIN to load your credit.`;
+            }
+            airtimeMsg += `\nRef: ${result.reference}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`;
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                completed: true,
+                txHash: hash,
+                fulfillmentData: {
+                  reference: result.reference,
+                  operatorName: result.operatorName,
+                  deliveredAmount: result.deliveredAmount,
+                  deliveredAmountCurrency: result.deliveredAmountCurrency,
+                  pin: result.pin,
+                  pinSerial: result.pinSerial,
+                  reloadlyTransactionId: result.reloadlyTransactionId,
+                },
+              });
+            }
+            addMessage({ role: 'ai', content: airtimeMsg });
           } else if (action.type === 'bill') {
-            addMessage({
-              role: 'ai',
-              content: `Bill paid! 🧾\n\n${action.service} payment of ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount}\nRef: ${result.reference}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
-            });
+            let billMsg = `Bill paid! 🧾\n\n${action.service} payment of ${CURRENCY_SYMBOLS[action.currency || 'USD']}${action.fiatAmount}`;
+            if (result.token) {
+              billMsg += `\n\n⚡ Meter Token: ${result.token}`;
+              if (result.tokenInfo1) billMsg += `\nℹ️ ${result.tokenInfo1}`;
+              if (result.tokenInfo2) billMsg += `\nℹ️ ${result.tokenInfo2}`;
+              billMsg += `\n\n⚠️ Enter this token on your meter to load credit.`;
+            }
+            if (result.deliveryAmount) {
+              billMsg += `\n\n🔋 Units: ${result.deliveryAmount} ${result.deliveryAmountCurrency || ''}`.trim();
+            }
+            billMsg += `\nRef: ${result.reference}\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`;
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                completed: true,
+                txHash: hash,
+                fulfillmentData: {
+                  reference: result.reference,
+                  token: result.token,
+                  tokenInfo1: result.tokenInfo1,
+                  deliveryAmount: result.deliveryAmount,
+                  deliveryAmountCurrency: result.deliveryAmountCurrency,
+                  billerName: result.billerName,
+                  serviceType: result.serviceType,
+                  reloadlyTransactionId: result.reloadlyTransactionId,
+                },
+              });
+            }
+            addMessage({ role: 'ai', content: billMsg });
           }
         } else {
           // Backend returned failure - check if it's a locked/failed order

@@ -76,6 +76,18 @@ export interface ActionCard {
   failed?: boolean;
   txHash?: string;
   locked?: boolean;      // Amount locked — cannot be changed by sender (payment request)
+  // Fulfillment data — stored after successful order so AI can reference it in follow-ups
+  fulfillmentData?: {
+    code?: string;       // Gift card redemption code
+    pin?: string;        // Gift card PIN or airtime voucher PIN
+    serialNumber?: string;
+    token?: string;      // Utility prepaid meter token
+    reloadlyTransactionId?: number | string;
+    reference?: string;
+    deliveredAmount?: number;
+    deliveredAmountCurrency?: string;
+    [key: string]: any;
+  };
   // Referral fields
   referralLink?: string;
   referralCount?: number;
