@@ -786,6 +786,28 @@ export async function getReferrals(walletAddress: string): Promise<{
   return res.json();
 }
 
+export async function getCashback(walletAddress: string, limit: number = 50): Promise<{
+  success: boolean;
+  totalLuna: number;
+  totalNim: number;
+  history: Array<any>;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+  
+  const res = await fetch(`${API_URL}/cashback?wallet=${encodeURIComponent(walletAddress)}&limit=${limit}`, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch cashback');
+  }
+  
+  return res.json();
+}
+
 // ============================================================================
 // AUTH / SESSION API
 // ============================================================================

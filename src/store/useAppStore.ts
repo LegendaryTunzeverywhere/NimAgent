@@ -306,24 +306,26 @@ export const useAppStore = create<AppState>()(
         set({ messages: [] });
       },
 
-      sendMessageToAI: async (content: string, walletAddress?: string) => {
+      sendMessageToAI: async (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => {
         const { messages, addMessage } = get();
 
         // Client-side guard: trim and cap message length (server also enforces).
         const trimmed = (content || '').trim().slice(0, 2000);
         if (!trimmed) return;
 
-        // Rate limiting: prevent spam
-        const now = Date.now();
-        const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : 0;
-        const timeSinceLastMessage = now - (lastMessageTime || 0);
-        
-        if (timeSinceLastMessage < 2000) {
-          await addMessage({
-            role: 'ai',
-            content: 'Please wait a moment before sending another message.',
-          });
-          return;
+        // Rate limiting: prevent spam, but allow bypassing for saved contact sends
+        if (!options?.bypassRateLimit) {
+          const now = Date.now();
+          const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : 0;
+          const timeSinceLastMessage = now - (lastMessageTime || 0);
+          
+          if (timeSinceLastMessage < 2000) {
+            await addMessage({
+              role: 'ai',
+              content: 'Please wait a moment before sending another message.',
+            });
+            return;
+          }
         }
 
         // Set loading state

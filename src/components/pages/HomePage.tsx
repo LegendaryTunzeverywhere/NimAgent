@@ -813,7 +813,7 @@ export default function HomePage() {
                 </div>
                 {referralStatus.qualified ? (
                   <p className="text-sm text-green-600 dark:text-success font-semibold">
-                    🎉 You've qualified your referral by spending over $100!
+                    🎉 You've qualified your referral by spending over $1000!
                   </p>
                 ) : (
                   <div>
@@ -902,12 +902,12 @@ export default function HomePage() {
           <div className="max-w-md w-full card-premium rounded-3xl p-6 animate-fade-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
-                  <Icon name="trophy" size={18} className="text-amber-600 dark:text-gold" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                  <Icon name="trophy" size={18} className="text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">Referral Leaderboard</h2>
-                  <p className="text-xs text-gray-500 dark:text-white/55">Top referrers</p>
+                  <p className="text-xs text-gray-500 dark:text-white/55">Top 20 referrers</p>
                 </div>
               </div>
               <button
@@ -924,40 +924,75 @@ export default function HomePage() {
                 <p className="text-sm text-gray-600 dark:text-white/60">Loading leaderboard...</p>
               </div>
             ) : leaderboard.length > 0 ? (
-              <div className="space-y-2 mb-6">
-                {leaderboard.map((entry, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10"
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                      index === 0 ? 'bg-amber-100 text-amber-600 dark:bg-gold/15 dark:text-gold' :
-                      index === 1 ? 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/70' :
-                      index === 2 ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400' :
-                      'bg-gray-200 text-gray-500 dark:bg-white/15 dark:text-white/55'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
-                        {entry.wallet.slice(0, 6)}...{entry.wallet.slice(-4)}
-                      </p>
-                      <p className="text-[10px] text-gray-500 dark:text-white/55">
-                        Invited: {entry.totalInvited} • Qualified: {entry.referrals}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600 dark:text-success">
-                        ${entry.totalEarned.toFixed(2)}
-                      </p>
-                      <p className="text-[10px] text-gray-500 dark:text-white/55">Earned</p>
-                    </div>
+              <div className="space-y-3 mb-6">
+                {/* Top 3 Special Display */}
+                {leaderboard.length > 0 && (
+                  <div className="flex justify-center gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+                    {[1, 0, 2].map((pos) => {
+                      const entry = leaderboard[pos];
+                      if (!entry) return null;
+                      return (
+                        <div key={pos} className="flex flex-col items-center">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-1 ${
+                            pos === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg' :
+                            pos === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
+                            'bg-gradient-to-br from-orange-400 to-orange-600'
+                          }`}>
+                            {pos === 0 ? '🥇' : pos === 1 ? '🥈' : '🥉'}
+                          </div>
+                          <p className="text-xs font-bold text-gray-700 dark:text-white/80">{pos + 1}</p>
+                          <p className="text-[10px] font-mono text-gray-500 dark:text-white/60 truncate max-w-[60px]">
+                            {entry.wallet.slice(0, 4)}...{entry.wallet.slice(-2)}
+                          </p>
+                          <p className="text-[10px] font-bold text-green-600 dark:text-success">
+                            ${entry.totalEarned.toFixed(2)}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
+                
+                {/* Rest of the Leaderboard */}
+                <div className="space-y-2">
+                  {leaderboard.map((entry, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-3 rounded-xl ${
+                        index === 0 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-500/10 dark:to-yellow-600/5 border-2 border-yellow-200 dark:border-yellow-500/20' :
+                        index === 1 ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/5 border-2 border-gray-200 dark:border-gray-500/20' :
+                        index === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-500/10 dark:to-orange-600/5 border-2 border-orange-200 dark:border-orange-500/20' :
+                        'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                        index === 0 ? 'bg-yellow-200 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' :
+                        index === 1 ? 'bg-gray-200 text-gray-700 dark:bg-gray-500/20 dark:text-gray-300' :
+                        index === 2 ? 'bg-orange-200 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' :
+                        'bg-gray-200 text-gray-500 dark:bg-white/15 dark:text-white/55'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
+                          {entry.wallet.slice(0, 8)}...{entry.wallet.slice(-4)}
+                        </p>
+                        <p className="text-[10px] text-gray-500 dark:text-white/55">
+                          {entry.totalInvited} invited • {entry.referrals} qualified
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-green-600 dark:text-success">
+                          ${entry.totalEarned.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="text-center py-10">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-white/65">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/5 flex items-center justify-center text-gray-500 dark:text-white/65 shadow-inner">
                   <Icon name="trophy" size={24} />
                 </div>
                 <p className="text-sm text-gray-600 dark:text-white/60">No referrals yet!</p>

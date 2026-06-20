@@ -14,6 +14,10 @@ interface Transaction {
   status: string;
   created_at: string;
   details?: any;
+  cashback?: {
+    amount_luna: number;
+    amount_nim: number;
+  };
 }
 
 const TRANSACTION_ICONS: Record<string, IconName> = {
@@ -143,6 +147,7 @@ export default function HistoryPage() {
           status: order.status,
           created_at: order.created_at,
           details: order.details,
+          cashback: order.cashback && order.cashback.length > 0 ? order.cashback[0] : undefined,
         }));
         allTransactions = [...allTransactions, ...orderTransactions];
       }
@@ -572,6 +577,11 @@ export default function HistoryPage() {
                         <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-success/12 text-success">
                           <Icon name="check" size={9} strokeWidth={3} /> {tx.status}
                         </span>
+                        {tx.cashback && (
+                          <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold">
+                            <Icon name="gift" size={9} strokeWidth={3} /> +{tx.cashback.amount_nim.toFixed(4)} NIM Cashback
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -683,6 +693,14 @@ export default function HistoryPage() {
                           {tx.status}
                         </span>
                       </div>
+                      {tx.cashback && (
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-xs text-gray-500 dark:text-white/55">Cashback Earned:</span>
+                          <span className="text-xs text-amber-600 dark:text-gold font-semibold">
+                            +{tx.cashback.amount_nim.toFixed(4)} NIM
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-start gap-2">
                         <span className="text-xs text-gray-500 dark:text-white/55">Date & Time:</span>
                         <span className="text-xs text-gray-700 dark:text-white/80">
