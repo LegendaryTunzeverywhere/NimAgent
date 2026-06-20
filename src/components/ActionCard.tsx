@@ -882,9 +882,15 @@ export default function ActionCard({ action }: ActionCardProps) {
       else if (error.message?.includes('locked') || error.message?.includes('already failed')) {
         errorMessage = `❌ Order Locked\n\n${error.message}\n\n⚠️ This transaction is locked. Do not retry. If your payment was deducted, a refund will be processed within 24 hours.`;
       }
-      // Generic error
+      // Generic error - different message depending on action type
       else {
-        errorMessage = `❌ Payment Failed\n\n${error.message || 'Something went wrong. Please try again.'}\n\nIf funds were deducted, our team will investigate and process a refund if needed.`;
+        if (action.type === 'send') {
+          // For simple NIM sends, don't mention refunds or service wallet stuff
+          errorMessage = `❌ Payment Failed\n\n${error.message || 'Something went wrong. Please try again.'}`;
+        } else {
+          // For service orders (gift-card, airtime, bill), keep the original message
+          errorMessage = `❌ Payment Failed\n\n${error.message || 'Something went wrong. Please try again.'}\n\nIf funds were deducted, our team will investigate and process a refund if needed.`;
+        }
       }
       
       addMessage({
