@@ -17,6 +17,9 @@ interface Transaction {
   cashback?: {
     amount_luna: number;
     amount_nim: number;
+    status?: string;
+    paid_tx_hash?: string;
+    failure_reason?: string;
   };
 }
 
