@@ -578,8 +578,10 @@ export default function HistoryPage() {
                           <Icon name="check" size={9} strokeWidth={3} /> {tx.status}
                         </span>
                         {tx.cashback && (
-                          <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-amber-50 dark:bg-gold/10 text-amber-600 dark:text-gold">
-                            <Icon name="gift" size={9} strokeWidth={3} /> +{tx.cashback.amount_nim.toFixed(4)} NIM Cashback
+                          <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-amber-500/10 text-amber-600 dark:text-gold border border-amber-500/20 dark:border-gold/20">
+                            +{tx.cashback.amount_nim < 0.01
+                              ? tx.cashback.amount_nim.toFixed(4)
+                              : tx.cashback.amount_nim.toFixed(2)} NIM back
                           </span>
                         )}
                       </div>
@@ -694,11 +696,37 @@ export default function HistoryPage() {
                         </span>
                       </div>
                       {tx.cashback && (
-                        <div className="flex justify-between items-center gap-2">
-                          <span className="text-xs text-gray-500 dark:text-white/55">Cashback Earned:</span>
-                          <span className="text-xs text-amber-600 dark:text-gold font-semibold">
-                            +{tx.cashback.amount_nim.toFixed(4)} NIM
-                          </span>
+                        <div className="mt-1 rounded-xl bg-amber-500/8 dark:bg-gold/8 border border-amber-500/15 dark:border-gold/15 px-3 py-2.5 space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-amber-700 dark:text-gold">0.1% Cashback</span>
+                            <span className="text-xs font-bold text-amber-700 dark:text-gold">
+                              +{tx.cashback.amount_nim < 0.01
+                                ? tx.cashback.amount_nim.toFixed(4)
+                                : tx.cashback.amount_nim.toFixed(2)} NIM
+                            </span>
+                          </div>
+                          {tx.cashback.status && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-amber-600/70 dark:text-gold/60">Status</span>
+                              <span className={`text-[10px] font-semibold capitalize ${
+                                tx.cashback.status === 'paid' ? 'text-success' :
+                                tx.cashback.status === 'failed' ? 'text-error' :
+                                'text-amber-600 dark:text-gold'
+                              }`}>
+                                {tx.cashback.status === 'paid' ? '✓ Sent to wallet' :
+                                 tx.cashback.status === 'failed' ? 'Failed — retrying' :
+                                 'Pending payout'}
+                              </span>
+                            </div>
+                          )}
+                          {tx.cashback.paid_tx_hash && (
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="text-[10px] text-amber-600/70 dark:text-gold/60 flex-shrink-0">TX</span>
+                              <span className="text-[10px] font-mono text-amber-700/80 dark:text-gold/70 text-right break-all">
+                                {tx.cashback.paid_tx_hash.slice(0, 8)}…{tx.cashback.paid_tx_hash.slice(-6)}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="flex justify-between items-start gap-2">

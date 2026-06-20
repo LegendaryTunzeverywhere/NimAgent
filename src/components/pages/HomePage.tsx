@@ -86,11 +86,34 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // Fetch balance when wallet connects
-    if (wallet.connected && wallet.address && !wallet.balance) {
+    // Fetch balance on connect (initial load)
+    if (wallet.connected && wallet.address) {
       fetchBalance();
     }
-  }, [wallet.connected, wallet.address, wallet.balance, fetchBalance]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallet.connected, wallet.address]);
+
+  useEffect(() => {
+    if (!wallet.connected || !wallet.address) return;
+
+    // Refresh every 60 s while the tab is open
+    const interval = setInterval(() => {
+      fetchBalance();
+    }, 60_000);
+
+    // Refresh immediately whenever the tab becomes visible (covers switching back)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBalance();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [wallet.connected, wallet.address, fetchBalance]);
 
   useEffect(() => {
     // Handle referral tracking and fetch referral info

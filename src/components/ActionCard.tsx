@@ -25,7 +25,7 @@ interface ActionCardProps {
 }
 
 export default function ActionCard({ action }: ActionCardProps) {
-  const { wallet, addMessage, messages, updateActionState, sendMessageToAI } = useAppStore();
+  const { wallet, addMessage, messages, updateActionState, sendMessageToAI, fetchBalance } = useAppStore();
   
   // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
   const [loading, setLoading] = useState(false);
@@ -778,6 +778,9 @@ export default function ActionCard({ action }: ActionCardProps) {
           setSuccess(true);
           setTxHash(hash);
           setAmountLocked(true); // Lock after successful transaction
+
+          // Refresh balance immediately — NIM was just spent
+          fetchBalance();
           
           // Update action in store to persist completion state
           if (messageIndex >= 0) {
