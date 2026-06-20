@@ -818,7 +818,7 @@ export default function HomePage() {
                 ) : (
                   <div>
                     <p className="text-sm text-gray-700 dark:text-white/70 mb-2">
-                      You've spent $${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far.
+                      You've spent ${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far.
                     </p>
                     <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
@@ -827,7 +827,7 @@ export default function HomePage() {
                       />
                     </div>
                     <p className="text-xs text-gray-500 dark:text-white/55 mt-1">
-                      Only $${referralStatus.remaining?.toFixed(2) || '100.00'} more to qualify!
+                      Only ${referralStatus.remaining?.toFixed(2)} more to qualify!
                     </p>
                   </div>
                 )}
