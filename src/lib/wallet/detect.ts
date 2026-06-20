@@ -16,7 +16,9 @@ let detection: Promise<boolean> | null = null;
  * Not 100% authoritative — use `isInsideNimiqPay()` to confirm the provider.
  */
 export function hasNimiqPayHostHint(): boolean {
-  return typeof window !== 'undefined' && !!window.nimiqPay;
+  const hasHint = typeof window !== 'undefined' && !!window.nimiqPay;
+  console.log('[detect] hasNimiqPayHostHint():', hasHint, 'window.nimiqPay:', window.nimiqPay);
+  return hasHint;
 }
 
 /**
@@ -24,15 +26,23 @@ export function hasNimiqPayHostHint(): boolean {
  * Detection runs once; subsequent calls return the cached result.
  */
 export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | null> {
+  console.log('[detect] getNimiqProvider called, timeout:', timeout);
   if (typeof window === 'undefined') return null;
-  if (cachedProvider) return cachedProvider;
+  if (cachedProvider) {
+    console.log('[detect] Using cached provider');
+    return cachedProvider;
+  }
 
   try {
+    console.log('[detect] Importing @nimiq/mini-app-sdk...');
     const { init } = await import('@nimiq/mini-app-sdk');
+    console.log('[detect] Calling init()...');
     const provider = await init({ timeout });
+    console.log('[detect] Got provider:', provider);
     cachedProvider = provider;
     return provider;
-  } catch {
+  } catch (err) {
+    console.error('[detect] init() failed:', err);
     // init() rejects/times out when not running inside Nimiq Pay.
     return null;
   }
@@ -43,11 +53,17 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * Memoized so we only probe once per session.
  */
 export function isInsideNimiqPay(timeout = 2500): Promise<boolean> {
+  console.log('[detect] isInsideNimiqPay called');
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (!detection) {
     // If there's no host hint, skip the full timeout — fail fast to Hub mode.
     const probeTimeout = hasNimiqPayHostHint() ? timeout : 600;
-    detection = getNimiqProvider(probeTimeout).then((p) => p !== null);
+    console.log('[detect] Probe timeout:', probeTimeout);
+    detection = getNimiqProvider(probeTimeout).then((p) => {
+      const result = p !== null;
+      console.log('[detect] isInsideNimiqPay result:', result);
+      return result;
+    });
   }
   return detection;
 }
