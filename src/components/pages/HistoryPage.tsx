@@ -365,7 +365,7 @@ export default function HistoryPage() {
                 }`}
                 title="Filter by Date"
               >
-                <Icon name="calender" size={18} />
+                <Icon name="calendar" size={18} />
               </button>
               <button
                 onClick={() => fetchTransactions(true)}
@@ -470,7 +470,7 @@ export default function HistoryPage() {
           <div className="max-w-md w-full card-premium rounded-3xl p-5 animate-fade-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Icon name="wallet" size={20} className="text-amber-600 dark:text-gold" />
+                <Icon name="calendar" size={20} className="text-amber-600 dark:text-gold" />
                 <p className="text-sm font-bold text-gray-900 dark:text-white">Date Range Filter</p>
               </div>
               <button
