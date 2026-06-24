@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { retrieveGiftCardCode } from '@/lib/api-client';
 import Icon, { type IconName } from '@/components/Icon';
 
 interface Transaction {
@@ -83,6 +84,23 @@ export default function HistoryPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [showDateFilter, setShowDateFilter] = useState(false);
+  // Gift card code retrieval state: orderId → { loading, code, pin, error }
+  const [codeRetrievals, setCodeRetrievals] = useState<Record<string, { loading: boolean; code?: string; pin?: string | null; error?: string }>>({});
+
+  const handleRetrieveCode = async (orderId: string) => {
+    if (!wallet.address) return;
+    setCodeRetrievals(prev => ({ ...prev, [orderId]: { loading: true } }));
+    try {
+      const result = await retrieveGiftCardCode(orderId, wallet.address);
+      setCodeRetrievals(prev => ({ ...prev, [orderId]: { loading: false, code: result.code, pin: result.pin ?? null } }));
+    } catch (err: any) {
+      // If order is pending refund, tell the user clearly
+      const msg = err.message?.includes('completed')
+        ? 'This order failed and is pending a refund — code not available.'
+        : (err.message || 'Failed to retrieve code');
+      setCodeRetrievals(prev => ({ ...prev, [orderId]: { loading: false, error: msg } }));
+    }
+  };
 
   const fetchTransactions = useCallback(async (showLoading = false) => {
     if (!wallet.address) return;
@@ -347,7 +365,7 @@ export default function HistoryPage() {
                 }`}
                 title="Filter by Date"
               >
-                <Icon name="wallet" size={18} />
+                <Icon name="calender" size={18} />
               </button>
               <button
                 onClick={() => fetchTransactions(true)}
@@ -711,6 +729,43 @@ export default function HistoryPage() {
                               <p className="text-[10px] text-emerald-600/60 dark:text-emerald-400/50">⚠️ Keep this safe</p>
                             </div>
                           )}
+                          {/* No code yet — show retrieve button if order is completed */}
+                          {!tx.fulfillment_data?.code && tx.status === 'completed' && tx.fulfillment_data?.reloadlyTransactionId && (() => {
+                            const retrieval = codeRetrievals[tx.id];
+                            const retrieved = retrieval?.code;
+                            return (
+                              <div className="mt-1 rounded-xl bg-emerald-500/8 dark:bg-emerald-400/8 border border-emerald-500/15 dark:border-emerald-400/15 px-3 py-2.5 space-y-1.5">
+                                {retrieved ? (
+                                  <>
+                                    <div className="flex justify-between items-center gap-2">
+                                      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">🎟️ Code</span>
+                                      <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300 tracking-wider select-all">{retrieved}</span>
+                                    </div>
+                                    {retrieval.pin && (
+                                      <div className="flex justify-between items-center gap-2">
+                                        <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/60">PIN</span>
+                                        <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-300">{retrieval.pin}</span>
+                                      </div>
+                                    )}
+                                    <p className="text-[10px] text-emerald-600/60 dark:text-emerald-400/50">⚠️ Keep this safe</p>
+                                  </>
+                                ) : retrieval?.error ? (
+                                  <p className="text-[10px] text-amber-600 dark:text-gold">{retrieval.error}</p>
+                                ) : (
+                                  <>
+                                    <p className="text-[10px] text-gray-500 dark:text-white/55">Redemption code not yet available</p>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleRetrieveCode(tx.id); }}
+                                      disabled={retrieval?.loading}
+                                      className="w-full py-1.5 rounded-lg text-[10px] font-semibold bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors disabled:opacity-50"
+                                    >
+                                      {retrieval?.loading ? 'Fetching…' : '🔄 Retrieve Code'}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
                       {tx.details && tx.type === 'airtime' && (

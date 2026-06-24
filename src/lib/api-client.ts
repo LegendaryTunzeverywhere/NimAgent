@@ -808,6 +808,32 @@ export async function getCashback(walletAddress: string, limit: number = 50): Pr
   return res.json();
 }
 
+/**
+ * Retrieve gift card redemption code for an order (for async delivery cases)
+ */
+export async function retrieveGiftCardCode(orderId: string, walletAddress: string): Promise<{
+  code: string;
+  pin: string | null;
+  serialNumber: string | null;
+  cached: boolean;
+}> {
+  const cleanAddress = walletAddress.replace(/\s/g, '');
+  const res = await fetch(
+    `${API_URL}/orders/${encodeURIComponent(orderId)}/retrieve-code?wallet=${encodeURIComponent(cleanAddress)}`,
+    {
+      headers: await getHeaders('GET'),
+      credentials: 'include',
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to retrieve code');
+  }
+
+  return res.json();
+}
+
 // ============================================================================
 // AUTH / SESSION API
 // ============================================================================

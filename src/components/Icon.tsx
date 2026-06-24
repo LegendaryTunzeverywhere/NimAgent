@@ -43,7 +43,8 @@ export type IconName =
   | 'settings'
   | 'gift'
   | 'trophy'
-  | 'share';
+  | 'share'
+  | 'calender';
 
 interface IconProps {
   name: IconName;
