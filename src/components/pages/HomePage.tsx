@@ -72,8 +72,8 @@ export default function HomePage() {
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          // Use actual change24h from API, don't default to 3.14
-          setPriceChange(data.change24h || 0);
+          // Use null when change24h is not available — distinguishes "flat" (0) from "unknown" (null)
+          setPriceChange(typeof data.change24h === 'number' ? data.change24h : null);
         }
       } catch (error) {
         // Silent failure

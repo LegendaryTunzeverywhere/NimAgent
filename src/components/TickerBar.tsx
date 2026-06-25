@@ -18,8 +18,8 @@ export default function TickerBar() {
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          // Ensure change24h is a number, default to 0 if missing
-          setPriceChange(typeof data.change24h === 'number' ? data.change24h : 0);
+          // null = not available, 0 = genuinely flat day
+          setPriceChange(typeof data.change24h === 'number' ? data.change24h : null);
         }
       } catch (error) {
         // Silent failure
