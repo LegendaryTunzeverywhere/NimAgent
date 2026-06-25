@@ -41,11 +41,12 @@ export async function GET(request: NextRequest) {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('[NIM-PRICE] Backend response:', JSON.stringify(data));
           return NextResponse.json(
             { ...data, source: 'backend' },
             {
               headers: {
-                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+                'Cache-Control': 'no-store',
               },
             }
           );
