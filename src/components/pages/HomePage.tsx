@@ -65,15 +65,34 @@ export default function HomePage() {
   const [copyToastVisible, setCopyToastVisible] = useState(false);
 
   useEffect(() => {
-    // Fetch NIM price via BFF proxy
+    // Fetch NIM price via BFF proxy, then get 24h change directly from CoinGecko
     const fetchPrice = async () => {
       try {
         const res = await fetch(`/api/nim-price?currency=usd`);
         if (res.ok) {
           const data = await res.json();
           setNimPrice(data.price);
-          // Use null when change24h is not available — distinguishes "flat" (0) from "unknown" (null)
-          setPriceChange(typeof data.change24h === 'number' ? data.change24h : null);
+
+          // If the backend already includes change24h, use it directly
+          if (typeof data.change24h === 'number') {
+            setPriceChange(data.change24h);
+            return;
+          }
+
+          // Fallback: fetch 24h change directly from CoinGecko
+          try {
+            const cgRes = await fetch(
+              'https://api.coingecko.com/api/v3/simple/price?ids=nimiq-2&vs_currencies=usd&include_24hr_change=true',
+              { signal: AbortSignal.timeout(5000) }
+            );
+            if (cgRes.ok) {
+              const cgData = await cgRes.json();
+              const change = cgData?.['nimiq-2']?.['usd_24h_change'];
+              setPriceChange(typeof change === 'number' ? change : null);
+            }
+          } catch {
+            setPriceChange(null);
+          }
         }
       } catch (error) {
         // Silent failure
