@@ -507,9 +507,13 @@ export default function HomePage() {
             <div className="card-premium rounded-2xl p-5 text-center">
               <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
-              <p className={`text-xs mt-1 font-semibold ${priceChange && priceChange > 0 ? 'text-success' : 'text-error'}`}>
-                {priceChange && priceChange > 0 ? '+' : ''}{priceChange?.toFixed(2) ?? '0.00'}%
-              </p>
+              {priceChange != null ? (
+                <p className={`text-xs mt-1 font-semibold ${priceChange >= 0 ? 'text-success' : 'text-error'}`}>
+                  {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
+                </p>
+              ) : (
+                <p className="text-xs mt-1 text-gray-400 dark:text-white/30">—</p>
+              )}
             </div>
             <div className="card-premium rounded-2xl p-5 text-center">
               <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
