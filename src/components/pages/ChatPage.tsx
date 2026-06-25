@@ -44,6 +44,8 @@ export default function ChatPage() {
   const [showOnboarding,  setShowOnboarding]  = useState(false);
   const [keyboardOpen,    setKeyboardOpen]    = useState(false);
   const [showScrollBtn,   setShowScrollBtn]   = useState(false);
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
+  const [copiedTxHash, setCopiedTxHash] = useState<string | null>(null);
 
   // Sessions
   const [sessions,        setSessions]        = useState<ChatSession[]>([]);
@@ -387,11 +389,19 @@ export default function ChatPage() {
                     return (
                       <div key={idx} className="mt-2 space-y-2">
                         <div
-                          onClick={() => navigator.clipboard.writeText(hash)}
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(hash);
+                            setCopiedTxHash(hash);
+                            setTimeout(() => setCopiedTxHash(null), 2000);
+                          }}
                           className="flex items-center gap-2 bg-black/20 dark:bg-black/30 rounded-lg px-2.5 py-1.5 font-mono text-[10px] cursor-pointer hover:bg-black/30 dark:hover:bg-black/40 transition-colors group/hash break-all"
                         >
                           <span className="flex-1 opacity-80 font-mono">{hash.slice(0, 10)}…{hash.slice(-8)}</span>
-                          <Icon name="copy" size={11} strokeWidth={2} className="opacity-40 group-hover/hash:opacity-80 transition-opacity" />
+                          {copiedTxHash === hash ? (
+                            <Icon name="check" size={11} strokeWidth={2} className="opacity-80" />
+                          ) : (
+                            <Icon name="copy" size={11} strokeWidth={2} className="opacity-40 group-hover/hash:opacity-80 transition-opacity" />
+                          )}
                         </div>
                         <a href={`${base}${hash}`} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors break-all">
@@ -423,10 +433,18 @@ export default function ChatPage() {
               {/* Hover actions */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                 <button
-                  onClick={() => navigator.clipboard.writeText(msg.content)}
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(msg.content);
+                    setCopiedMessageIndex(i);
+                    setTimeout(() => setCopiedMessageIndex(null), 2000);
+                  }}
                   className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                 >
-                  <Icon name="copy" size={10} strokeWidth={2} /> Copy
+                  {copiedMessageIndex === i ? (
+                    <><Icon name="check" size={10} strokeWidth={2} /> Copied!</>
+                  ) : (
+                    <><Icon name="copy" size={10} strokeWidth={2} /> Copy</>
+                  )}
                 </button>
                 {msg.role === 'ai' && (
                   <button
