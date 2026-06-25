@@ -535,12 +535,9 @@ export default function ActionCard({ action }: ActionCardProps) {
                     }
                     
                     // Send message with FULL address so AI can immediately create send action
-                    addMessage({
-                      role: 'user',
-                      content: `Send NIM to ${contact.nickname} (${contact.recipient_address})`,
-                    });
-                    // Also send the AI context so it knows this is a saved contact
-                    (sendMessageToAI as any)(`Send NIM to ${contact.nickname} at address ${contact.recipient_address}`, wallet.address || undefined, { bypassRateLimit: true });
+                    const userMessage = `Send NIM to ${contact.nickname} at address ${contact.recipient_address}`;
+                    // Send to AI to process (this will add the user message automatically)
+                    sendMessageToAI(userMessage, wallet.address || undefined, { bypassRateLimit: true });
                   }}
                   disabled={!isValidAddr}
                   className="w-full sm:w-auto sm:ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-700 dark:text-gold border-2 border-amber-300 dark:border-gold/20 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:opacity-0 sm:group-hover:opacity-100"

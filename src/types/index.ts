@@ -132,6 +132,6 @@ export interface AppState {
   addMessage: (message: Message) => Promise<void>;
   updateActionState: (messageIndex: number, actionUpdates: Partial<ActionCard>) => Promise<void>;
   clearMessages: () => void;
-  sendMessageToAI: (content: string, walletAddress?: string) => Promise<void>;
+  sendMessageToAI: (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => Promise<void>;
   addTransaction: (transaction: Transaction) => void;
 }
