@@ -18,7 +18,7 @@ import HistoryPage from '@/components/pages/HistoryPage';
  * rendering. Renders nothing.
  */
 function PaymentLinkHandler() {
-  const { setActiveTab, addMessage } = useAppStore();
+  const { setActiveTab, addMessage, wallet } = useAppStore();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -33,11 +33,16 @@ function PaymentLinkHandler() {
         role: 'ai',
         content: '❌ Invalid Nimiq address in the payment link. Please check the QR code or link.',
       });
-      setActiveTab('chat');
+      setActiveTab(wallet.connected ? 'chat' : 'home');
       return;
     }
 
     if (to) {
+      if (!wallet.connected) {
+        setActiveTab('home');
+        return;
+      }
+
       // Pre-fill payment request from QR code scan
       let paymentMessage = `I want to send NIM to ${to}`;
       if (amount) {
@@ -66,13 +71,19 @@ function PaymentLinkHandler() {
         });
       }, 500);
     }
-  }, [searchParams, addMessage, setActiveTab]);
+  }, [searchParams, addMessage, setActiveTab, wallet.connected]);
 
   return null;
 }
 
 export default function Home() {
-  const { activeTab } = useAppStore();
+  const { activeTab, wallet, setActiveTab } = useAppStore();
+
+  useEffect(() => {
+    if (activeTab === 'chat' && !wallet.connected) {
+      setActiveTab('home');
+    }
+  }, [activeTab, wallet.connected, setActiveTab]);
 
   return (
     <ThemeProvider>
@@ -94,7 +105,7 @@ export default function Home() {
               <HomePage />
             </div>
           )}
-          {activeTab === 'chat' && <ChatPage />}
+          {activeTab === 'chat' && wallet.connected && <ChatPage />}
           {activeTab === 'history' && (
             <div className="h-full overflow-y-auto pb-36 pt-[104px]">
               <HistoryPage />

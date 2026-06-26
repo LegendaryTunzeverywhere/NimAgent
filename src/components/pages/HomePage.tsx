@@ -25,6 +25,32 @@ const TX_COLOR_MAP: Record<string, string> = {
   blue: '#2B6BD6',
 };
 
+const WELCOME_HIGHLIGHTS: Array<{
+  icon: IconName;
+  title: string;
+  description: string;
+  color: string;
+}> = [
+  {
+    icon: 'send',
+    title: 'Send NIM fast',
+    description: 'Feeless transfers with QR, saved contacts, and plain-language prompts.',
+    color: '#F5A623',
+  },
+  {
+    icon: 'robot',
+    title: 'Ask the agent',
+    description: 'Get guided help for payments, balances, and wallet actions in one place.',
+    color: '#2B6BD6',
+  },
+  {
+    icon: 'gift-card',
+    title: 'Pay for services',
+    description: 'Buy gift cards, top up airtime, and pay bills from the same wallet.',
+    color: '#F5A623',
+  },
+];
+
 // Resolve a transaction row to a line-icon based on its type/direction.
 function txIconFor(tx: Transaction): IconName {
   switch (tx.category || tx.type) {
@@ -726,38 +752,44 @@ export default function HomePage() {
 
       {/* Welcome Message for Non-Connected Users */}
       {!wallet.connected && (
-        <div className="animate-fade-up-delay-1 rounded-3xl p-7 card-premium text-center relative overflow-hidden">
-          <div className="relative">
+        <div className="animate-fade-up-delay-1 rounded-[2rem] p-6 sm:p-7 card-premium relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,166,35,0.12),transparent_40%)] dark:bg-[radial-gradient(circle_at_top,rgba(245,166,35,0.16),transparent_42%)]" />
+          <div className="relative text-center">
             <div className="flex justify-center mb-4">
               <Logo size={64} glow />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/70 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:text-gold mb-4">
+              <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-gold" />
+              Wallet required for AI chat
+            </div>
+            <h2 className="text-2xl sm:text-[2rem] font-black text-gray-900 dark:text-white mb-3 text-balance">
               Welcome to Nim<span className="text-gradient-gold">Agent</span>
             </h2>
-            <p className="text-sm text-gray-600 dark:text-white/55 mb-6 max-w-xs mx-auto leading-relaxed">
-              Your AI-powered Nimiq payment agent. Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto, all in one chat.
+            <p className="text-sm sm:text-[15px] text-gray-600 dark:text-white/60 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
+              Connect your wallet to unlock AI chat, send NIM, and pay for everyday services from one clean Nimiq flow.
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5 mb-6 text-left">
-              {[
-                { icon: 'send' as IconName, label: 'Feeless Transfers', color: '#F5A623', action: () => handleConnect() },
-                { icon: 'robot' as IconName, label: 'AI Assistant', color: '#2B6BD6', action: () => handleConnect() },
-                { icon: 'wallet' as IconName, label: 'Cash Out', color: '#2B6BD6', action: () => handleConnect() },
-                { icon: 'swap' as IconName, label: 'Crypto Swap', color: '#F5A623', action: () => handleConnect() },
-              ].map((feature) => (
-                <button
-                  key={feature.label}
-                  onClick={feature.action}
-                  className="flex items-center gap-2.5 rounded-xl p-3 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] transition-all active:scale-95"
+            <div className="space-y-2.5 mb-6 text-left">
+              {WELCOME_HIGHLIGHTS.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50/90 dark:bg-white/[0.03] px-4 py-3"
                 >
                   <span
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${feature.color}1f`, border: `1px solid ${feature.color}33`, color: feature.color }}
+                    className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: `${feature.color}1a`, border: `1px solid ${feature.color}33`, color: feature.color }}
                   >
-                    <Icon name={feature.icon} size={16} />
+                    <Icon name={feature.icon} size={18} />
                   </span>
-                  <span className="text-xs font-semibold text-gray-700 dark:text-white/70">{feature.label}</span>
-                </button>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {feature.title}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-white/58">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
 
@@ -778,6 +810,9 @@ export default function HomePage() {
                 </>
               )}
             </button>
+            <p className="mt-3 text-xs text-gray-500 dark:text-white/45">
+              Connect once to open AI chat, view balances, and start payments.
+            </p>
           </div>
         </div>
       )}

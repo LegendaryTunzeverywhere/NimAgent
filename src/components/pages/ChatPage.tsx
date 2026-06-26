@@ -33,7 +33,7 @@ export default function ChatPage() {
   const {
     wallet, messages, addMessage, clearMessages,
     sendMessageToAI, startNewSession, loadOrCreateSession, currentSessionId,
-    aiLoading,
+    aiLoading, aiStatus,
   } = useAppStore();
 
   const [input,           setInput]           = useState('');
@@ -470,20 +470,6 @@ export default function ChatPage() {
           </div>
         ))}
 
-        {/* Typing indicator */}
-        {aiLoading && (
-          <div className="flex gap-2.5 animate-fade-up">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-600 dark:bg-brand-blue text-white animate-breathe shadow-sm shadow-blue-500/20">
-              <Icon name="robot" size={14} strokeWidth={2.2} />
-            </div>
-            <div className="bg-gray-100 dark:bg-white/[0.07] border border-gray-200 dark:border-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-1 inline-block" />
-              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-2 inline-block" />
-              <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-white/60 dot-typing-3 inline-block" />
-            </div>
-          </div>
-        )}
-
         <div ref={chatEndRef} />
       </div>
 
@@ -511,6 +497,26 @@ export default function ChatPage() {
         className="shrink-0 px-3 pt-2 bg-white dark:bg-background-primary border-t border-gray-100 dark:border-white/[0.05] z-10"
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
       >
+        {aiLoading && (
+          <div className="px-1 pb-2 animate-fade-in">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex items-center gap-2 text-[12px] text-gray-600 dark:text-white/62">
+                <span className="relative flex h-2.5 w-2.5 flex-shrink-0 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/30 dark:bg-gold/35 animate-ping" />
+                  <span className="relative h-1.5 w-1.5 rounded-full bg-amber-600 dark:bg-gold" />
+                </span>
+                <span className="truncate">{aiStatus || 'Thinking through your request'}</span>
+              </div>
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-white/28">
+                AI
+              </span>
+            </div>
+            <div className="mt-2 h-px overflow-hidden rounded-full bg-gray-200/80 dark:bg-white/[0.08]">
+              <div className="h-full w-24 rounded-full bg-gradient-to-r from-transparent via-amber-500/80 to-transparent dark:via-gold animate-shimmer" />
+            </div>
+          </div>
+        )}
+
         {/* Input row */}
         <div className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all ${
           isListening
@@ -575,10 +581,10 @@ export default function ChatPage() {
         {isListening && (
           <p className="text-[11px] text-red-500 dark:text-error text-center mt-1.5 flex items-center justify-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-error animate-pulse inline-block" />
-            Listening — speak now
+            Listening, speak now
           </p>
         )}
-        {!wallet.connected && !isListening && (
+        {!wallet.connected && !isListening && !aiLoading && (
           <p className="text-[11px] text-gray-500 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">
             <Icon name="wallet" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
             Connect your wallet for full functionality

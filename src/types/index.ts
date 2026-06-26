@@ -121,9 +121,11 @@ export interface AppState {
   theme: 'dark' | 'light';
   network: 'testnet' | 'mainnet';
   aiLoading: boolean;
+  aiStatus: string | null;
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   setNetwork: (network: 'testnet' | 'mainnet') => void;
+  setAiStatus: (status: string | null) => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   fetchBalance: () => Promise<void>;

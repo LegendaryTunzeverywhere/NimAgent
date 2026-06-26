@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function BottomNav() {
-  const { activeTab, setActiveTab } = useAppStore();
+  const { activeTab, setActiveTab, wallet } = useAppStore();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   // Hide bottom nav when the virtual keyboard is open — frees up space for chat input.
@@ -101,17 +101,26 @@ export default function BottomNav() {
       <div className="glass-strong pointer-events-auto mx-auto max-w-md flex items-center justify-around rounded-2xl px-3 py-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+          const isChatLocked = tab.id === 'chat' && !wallet.connected;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                if (isChatLocked) return;
+                setActiveTab(tab.id);
+              }}
+              disabled={isChatLocked}
               className={[
                 'relative flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-all duration-200',
                 isActive
                   ? 'text-amber-700 dark:text-gold'
-                  : 'text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80',
+                  : isChatLocked
+                    ? 'text-gray-400 dark:text-white/30 cursor-not-allowed'
+                    : 'text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
+              aria-disabled={isChatLocked || undefined}
+              title={isChatLocked ? 'Connect your wallet to open AI Chat' : undefined}
             >
               {isActive && (
                 <span className="absolute inset-0 rounded-xl bg-amber-700/10 dark:bg-gold/10 border border-amber-700/20 dark:border-gold/20" />

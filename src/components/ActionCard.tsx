@@ -85,6 +85,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [priceChanged, setPriceChanged] = useState(false);
   const [lastKnownAmount, setLastKnownAmount] = useState<number | null>(null);
+  const [billAccountConfirmed, setBillAccountConfirmed] = useState(action.type !== 'bill');
 
   // Refresh quote function
   const refreshQuote = async () => {
@@ -1079,6 +1080,24 @@ export default function ActionCard({ action }: ActionCardProps) {
               </span>
             </div>
           )}
+          {!success && !failed && (
+            <div className="space-y-2 rounded-xl border-2 border-amber-300 dark:border-gold/20 bg-amber-50 dark:bg-gold/10 p-3">
+              <p className="text-xs leading-relaxed text-amber-800 dark:text-gold/90">
+                Reloadly does not return the subscriber name before payment for this flow. Please confirm the service and account or meter number manually before paying.
+              </p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={billAccountConfirmed}
+                  onChange={(e) => setBillAccountConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 dark:border-white/20 dark:bg-white/5 dark:focus:ring-gold"
+                />
+                <span className="text-xs leading-relaxed text-gray-700 dark:text-white/75">
+                  I confirm this account or meter number is correct and belongs to the person or service I want to pay.
+                </span>
+              </label>
+            </div>
+          )}
         </>
       )}
 
@@ -1149,7 +1168,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Button */}
       <button
         onClick={executeAction}
-        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError}
+        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError || (action.type === 'bill' && !billAccountConfirmed)}
         className={`w-full py-3 rounded-xl font-semibold transition-all ${
           success
             ? 'bg-success/10 text-success cursor-default border border-success/20'
@@ -1160,6 +1179,11 @@ export default function ActionCard({ action }: ActionCardProps) {
       >
         {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : 'Confirm & Pay'}
       </button>
+      {action.type === 'bill' && !billAccountConfirmed && !success && !failed && (
+        <p className="text-xs text-amber-700 dark:text-gold/80 text-center">
+          Confirm the account details above to continue.
+        </p>
+      )}
       
       {success && txHash && (
         <p className="text-xs text-success text-center">

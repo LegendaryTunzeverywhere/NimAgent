@@ -34,6 +34,7 @@ export const useAppStore = create<AppState>()(
       theme: 'dark',
       network: 'testnet',
       aiLoading: false,
+      aiStatus: null,
 
       setActiveTab: (tab) => {
         set({ activeTab: tab });
@@ -42,6 +43,8 @@ export const useAppStore = create<AppState>()(
       setTheme: (theme) => set({ theme }),
       
       setNetwork: (network) => set({ network }),
+
+      setAiStatus: (status) => set({ aiStatus: status }),
 
       connectWallet: async () => {
         set((state) => ({
@@ -329,10 +332,11 @@ export const useAppStore = create<AppState>()(
         }
 
         // Set loading state
-        set({ aiLoading: true });
+        set({ aiLoading: true, aiStatus: 'Understanding your request' });
 
         // Get history before adding user message — send more turns and include
         // action metadata so the server can build rich context for the AI.
+        set({ aiStatus: 'Reviewing recent context' });
         const history = messages.slice(-20).map(m => ({
           role: m.role,
           text: m.content,
@@ -345,6 +349,7 @@ export const useAppStore = create<AppState>()(
         try {
           // Import and call chat API
           const { chatWithAgent, saveAddress, updateSavedAddress, deleteSavedAddress, findAddressByNickname } = await import('@/lib/api-client');
+          set({ aiStatus: 'Asking NimAgent' });
           const response = await chatWithAgent(trimmed, history, walletAddress);
           
           // Handle action execution for non-UI actions (save, update, delete contacts)
@@ -354,6 +359,7 @@ export const useAppStore = create<AppState>()(
             // Save contact
             if (action.type === 'save-contact' && action.nickname && action.recipientAddress) {
               try {
+                set({ aiStatus: 'Saving contact' });
                 // Validate address before saving
                 const cleanAddress = action.recipientAddress.replace(/\s/g, '').toUpperCase();
                 
@@ -416,6 +422,7 @@ export const useAppStore = create<AppState>()(
             // Update contact
             if (action.type === 'update-contact' && (action.oldNickname || action.nickname)) {
               try {
+                set({ aiStatus: 'Updating contact' });
                 // Use oldNickname (new format) or fallback to nickname (old format)
                 // Normalize to lowercase for case-insensitive lookup (backend uses ilike)
                 const lookupNickname = (action.oldNickname || action.nickname || '').trim();
@@ -469,6 +476,7 @@ export const useAppStore = create<AppState>()(
             // Delete contact
             if (action.type === 'delete-contact' && action.nickname) {
               try {
+                set({ aiStatus: 'Removing contact' });
                 // Normalize for case-insensitive lookup
                 const deleteNickname = action.nickname.trim();
                 const found = await findAddressByNickname(walletAddress, deleteNickname);
@@ -495,8 +503,29 @@ export const useAppStore = create<AppState>()(
               }
             }
           }
+
+          if (response.action) {
+            const statusByAction: Record<string, string> = {
+              'show-contacts': 'Loading your contacts',
+              'list-contacts': 'Loading your contacts',
+              'send': 'Preparing payment details',
+              'bill': 'Preparing bill payment',
+              'airtime': 'Preparing airtime top-up',
+              'gift-card': 'Preparing gift card checkout',
+              'balance': 'Checking your balance',
+              'qr-code': 'Preparing your QR code',
+              'qr-scan': 'Preparing QR scanner',
+              'support': 'Preparing support options',
+              'referral': 'Preparing your referral link',
+              'leaderboard': 'Loading leaderboard',
+            };
+            set({ aiStatus: statusByAction[response.action.type] || 'Preparing response' });
+          } else {
+            set({ aiStatus: 'Finalizing response' });
+          }
           
           // Add AI response with action (for UI actions like show-contacts, send, etc.)
+          set({ aiStatus: 'Finalizing response' });
           await addMessage({
             role: 'ai',
             content: response.message,
@@ -512,7 +541,7 @@ export const useAppStore = create<AppState>()(
           });
         } finally {
           // Clear loading state
-          set({ aiLoading: false });
+          set({ aiLoading: false, aiStatus: null });
         }
       },
 
