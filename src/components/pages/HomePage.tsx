@@ -900,6 +900,7 @@ export default function HomePage() {
                   aria-label={social.label}
                   className={`${sharedClasses} border-amber-300 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 hover:scale-[1.03] hover:bg-amber-100 dark:hover:bg-gold/15`}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain" />
                 </button>
               ) : (
@@ -909,11 +910,11 @@ export default function HomePage() {
                   aria-label={`${social.label} coming soon`}
                   className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40`}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain grayscale" />
                 </div>
               );
             })}
-          </div>
           </div>
         </div>
       </div>
