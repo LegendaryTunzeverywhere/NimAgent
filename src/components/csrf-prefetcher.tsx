@@ -14,7 +14,7 @@ export default function CsrfPrefetcher() {
       try {
         const response = await fetch('/api/csrf-token', {
           credentials: 'include',
-          headers: getClientPlatformHeaders(),
+          headers: await getClientPlatformHeaders(),
         });
         if (response.ok) {
           const data = await response.json();

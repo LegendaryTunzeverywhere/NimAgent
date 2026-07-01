@@ -229,11 +229,12 @@ export default function HomePage() {
       try {
         // Normalize wallet address - remove spaces for consistent querying
         const normalizedAddress = wallet.address.replace(/\s/g, '');
+        const platformHeaders = await getClientPlatformHeaders();
         
         // Fetch both orders and transactions via BFF proxy
         const [ordersRes, transactionsRes] = await Promise.all([
-          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: getClientPlatformHeaders() }),
-          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: getClientPlatformHeaders() })
+          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: platformHeaders }),
+          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: platformHeaders })
         ]);
 
         let allOrders: any[] = [];
@@ -881,52 +882,39 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="card-premium rounded-[2rem] p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
+      <div className="card-premium rounded-[2rem] p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">Community</p>
-            <h3 className="mt-2 text-lg font-black text-gray-900 dark:text-white">Find NimAgent on social</h3>
-            <p className="mt-1 text-sm text-gray-600 dark:text-white/60">
-              Follow updates, support drops, and upcoming community channels from one place.
-            </p>
+            <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">Follow NimAgent</p>
           </div>
-          <div className="rounded-2xl border border-amber-300/70 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold">
-            Beta
+          <div className="flex items-center gap-2">
+            {SOCIAL_LINKS.map((social) => {
+              const shortLabel = social.label === 'Instagram' ? 'IG' : social.label === 'Discord' ? 'DC' : social.label;
+              const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-2xl border text-[11px] font-black uppercase tracking-[0.14em] transition-all';
+              return social.href ? (
+                <button
+                  key={social.label}
+                  type="button"
+                  onClick={() => openExternalUrl(social.href!)}
+                  title={social.label}
+                  aria-label={social.label}
+                  className={`${sharedClasses} border-amber-300 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:scale-[1.03] hover:bg-amber-100 dark:hover:bg-gold/15`}
+                >
+                  {shortLabel}
+                </button>
+              ) : (
+                <div
+                  key={social.label}
+                  title={`${social.label} coming soon`}
+                  aria-label={`${social.label} coming soon`}
+                  className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] text-gray-500 dark:text-white/45`}
+                >
+                  {shortLabel}
+                </div>
+              );
+            })}
           </div>
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {SOCIAL_LINKS.map((social) => (
-            social.href ? (
-              <button
-                key={social.label}
-                type="button"
-                onClick={() => openExternalUrl(social.href!)}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 dark:border-white/[0.08] bg-white/70 dark:bg-white/[0.03] px-4 py-3 text-left hover:bg-amber-50 dark:hover:bg-gold/10 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-white/55">{social.description}</p>
-                </div>
-                <span className="rounded-full bg-amber-100 dark:bg-gold/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-gold">
-                  Live
-                </span>
-              </button>
-            ) : (
-              <div
-                key={social.label}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-gray-200 dark:border-white/[0.08] bg-gray-50/80 dark:bg-white/[0.02] px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-white/55">{social.description}</p>
-                </div>
-                <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-white/45">
-                  Add Link
-                </span>
-              </div>
-            )
-          ))}
         </div>
       </div>
 

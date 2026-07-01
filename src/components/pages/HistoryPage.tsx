@@ -125,11 +125,12 @@ export default function HistoryPage() {
       params.set('wallet', normalizedAddress);
       if (startDate) params.set('start_date', startDate);
       if (endDate) params.set('end_date', endDate);
+      const platformHeaders = await getClientPlatformHeaders();
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`/api/transactions?${params.toString()}`, { headers: getClientPlatformHeaders() }),
-        fetch(`/api/orders?${params.toString()}`, { headers: getClientPlatformHeaders() })
+        fetch(`/api/transactions?${params.toString()}`, { headers: platformHeaders }),
+        fetch(`/api/orders?${params.toString()}`, { headers: platformHeaders })
       ]);
       
       let allTransactions: Transaction[] = [];

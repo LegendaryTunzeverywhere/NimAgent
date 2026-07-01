@@ -98,7 +98,8 @@ function copyResponseHeaders(backendResponse: Response, nextResponse: NextRespon
 
 function ensureNimiqPayAccess(request: NextRequest) {
   const clientPlatform = (request.headers.get('x-client-platform') || '').toLowerCase();
-  if (clientPlatform !== NIMIQ_PAY_PLATFORM) {
+  const walletKind = (request.headers.get('x-wallet-kind') || '').toLowerCase();
+  if (clientPlatform !== NIMIQ_PAY_PLATFORM && walletKind !== 'miniapp') {
     return NextResponse.json(
       { error: 'NimAgent is only available inside the Nimiq Pay app.' },
       { status: 403 }

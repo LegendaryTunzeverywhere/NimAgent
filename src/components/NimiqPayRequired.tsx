@@ -3,7 +3,7 @@
 import { openExternalUrl } from '@/lib/external-links';
 
 const NIMIQ_PAY_URL = 'https://www.nimiq.com/nimiq-pay/';
-const X_URL = 'https://x.nimiqagent';
+const X_URL = 'https://x.com/nimiqagent';
 
 export default function NimiqPayRequired() {
   return (

@@ -51,7 +51,7 @@ function saveSignatureCache() {
 async function fetchCsrfToken(): Promise<string> {
   const res = await fetch(`${API_URL}/csrf-token`, {
     credentials: 'include',
-    headers: getClientPlatformHeaders(),
+    headers: await getClientPlatformHeaders(),
   });
   if (!res.ok) {
     throw new Error('Failed to fetch CSRF token');
@@ -67,7 +67,7 @@ async function fetchCsrfToken(): Promise<string> {
 async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; challenge: string; expiresAt: string }> {
   const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`, {
     credentials: 'include',
-    headers: getClientPlatformHeaders(),
+    headers: await getClientPlatformHeaders(),
   });
   if (!res.ok) {
     throw new Error('Failed to fetch challenge');
@@ -130,7 +130,7 @@ function isValidNimAddress(address: string): boolean {
 async function getHeaders(method: string, walletAddress?: string): Promise<HeadersInit> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...getClientPlatformHeaders(),
+    ...(await getClientPlatformHeaders()),
   };
 
   // Add signature headers if wallet address is provided for any method
