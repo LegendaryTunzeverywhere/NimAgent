@@ -322,7 +322,7 @@ export async function getBalances(address: string): Promise<{
 }> {
   const cleanAddress = address.replace(/\s/g, '');
   const res = await fetch(`${API_URL}/balances/${cleanAddress}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', cleanAddress),
     credentials: 'include',
   });
   

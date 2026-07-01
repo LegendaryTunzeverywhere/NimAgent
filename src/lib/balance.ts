@@ -1,5 +1,6 @@
 import type { Balance } from '@/types';
 import { getBalances } from './api-client';
+import { getClientPlatformHeaders } from './client-platform';
 
 type BalanceResponse = {
   nim: { balance: number; balanceUSD: number; price: number };
@@ -21,7 +22,11 @@ function asNumber(value: unknown): number | null {
 
 async function fetchNimUsdPrice(): Promise<number> {
   try {
-    const res = await fetch('/api/nim-price?currency=usd', { cache: 'no-store' });
+    const platformHeaders = await getClientPlatformHeaders();
+    const res = await fetch('/api/nim-price?currency=usd', {
+      cache: 'no-store',
+      headers: platformHeaders,
+    });
     if (res.ok) {
       const data = await res.json();
       const price = asNumber(data?.price);
@@ -45,9 +50,11 @@ async function fetchNimUsdPrice(): Promise<number> {
 
 async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   const cleanAddress = address.replace(/\s/g, '');
+  const platformHeaders = await getClientPlatformHeaders();
+
   const rpcRes = await fetch('/api/nimiq-rpc', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...platformHeaders },
     body: JSON.stringify({
       jsonrpc: '2.0',
       method: 'getAccountByAddress',
