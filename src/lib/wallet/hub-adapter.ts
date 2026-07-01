@@ -5,7 +5,7 @@
 
 import type { WalletAdapter, PaymentRequest, SignResult } from './types';
 
-const HUB_URL = process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq-testnet.com';
+const HUB_URL = process.env.NEXT_PUBLIC_NIMIQ_HUB_URL || 'https://hub.nimiq.com';
 const APP_NAME = 'NimAgent';
 
 let hubApiInstance: any = null;

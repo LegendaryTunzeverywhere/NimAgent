@@ -650,6 +650,10 @@ export async function getReferralLink(walletAddress: string): Promise<{
   referralCount: number;
   totalReferrals: number;
   qualifiedReferrals: number;
+  totalEarnedUsd: number;
+  totalEarnedNim: number;
+  totalClaimableNim: number;
+  totalClaimedNim: number;
   threshold: number;
 }> {
   if (!isValidNimAddress(walletAddress)) {
@@ -744,6 +748,8 @@ export async function getLeaderboard(limit: number = 20): Promise<{
     referrals: number;
     totalInvited: number;
     totalEarned: number;
+    totalEarnedNim?: number;
+    totalClaimableNim?: number;
   }>;
   threshold: number;
 }> {
@@ -768,6 +774,10 @@ export async function getReferrals(walletAddress: string): Promise<{
     is_qualified: boolean;
     qualified_at: string | null;
     created_at: string;
+    amount_earned_usd?: number;
+    amount_earned_nim?: number;
+    amount_claimable_nim?: number;
+    amount_claimed_nim?: number;
   }>;
 }> {
   if (!isValidNimAddress(walletAddress)) {
@@ -783,6 +793,26 @@ export async function getReferrals(walletAddress: string): Promise<{
     throw new Error('Failed to fetch referrals');
   }
   
+  return res.json();
+}
+
+export async function claimReferralRewards(walletAddress: string): Promise<{
+  success: boolean;
+  amountNim?: number;
+  txHash?: string;
+  error?: string;
+}> {
+  if (!isValidNimAddress(walletAddress)) {
+    throw new Error('Invalid NIM wallet address format');
+  }
+
+  const res = await fetch(`${API_URL}/referrals/claim`, {
+    method: 'POST',
+    headers: await getHeaders('POST', walletAddress),
+    credentials: 'include',
+    body: JSON.stringify({ wallet: walletAddress }),
+  });
+
   return res.json();
 }
 

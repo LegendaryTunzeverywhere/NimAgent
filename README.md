@@ -141,8 +141,8 @@ node generate-api-key.js
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_API_SECRET=<paste_generated_key>
-NEXT_PUBLIC_NIMIQ_NETWORK=testnet
-NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq-testnet.com
+NEXT_PUBLIC_NIMIQ_NETWORK=mainnet
+NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq.com
 NEXT_PUBLIC_SERVICE_ADDRESS=NQ07...
 ```
 
@@ -166,6 +166,8 @@ RELOADLY_SANDBOX=true
 
 # Service Wallet
 SERVICE_WALLET_ADDRESS=NQ07...
+NEXT_PUBLIC_NIMIQ_NETWORK=mainnet
+NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq.com
 FRONTEND_URL=http://localhost:3001
 ```
 
@@ -466,4 +468,4 @@ SOFTWARE.
 
 **Built with ❤️ for the Nimiq community**
 
-**Status**: Production Ready for Testnet 🚀
+**Status**: Production Ready for Mainnet 🚀

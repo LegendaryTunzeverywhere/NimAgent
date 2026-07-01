@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
-import { getReferralLink, getReferralCount, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
+import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
 
 interface QuickAction {
   icon: IconName;
@@ -81,6 +81,9 @@ export default function HomePage() {
   const [referralCount, setReferralCount] = useState<number>(0);
   const [totalReferrals, setTotalReferrals] = useState<number>(0);
   const [qualifiedReferrals, setQualifiedReferrals] = useState<number>(0);
+  const [totalEarnedNim, setTotalEarnedNim] = useState<number>(0);
+  const [totalClaimableNim, setTotalClaimableNim] = useState<number>(0);
+  const [totalClaimedNim, setTotalClaimedNim] = useState<number>(0);
   const [referralStatus, setReferralStatus] = useState<any>(null);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
@@ -88,7 +91,33 @@ export default function HomePage() {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loadingReferral, setLoadingReferral] = useState(false);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [claimingReferralRewards, setClaimingReferralRewards] = useState(false);
+  const [referralClaimNotice, setReferralClaimNotice] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
+
+  const refreshReferralData = async () => {
+    if (!wallet.address) return;
+
+    const [linkData, statusData] = await Promise.all([
+      getReferralLink(wallet.address),
+      getReferralStatus(wallet.address),
+    ]);
+
+    setReferralLink(linkData.referralLink);
+    setReferralCount(linkData.referralCount || 0);
+    setTotalReferrals(linkData.totalReferrals || 0);
+    setQualifiedReferrals(linkData.qualifiedReferrals || 0);
+    setTotalEarnedNim(linkData.totalEarnedNim || 0);
+    setTotalClaimableNim(linkData.totalClaimableNim || 0);
+    setTotalClaimedNim(linkData.totalClaimedNim || 0);
+    setReferralStatus(statusData);
+  };
+
+  const refreshReferralList = async () => {
+    if (!wallet.address) return;
+    const data = await getReferrals(wallet.address);
+    setReferrals(data.referrals || []);
+  };
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy, then get 24h change directly from CoinGecko
@@ -177,18 +206,9 @@ export default function HomePage() {
         }
       }
       
-      // Fetch referral link and count, and status
+      // Fetch referral link, live reward totals, and status
       try {
-        const [linkData, statusData] = await Promise.all([
-          getReferralLink(wallet.address),
-          getReferralStatus(wallet.address)
-        ]);
-        
-        setReferralLink(linkData.referralLink);
-        setReferralCount(linkData.referralCount || 0);
-        setTotalReferrals(linkData.totalReferrals || 0);
-        setQualifiedReferrals(linkData.qualifiedReferrals || 0);
-        setReferralStatus(statusData);
+        await refreshReferralData();
       } catch (error) {
         // Silent failure
       }
@@ -376,11 +396,9 @@ export default function HomePage() {
       // Open referral modal and fetch referrals
       setShowReferralModal(true);
       setLoadingReferral(true);
+      setReferralClaimNotice(null);
       try {
-        if (wallet.address) {
-          const data = await getReferrals(wallet.address);
-          setReferrals(data.referrals || []);
-        }
+        await Promise.all([refreshReferralData(), refreshReferralList()]);
       } catch (error) {
         // Silent failure
       } finally {
@@ -437,6 +455,32 @@ export default function HomePage() {
         await sendMessageToAI(message, wallet.address || undefined);
       }
     }, 100);
+  };
+
+  const handleClaimReferralRewards = async () => {
+    if (!wallet.address || totalClaimableNim <= 0 || claimingReferralRewards) return;
+
+    setClaimingReferralRewards(true);
+    setReferralClaimNotice(null);
+    try {
+      const result = await claimReferralRewards(wallet.address);
+      if (!result.success) {
+        setReferralClaimNotice(result.error || 'Unable to claim referral rewards right now.');
+        return;
+      }
+
+      await Promise.all([refreshReferralData(), refreshReferralList()]);
+      const claimedAmount = result.amountNim || totalClaimableNim;
+      setReferralClaimNotice(`Claimed ${claimedAmount.toFixed(5)} NIM successfully.`);
+      addMessage({
+        role: 'ai',
+        content: `Referral rewards claimed successfully. ${claimedAmount.toFixed(5)} NIM has been sent to your wallet.`,
+      });
+    } catch (error) {
+      setReferralClaimNotice('Unable to claim referral rewards right now.');
+    } finally {
+      setClaimingReferralRewards(false);
+    }
   };
 
   const quickActions: QuickAction[] = [
@@ -762,9 +806,14 @@ export default function HomePage() {
               <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-gold" />
               Wallet required for AI chat
             </div>
-            <h2 className="text-2xl sm:text-[2rem] font-black text-gray-900 dark:text-white mb-3 text-balance">
-              Welcome to Nim<span className="text-gradient-gold">Agent</span>
-            </h2>
+            <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
+              <h2 className="text-2xl sm:text-[2rem] font-black text-gray-900 dark:text-white text-balance">
+                Welcome to Nim<span className="text-gradient-gold">Agent</span>
+              </h2>
+              <span className="shrink-0 rounded-full border border-amber-300 dark:border-gold/35 bg-amber-100 dark:bg-gold/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold shadow-[0_0_0_1px_rgba(245,166,35,0.08)]">
+                Beta
+              </span>
+            </div>
             <p className="text-sm sm:text-[15px] text-gray-600 dark:text-white/60 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
               Connect your wallet to unlock AI chat, send NIM, and pay for everyday services from one clean Nimiq flow.
             </p>
@@ -849,6 +898,43 @@ export default function HomePage() {
                 <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Qualified</p>
                 <p className="text-xl font-bold text-success">{qualifiedReferrals}</p>
               </div>
+              <div className="card-premium rounded-2xl p-4 text-center">
+                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Claimable NIM</p>
+                <p className="text-xl font-bold text-amber-600 dark:text-gold">{totalClaimableNim.toFixed(4)}</p>
+              </div>
+              <div className="card-premium rounded-2xl p-4 text-center">
+                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Claimed NIM</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{totalClaimedNim.toFixed(4)}</p>
+              </div>
+            </div>
+
+            <div className="card-premium rounded-2xl p-4 mb-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-white/70">Referral Rewards</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/55 mt-1">
+                    Rewards accrue in real NIM and can be claimed to your wallet.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-black text-amber-600 dark:text-gold">{totalEarnedNim.toFixed(4)} NIM</p>
+                  <p className="text-[10px] text-gray-500 dark:text-white/55">Lifetime earned</p>
+                </div>
+              </div>
+              <button
+                onClick={handleClaimReferralRewards}
+                disabled={claimingReferralRewards || totalClaimableNim <= 0}
+                className={`mt-4 w-full rounded-2xl py-3 text-sm font-bold transition-all ${
+                  claimingReferralRewards || totalClaimableNim <= 0
+                    ? 'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/35 cursor-not-allowed'
+                    : 'btn-gold'
+                }`}
+              >
+                {claimingReferralRewards ? 'Claiming rewards...' : totalClaimableNim > 0 ? `Claim ${totalClaimableNim.toFixed(4)} NIM` : 'No claimable rewards yet'}
+              </button>
+              {referralClaimNotice && (
+                <p className="mt-3 text-xs font-medium text-gray-600 dark:text-white/65">{referralClaimNotice}</p>
+              )}
             </div>
 
             {/* Referral Link Copy */}
@@ -904,7 +990,7 @@ export default function HomePage() {
                     <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-600 dark:bg-gold transition-all"
-                        style={{ width: `${Math.min(((referralStatus.totalSpent || 0) / 100) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(((referralStatus.totalSpent || 0) / 1000) * 100, 100)}%` }}
                       />
                     </div>
                     <p className="text-xs text-gray-500 dark:text-white/55 mt-1">
@@ -948,6 +1034,9 @@ export default function HomePage() {
                           </p>
                           <p className="text-[10px] text-gray-500 dark:text-white/55">
                             Spent: ${(referral.total_spent_usd || 0).toFixed(2)}
+                          </p>
+                          <p className="text-[10px] text-amber-600 dark:text-gold">
+                            Earned: {(referral.amount_earned_nim || 0).toFixed(4)} NIM
                           </p>
                         </div>
                       </div>
@@ -1026,7 +1115,7 @@ export default function HomePage() {
                             {entry.wallet.slice(0, 4)}...{entry.wallet.slice(-2)}
                           </p>
                           <p className="text-[10px] font-bold text-green-600 dark:text-success">
-                            ${entry.totalEarned.toFixed(2)}
+                            {(entry.totalEarnedNim || 0).toFixed(2)} NIM
                           </p>
                         </div>
                       );
@@ -1064,7 +1153,7 @@ export default function HomePage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-600 dark:text-success">
-                          ${entry.totalEarned.toFixed(2)}
+                          {(entry.totalEarnedNim || 0).toFixed(2)} NIM
                         </p>
                       </div>
                     </div>

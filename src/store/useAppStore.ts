@@ -32,7 +32,7 @@ export const useAppStore = create<AppState>()(
       activeTab: 'home',
       currentSessionId: null,
       theme: 'dark',
-      network: 'testnet',
+      network: 'mainnet',
       aiLoading: false,
       aiStatus: null,
 

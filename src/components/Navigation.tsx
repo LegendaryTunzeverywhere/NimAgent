@@ -14,10 +14,15 @@ export default function Navigation() {
       <nav className="glass-strong flex items-center justify-between px-5 py-3 border-b border-black/[0.07] dark:border-white/[0.07]">
         <div className="flex items-center gap-2.5">
           <Logo size={34} glow />
-          <div className="flex flex-col leading-none">
-            <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
-              Nim<span className="text-amber-700 dark:text-gold">Agent</span>
-            </span>
+          <div className="flex flex-col leading-none min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
+                Nim<span className="text-amber-700 dark:text-gold">Agent</span>
+              </span>
+              <span className="shrink-0 rounded-full border border-amber-300 dark:border-gold/35 bg-amber-100 dark:bg-gold/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold shadow-[0_0_0_1px_rgba(245,166,35,0.08)]">
+                Beta
+              </span>
+            </div>
             <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-white/50 mt-0.5">
               AI Payments
             </span>

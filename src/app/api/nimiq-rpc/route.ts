@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Determine which RPC endpoint to use
     const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS] || RPC_ENDPOINTS.testnet;
+    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS] || RPC_ENDPOINTS.mainnet;
     
     // Try each endpoint until one succeeds
     let lastError: any = null;
