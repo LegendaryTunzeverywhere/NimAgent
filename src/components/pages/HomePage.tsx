@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
@@ -95,7 +95,7 @@ export default function HomePage() {
   const [referralClaimNotice, setReferralClaimNotice] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
 
-  const refreshReferralData = async () => {
+  const refreshReferralData = useCallback(async () => {
     if (!wallet.address) return;
 
     const [linkData, statusData] = await Promise.all([
@@ -111,13 +111,13 @@ export default function HomePage() {
     setTotalClaimableNim(linkData.totalClaimableNim || 0);
     setTotalClaimedNim(linkData.totalClaimedNim || 0);
     setReferralStatus(statusData);
-  };
+  }, [wallet.address]);
 
-  const refreshReferralList = async () => {
+  const refreshReferralList = useCallback(async () => {
     if (!wallet.address) return;
     const data = await getReferrals(wallet.address);
     setReferrals(data.referrals || []);
-  };
+  }, [wallet.address]);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy, then get 24h change directly from CoinGecko
@@ -164,8 +164,7 @@ export default function HomePage() {
     if (wallet.connected && wallet.address) {
       fetchBalance();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet.connected, wallet.address]);
+  }, [wallet.connected, wallet.address, fetchBalance]);
 
   useEffect(() => {
     if (!wallet.connected || !wallet.address) return;
@@ -217,7 +216,7 @@ export default function HomePage() {
     if (wallet.connected && wallet.address) {
       fetchReferralInfo();
     }
-  }, [wallet.connected, wallet.address]);
+  }, [wallet.connected, wallet.address, refreshReferralData]);
 
   useEffect(() => {
     // Fetch recent transactions when wallet connects
@@ -507,7 +506,7 @@ export default function HomePage() {
     'Leaderboard': '#2B6BD6',
   };
 
-  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
+  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'mainnet';
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
