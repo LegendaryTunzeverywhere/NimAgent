@@ -52,7 +52,7 @@ export const useAppStore = create<AppState>()(
         }));
 
         try {
-          // Resolve the active wallet (Nimiq Pay mini-app provider or Hub popup)
+          // Resolve the active wallet from the Nimiq Pay mini-app provider.
           const { getUserAddress } = await import('@/lib/wallet');
           const address = await getUserAddress();
           
@@ -74,8 +74,8 @@ export const useAppStore = create<AppState>()(
           
           // Provide specific error messages
           let errorMessage = 'Failed to connect wallet';
-          if (error?.message?.includes('popup')) {
-            errorMessage = 'Please allow popups and try again';
+          if (error?.message?.includes('only inside the Nimiq Pay app')) {
+            errorMessage = 'Open NimAgent inside the Nimiq Pay app to continue.';
           } else if (error?.message?.includes('closed') || error?.message?.includes('reject')) {
             errorMessage = 'Connection cancelled';
           } else if (error?.message?.includes('unavailable')) {

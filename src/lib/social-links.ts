@@ -7,7 +7,7 @@ export interface SocialLink {
 export const SOCIAL_LINKS: SocialLink[] = [
   {
     label: 'X',
-    href: 'https://x.nimiqagent',
+    href: 'https://x.com/nimiqagent',
     description: 'Updates, support, and launch posts',
   },
   {

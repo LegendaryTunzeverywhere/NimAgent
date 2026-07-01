@@ -8,6 +8,7 @@ import type { Transaction } from '@/types';
 import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
+import { getClientPlatformHeaders } from '@/lib/client-platform';
 
 interface QuickAction {
   icon: IconName;
@@ -231,8 +232,8 @@ export default function HomePage() {
         
         // Fetch both orders and transactions via BFF proxy
         const [ordersRes, transactionsRes] = await Promise.all([
-          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`),
-          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`)
+          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: getClientPlatformHeaders() }),
+          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: getClientPlatformHeaders() })
         ]);
 
         let allOrders: any[] = [];

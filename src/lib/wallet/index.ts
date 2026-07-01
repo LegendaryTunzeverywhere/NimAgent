@@ -1,26 +1,21 @@
-// Wallet facade — picks the right adapter at runtime and exposes a stable API.
-//
-// Detection: if the Nimiq Pay injected provider is available we use the
-// mini-app adapter; otherwise we fall back to the Hub popup adapter. The
-// chosen adapter is memoized for the session.
+// Wallet facade — resolves the Nimiq Pay mini-app adapter and exposes a stable API.
 //
 // The exported functions keep the same signatures the app already used with
 // `@/lib/nimiq-hub`, so call sites (store, ActionCard) need only swap the
 // import path.
 
 import type { WalletAdapter, SignResult } from './types';
-import { hasNimiqPayHostHint, isInsideNimiqPay } from './detect';
+import { isInsideNimiqPay } from './detect';
 
 let adapterPromise: Promise<WalletAdapter> | null = null;
 
 async function resolveAdapter(): Promise<WalletAdapter> {
   const inside = await isInsideNimiqPay();
-  if (inside) {
-    const { miniAppAdapter } = await import('./miniapp-adapter');
-    return miniAppAdapter;
+  if (!inside) {
+    throw new Error('NimAgent is available only inside the Nimiq Pay app.');
   }
-  const { hubAdapter } = await import('./hub-adapter');
-  return hubAdapter;
+  const { miniAppAdapter } = await import('./miniapp-adapter');
+  return miniAppAdapter;
 }
 
 /** Resolve (and cache) the active wallet adapter for this session. */
@@ -28,14 +23,7 @@ export async function getWalletAdapter(): Promise<WalletAdapter> {
   if (!adapterPromise) {
     adapterPromise = resolveAdapter();
   }
-
-  let adapter = await adapterPromise;
-  if (adapter.kind === 'hub' && hasNimiqPayHostHint()) {
-    adapterPromise = resolveAdapter();
-    adapter = await adapterPromise;
-  }
-
-  return adapter;
+  return adapterPromise;
 }
 
 /** Which wallet backend is active, once resolved. Useful for UI hints. */
@@ -44,9 +32,8 @@ export async function getWalletKind(): Promise<WalletAdapter['kind']> {
 }
 
 /**
- * Best-effort warm-up. Kicks off adapter detection immediately and warms the
- * underlying provider/popup so the eventual wallet call is fast and (in Hub
- * mode) keeps the click's user-activation.
+ * Best-effort warm-up. Kicks off provider resolution so the eventual wallet
+ * call is fast inside the Nimiq Pay mini app.
  */
 export function prewarmHub(): void {
   if (typeof window === 'undefined') return;
@@ -62,7 +49,7 @@ export async function getUserAddress(): Promise<string> {
 }
 
 /**
- * Send a NIM payment. Signature matches the legacy Hub helper:
+ * Send a NIM payment. Signature matches the legacy helper:
  *   requestPayment(recipient, amountLuna, context, memo?, sender?)
  * `context` and `memo` are combined into the transaction data (as before).
  */

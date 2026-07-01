@@ -971,9 +971,9 @@ export default function ActionCard({ action }: ActionCardProps) {
       else if (error.message?.includes('timeout')) {
         errorMessage = '⏱️ Timeout\n\nThe wallet took too long to respond. Please try again.';
       }
-      // Handle popup blocked
-      else if (error.message?.includes('popup')) {
-        errorMessage = '🚫 Popup Blocked\n\nPlease allow popups for this site and try again.';
+      // Handle unsupported browser context
+      else if (error.message?.includes('popup') || error.message?.includes('only inside the Nimiq Pay app')) {
+        errorMessage = '🚫 Nimiq Pay Required\n\nOpen NimAgent inside the Nimiq Pay app and try again.';
       }
       // Handle locked order from backend
       else if (error.message?.includes('locked') || error.message?.includes('already failed')) {

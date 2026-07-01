@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import ThemeProvider from '@/components/ThemeProvider';
@@ -10,6 +10,8 @@ import BottomNav from '@/components/BottomNav';
 import HomePage from '@/components/pages/HomePage';
 import ChatPage from '@/components/pages/ChatPage';
 import HistoryPage from '@/components/pages/HistoryPage';
+import NimiqPayRequired from '@/components/NimiqPayRequired';
+import { isInsideNimiqPay } from '@/lib/wallet/detect';
 
 /**
  * Reads payment params from the URL (?to=&amount=&message=) and seeds a chat
@@ -78,12 +80,59 @@ function PaymentLinkHandler() {
 
 export default function Home() {
   const { activeTab, wallet, setActiveTab } = useAppStore();
+  const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
 
   useEffect(() => {
     if (activeTab === 'chat' && !wallet.connected) {
       setActiveTab('home');
     }
   }, [activeTab, wallet.connected, setActiveTab]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const detectMiniApp = async () => {
+      const inside = await isInsideNimiqPay();
+      if (!cancelled) {
+        setMiniAppStatus(inside ? 'inside' : 'outside');
+      }
+    };
+
+    detectMiniApp().catch(() => {
+      if (!cancelled) {
+        setMiniAppStatus('outside');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (miniAppStatus === 'checking') {
+    return (
+      <ThemeProvider>
+        <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
+          <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
+            <div className="w-full rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-6">
+              <div className="h-3 w-24 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse" />
+              <div className="mt-4 h-8 w-56 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse" />
+              <div className="mt-3 h-16 rounded-2xl bg-gray-100 dark:bg-white/[0.05] animate-pulse" />
+              <div className="mt-5 h-12 rounded-2xl bg-amber-100 dark:bg-gold/10 animate-pulse" />
+            </div>
+          </div>
+        </main>
+      </ThemeProvider>
+    );
+  }
+
+  if (miniAppStatus === 'outside') {
+    return (
+      <ThemeProvider>
+        <NimiqPayRequired />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider>

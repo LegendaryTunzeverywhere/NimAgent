@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { retrieveGiftCardCode } from '@/lib/api-client';
+import { getClientPlatformHeaders } from '@/lib/client-platform';
 import { openExternalUrl } from '@/lib/external-links';
 import Icon, { type IconName } from '@/components/Icon';
 
@@ -127,8 +128,8 @@ export default function HistoryPage() {
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`/api/transactions?${params.toString()}`),
-        fetch(`/api/orders?${params.toString()}`)
+        fetch(`/api/transactions?${params.toString()}`, { headers: getClientPlatformHeaders() }),
+        fetch(`/api/orders?${params.toString()}`, { headers: getClientPlatformHeaders() })
       ]);
       
       let allTransactions: Transaction[] = [];

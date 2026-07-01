@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const NIMIQ_PAY_PLATFORM = 'nimiq-pay-miniapp';
+
 // Mark this route as dynamic (not statically generated)
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -54,6 +56,11 @@ function createProxyHeaders(request: NextRequest) {
     headers['x-public-key'] = publicKey;
   }
 
+  const clientPlatform = request.headers.get('x-client-platform');
+  const walletKind = request.headers.get('x-wallet-kind');
+  if (clientPlatform) headers['x-client-platform'] = clientPlatform;
+  if (walletKind) headers['x-wallet-kind'] = walletKind;
+
   // Forward cookies from frontend to backend
   const cookieHeader = request.headers.get('cookie');
   if (cookieHeader) {
@@ -82,6 +89,22 @@ function copyResponseHeaders(backendResponse: Response, nextResponse: NextRespon
   if (cacheControl) {
     nextResponse.headers.set('cache-control', cacheControl);
   }
+
+  const walletMode = backendResponse.headers.get('x-wallet-mode');
+  if (walletMode) {
+    nextResponse.headers.set('x-wallet-mode', walletMode);
+  }
+}
+
+function ensureNimiqPayAccess(request: NextRequest) {
+  const clientPlatform = (request.headers.get('x-client-platform') || '').toLowerCase();
+  if (clientPlatform !== NIMIQ_PAY_PLATFORM) {
+    return NextResponse.json(
+      { error: 'NimAgent is only available inside the Nimiq Pay app.' },
+      { status: 403 }
+    );
+  }
+  return null;
 }
 
 /**
@@ -98,6 +121,9 @@ export async function GET(
         { status: 500 }
       );
     }
+
+    const accessError = ensureNimiqPayAccess(request);
+    if (accessError) return accessError;
 
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
@@ -156,6 +182,9 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    const accessError = ensureNimiqPayAccess(request);
+    if (accessError) return accessError;
 
     const path = params.path.join('/');
     const body = await request.json();
@@ -224,6 +253,9 @@ export async function DELETE(
       );
     }
 
+    const accessError = ensureNimiqPayAccess(request);
+    if (accessError) return accessError;
+
     const path = params.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
     // Path already includes correct route from Next.js, use it directly
@@ -267,6 +299,9 @@ export async function PUT(
         { status: 500 }
       );
     }
+
+    const accessError = ensureNimiqPayAccess(request);
+    if (accessError) return accessError;
 
     const path = params.path.join('/');
     const body = await request.json();

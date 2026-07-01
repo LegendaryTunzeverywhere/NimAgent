@@ -14,6 +14,7 @@
 const API_URL = '/api'; // BFF proxy endpoint (same-origin)
 
 import type { ActionCard } from '@/types';
+import { getClientPlatformHeaders } from '@/lib/client-platform';
 
 
 
@@ -49,7 +50,8 @@ function saveSignatureCache() {
  */
 async function fetchCsrfToken(): Promise<string> {
   const res = await fetch(`${API_URL}/csrf-token`, {
-    credentials: 'include'
+    credentials: 'include',
+    headers: getClientPlatformHeaders(),
   });
   if (!res.ok) {
     throw new Error('Failed to fetch CSRF token');
@@ -64,7 +66,8 @@ async function fetchCsrfToken(): Promise<string> {
  */
 async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; challenge: string; expiresAt: string }> {
   const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`, {
-    credentials: 'include'
+    credentials: 'include',
+    headers: getClientPlatformHeaders(),
   });
   if (!res.ok) {
     throw new Error('Failed to fetch challenge');
@@ -127,6 +130,7 @@ function isValidNimAddress(address: string): boolean {
 async function getHeaders(method: string, walletAddress?: string): Promise<HeadersInit> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...getClientPlatformHeaders(),
   };
 
   // Add signature headers if wallet address is provided for any method
