@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@nimiq/core-web": "^1.6.4",
-    "@nimiq/hub-api": "^1.5.0",
     "@nimiq/mini-app-sdk": "^0.1.0",
     "framer-motion": "^11.0.0",
     "jsqr": "^1.4.0",

@@ -8,6 +8,11 @@ export const runtime = 'nodejs';
  * 
  * Proxies JSON-RPC requests to Nimiq nodes to avoid CORS issues.
  * Browser → This endpoint → Nimiq RPC → Browser
+ *
+ * IMPORTANT: Nimiq RPC nodes require the human-friendly grouped address format:
+ *   "NQ07 XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX"
+ * Stripped addresses (no spaces) are rejected with "Unknown format / Invalid params".
+ * This proxy normalises any NQ address in the params array to the grouped format.
  */
 
 const RPC_ENDPOINTS = {
@@ -21,6 +26,31 @@ const RPC_ENDPOINTS = {
     'https://rpc.mainnet.nimiq.network',
   ],
 };
+
+/**
+ * Ensure a Nimiq address is in the grouped format the RPC node expects.
+ * Leaves non-address strings untouched.
+ */
+function toRpcAddress(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const stripped = value.replace(/\s/g, '').toUpperCase();
+  if (!/^NQ[0-9A-Z]{34}$/.test(stripped)) return value;
+  const prefix = stripped.slice(0, 4);
+  const rest   = stripped.slice(4);
+  const groups = rest.match(/.{1,4}/g) ?? [];
+  return [prefix, ...groups].join(' ');
+}
+
+/** Normalise NQ addresses anywhere in a JSON-RPC params array. */
+function normaliseParams(params: unknown): unknown {
+  if (Array.isArray(params)) return params.map(toRpcAddress);
+  if (typeof params === 'object' && params !== null) {
+    return Object.fromEntries(
+      Object.entries(params as Record<string, unknown>).map(([k, v]) => [k, toRpcAddress(v)])
+    );
+  }
+  return params;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +84,13 @@ export async function POST(request: NextRequest) {
       });
 
       try {
+        // Normalise address params before forwarding — Nimiq RPC requires
+        // the human-friendly spaced format; stripped addresses are rejected.
+        const forwardBody = {
+          ...body,
+          params: normaliseParams(body.params),
+        };
+
         // Forward the request to the Nimiq RPC endpoint with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout per endpoint
@@ -63,7 +100,7 @@ export async function POST(request: NextRequest) {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify(forwardBody),
           signal: controller.signal,
         });
         

@@ -20,6 +20,30 @@ function asNumber(value: unknown): number | null {
   return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null;
 }
 
+/**
+ * Convert a Nimiq address to the user-friendly grouped format required by
+ * the Nimiq RPC node (e.g. "NQ07 XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX").
+ *
+ * The Nimiq RPC rejects stripped addresses with "Unknown format / Invalid params".
+ * This must be called before any RPC `getAccountByAddress` call.
+ */
+function toRpcAddress(address: string): string {
+  const stripped = address.replace(/\s/g, '').toUpperCase();
+  // NQ + 2 check digits + 32 base-32 chars = 36 chars total
+  // Group into: NQ## + 8 groups of 4
+  const prefix = stripped.slice(0, 4); // NQ##
+  const rest = stripped.slice(4);       // 32 chars
+  const groups = rest.match(/.{1,4}/g) ?? [];
+  return [prefix, ...groups].join(' ');
+}
+
+/**
+ * Strip spaces for REST API endpoints that need clean addresses.
+ */
+function toCleanAddress(address: string): string {
+  return address.replace(/\s/g, '');
+}
+
 async function fetchNimUsdPrice(): Promise<number> {
   try {
     const platformHeaders = await getClientPlatformHeaders();
@@ -49,7 +73,10 @@ async function fetchNimUsdPrice(): Promise<number> {
 }
 
 async function fetchNimBalanceFromRpc(address: string): Promise<number> {
-  const cleanAddress = address.replace(/\s/g, '');
+  // RPC requires the human-friendly grouped format: "NQ07 XXXX XXXX ..."
+  // Stripped addresses are rejected with "Unknown format / Invalid params".
+  const rpcAddress = toRpcAddress(address);
+  const cleanAddress = toCleanAddress(address);
   const platformHeaders = await getClientPlatformHeaders();
 
   const rpcRes = await fetch('/api/nimiq-rpc', {
@@ -58,22 +85,24 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
     body: JSON.stringify({
       jsonrpc: '2.0',
       method: 'getAccountByAddress',
-      params: [cleanAddress],
+      params: [rpcAddress],
       id: 1,
     }),
   });
 
   if (rpcRes.ok) {
     const rpcData = await rpcRes.json();
+    // Nimiq RPC response shape: { result: { data: { balance, address, type }, metadata: {...} } }
     const luna =
-      asNumber(rpcData?.result?.balance) ??
       asNumber(rpcData?.result?.data?.balance) ??
+      asNumber(rpcData?.result?.balance) ??
       asNumber(rpcData?.result?.account?.balance);
 
     if (luna != null) return luna / NIM_LUNA;
   }
 
   if (getActiveNetwork() === 'mainnet') {
+    // nimiq.watch REST API accepts both stripped and spaced addresses
     const watchRes = await fetch(`https://api.nimiq.watch/account/${cleanAddress}`, { cache: 'no-store' });
     if (watchRes.ok) {
       const watchData = await watchRes.json();
