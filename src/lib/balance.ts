@@ -79,11 +79,10 @@ async function fetchNimUsdPrice(): Promise<number> {
 }
 
 async function fetchNimBalanceFromRpc(address: string): Promise<number> {
-  // RPC requires the human-friendly grouped format: "NQ07 XXXX XXXX ..."
-  // Stripped addresses are rejected with "Unknown format / Invalid params".
   const rpcAddress = toRpcAddress(address);
   const cleanAddress = toCleanAddress(address);
   const platformHeaders = await getClientPlatformHeaders();
+  console.log('[fetchNimBalanceFromRpc] rpcAddress:', rpcAddress);
 
   const rpcRes = await fetch('/api/nimiq-rpc', {
     method: 'POST',
@@ -98,13 +97,16 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
 
   if (rpcRes.ok) {
     const rpcData = await rpcRes.json();
-    // Nimiq RPC response shape: { result: { data: { balance, address, type }, metadata: {...} } }
+    console.log('[fetchNimBalanceFromRpc] RPC response:', JSON.stringify(rpcData));
     const luna =
       asNumber(rpcData?.result?.data?.balance) ??
       asNumber(rpcData?.result?.balance) ??
       asNumber(rpcData?.result?.account?.balance);
 
-    if (luna != null) return luna / NIM_LUNA;
+    if (luna != null) {
+      console.log('[fetchNimBalanceFromRpc] luna from RPC:', luna, '=', luna / NIM_LUNA, 'NIM');
+      return luna / NIM_LUNA;
+    }
   }
 
   if (getActiveNetwork() === 'mainnet') {
@@ -122,9 +124,12 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
 
 export async function getBalancesWithFallback(address: string): Promise<BalanceResponse> {
   try {
+    console.log('[getBalancesWithFallback] trying BFF for:', address.replace(/\s/g,''));
     const data = await getBalances(address);
+    console.log('[getBalancesWithFallback] BFF success:', JSON.stringify(data));
     return { ...data, meta: { source: 'bff' } };
-  } catch {
+  } catch (err: any) {
+    console.warn('[getBalancesWithFallback] BFF failed:', err?.message, '— trying RPC fallback');
     try {
       const { getNimiqNetworkState } = await import('@/lib/wallet');
       const networkState = await getNimiqNetworkState();

@@ -54,7 +54,37 @@ export const miniAppAdapter: WalletAdapter = {
     const accounts = unwrap(await nimiq.listAccounts());
     console.log('[miniapp-adapter] Accounts:', accounts);
     if (!accounts.length) throw new Error('No Nimiq account available in Nimiq Pay.');
-    return accounts[0];
+
+    // If only one account, return it immediately.
+    if (accounts.length === 1) return accounts[0];
+
+    // Multiple accounts: pick the one with the highest on-chain balance so
+    // we always connect to the funded wallet, not an empty secondary account.
+    try {
+      const balanceResults = await Promise.all(
+        accounts.map(async (addr) => {
+          try {
+            const clean = addr.replace(/\s/g, '');
+            const res = await fetch(`https://api.nimiq.watch/account/${clean}`, {
+              cache: 'no-store',
+              signal: AbortSignal.timeout(5000),
+            });
+            if (!res.ok) return { addr, balance: 0 };
+            const data = await res.json();
+            return { addr, balance: Number(data?.balance ?? 0) };
+          } catch {
+            return { addr, balance: 0 };
+          }
+        })
+      );
+
+      balanceResults.sort((a, b) => b.balance - a.balance);
+      console.log('[miniapp-adapter] Account balances:', balanceResults);
+      return balanceResults[0].addr;
+    } catch {
+      // Fallback: return first account if balance check fails
+      return accounts[0];
+    }
   },
 
   async requestPayment(req: PaymentRequest): Promise<string> {
@@ -95,9 +125,16 @@ export const miniAppAdapter: WalletAdapter = {
   },
 
   async signMessage(message: string): Promise<SignResult> {
-    console.log('[miniapp-adapter] signMessage called with:', message);
+    console.log('[miniapp-adapter] signMessage called, message length:', message.length);
     const nimiq = await provider();
     const result = unwrap<SignatureResult>(await nimiq.sign(message));
+    // Log key details so we can diagnose server-side verification failures
+    console.log('[miniapp-adapter] sign result:', {
+      publicKeyLength: result.publicKey?.length,
+      signatureLength: result.signature?.length,
+      publicKeyPrefix: result.publicKey?.substring(0, 16),
+      signaturePrefix: result.signature?.substring(0, 16),
+    });
     return { publicKey: result.publicKey, signature: result.signature };
   },
 

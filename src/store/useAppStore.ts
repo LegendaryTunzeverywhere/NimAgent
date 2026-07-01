@@ -168,8 +168,11 @@ export const useAppStore = create<AppState>()(
 
         try {
           const { formatBalanceForUi, getBalancesWithFallback } = await import('@/lib/balance');
+          console.log('[fetchBalance] fetching for address:', wallet.address);
           const balances = await getBalancesWithFallback(wallet.address);
+          console.log('[fetchBalance] raw response:', JSON.stringify(balances));
           const balance: Balance = formatBalanceForUi(balances);
+          console.log('[fetchBalance] formatted:', JSON.stringify(balance));
 
           set((state) => ({
             wallet: {

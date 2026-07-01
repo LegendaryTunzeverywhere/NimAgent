@@ -114,7 +114,14 @@ function setCachedSession(walletAddress: string, expiresAt: string) {
 async function ensureWalletSession(walletAddress: string): Promise<void> {
   const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
   if (getCachedSession(cleanAddress)) return;
-  await loginWithWallet(cleanAddress);
+  try {
+    await loginWithWallet(cleanAddress);
+  } catch (err: any) {
+    // Login failure must not block API calls — the session cookie path may
+    // still work, and most endpoints don't strictly require a verified wallet
+    // session. Log for diagnostics but proceed.
+    console.warn('[api-client] Wallet session login failed (non-fatal):', err?.message);
+  }
 }
 
 /**

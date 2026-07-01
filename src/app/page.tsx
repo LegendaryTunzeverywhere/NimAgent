@@ -79,7 +79,7 @@ function PaymentLinkHandler() {
 }
 
 export default function Home() {
-  const { activeTab, wallet, setActiveTab } = useAppStore();
+  const { activeTab, wallet, setActiveTab, fetchBalance } = useAppStore();
   const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
 
   useEffect(() => {
@@ -108,6 +108,41 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
+
+  // When the app loads with a persisted connected state, re-verify the address
+  // from listAccounts() — this picks the funded account instead of blindly
+  // trusting the previously stored address (which may be an empty secondary account).
+  useEffect(() => {
+    if (miniAppStatus !== 'inside' || !wallet.connected) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getUserAddress } = await import('@/lib/wallet');
+        const freshAddress = await getUserAddress();
+        if (cancelled) return;
+
+        const { useAppStore: store } = await import('@/store/useAppStore');
+        const state = store.getState();
+
+        // Only update if the address changed — avoids unnecessary re-renders
+        if (freshAddress !== state.wallet.address) {
+          console.log('[page] Address updated on startup:', freshAddress);
+          store.setState((s) => ({
+            wallet: { ...s.wallet, address: freshAddress },
+          }));
+        }
+
+        // Always re-fetch balance on startup to clear stale null state
+        state.fetchBalance();
+      } catch {
+        // Best-effort — fallback to existing persisted address
+        if (!cancelled) fetchBalance();
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [miniAppStatus, wallet.connected, fetchBalance]);
 
   if (miniAppStatus === 'checking') {
     return (
