@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { openExternalUrl } from '@/lib/external-links';
+import { SOCIAL_LINKS } from '@/lib/social-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, getLeaderboard } from '@/lib/api-client';
 import QRCodeDisplay from './QRCodeDisplay';
@@ -423,6 +424,43 @@ export default function ActionCard({ action }: ActionCardProps) {
             <p className="font-semibold text-sm text-gray-900 dark:text-white">Get Support</p>
             <p className="text-[10px] font-mono text-gray-500 dark:text-white/55">HELP · FEEDBACK · BUG REPORT</p>
           </div>
+        </div>
+        <div className="space-y-2 mb-3">
+          {SOCIAL_LINKS.map((social) => (
+            social.href ? (
+              <button
+                key={social.label}
+                type="button"
+                onClick={() => openExternalUrl(social.href!)}
+                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] px-3 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-brand-blue/10 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                  </div>
+                  <span className="rounded-full bg-blue-100 dark:bg-brand-blue/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:text-brand-blue-light">
+                    Live
+                  </span>
+                </div>
+              </button>
+            ) : (
+              <div
+                key={social.label}
+                className="w-full rounded-xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.02] px-3 py-2.5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                  </div>
+                  <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-white/45">
+                    Add Link
+                  </span>
+                </div>
+              </div>
+            )
+          ))}
         </div>
         {action.formUrl ? (
           <button

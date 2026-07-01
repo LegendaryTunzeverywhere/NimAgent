@@ -7,6 +7,7 @@ import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
 import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
+import { SOCIAL_LINKS } from '@/lib/social-links';
 
 interface QuickAction {
   icon: IconName;
@@ -878,6 +879,55 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <div className="card-premium rounded-[2rem] p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">Community</p>
+            <h3 className="mt-2 text-lg font-black text-gray-900 dark:text-white">Find NimAgent on social</h3>
+            <p className="mt-1 text-sm text-gray-600 dark:text-white/60">
+              Follow updates, support drops, and upcoming community channels from one place.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-amber-300/70 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold">
+            Beta
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {SOCIAL_LINKS.map((social) => (
+            social.href ? (
+              <button
+                key={social.label}
+                type="button"
+                onClick={() => openExternalUrl(social.href!)}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 dark:border-white/[0.08] bg-white/70 dark:bg-white/[0.03] px-4 py-3 text-left hover:bg-amber-50 dark:hover:bg-gold/10 transition-colors"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-white/55">{social.description}</p>
+                </div>
+                <span className="rounded-full bg-amber-100 dark:bg-gold/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-gold">
+                  Live
+                </span>
+              </button>
+            ) : (
+              <div
+                key={social.label}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-gray-200 dark:border-white/[0.08] bg-gray-50/80 dark:bg-white/[0.02] px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-white/55">{social.description}</p>
+                </div>
+                <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-white/45">
+                  Add Link
+                </span>
+              </div>
+            )
+          ))}
+        </div>
+      </div>
 
       {/* Referral Modal */}
       {showReferralModal && (
