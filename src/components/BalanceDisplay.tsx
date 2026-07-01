@@ -15,11 +15,6 @@ interface BalanceData {
     balanceUSD: string;
     error?: string;
   };
-  usdt?: {
-    balanceFormatted: string;
-    balanceUSD: string;
-    error?: string;
-  };
   totalUSD: string;
 }
 
@@ -27,7 +22,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
   const [balances, setBalances] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const { sendMessageToAI, addMessage } = useAppStore();
+  const { sendMessageToAI } = useAppStore();
 
   useEffect(() => {
     if (!walletAddress) { setError(true); setLoading(false); return; }
@@ -40,10 +35,6 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
             balanceFormatted: formatted.nim.balanceFormatted,
             balanceUSD: formatted.nim.balanceUSD,
           },
-          usdt: formatted.usdt ? {
-            balanceFormatted: formatted.usdt.balanceFormatted,
-            balanceUSD: formatted.usdt.balanceUSD,
-          } : undefined,
           totalUSD: formatted.totalUSD,
         });
         setLoading(false);
@@ -59,7 +50,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
       <div className="card-premium rounded-2xl p-6 max-w-sm">
         <div className="flex items-center justify-center gap-2.5">
           <div className="w-5 h-5 border-2 border-amber-600 dark:border-gold border-t-transparent rounded-full animate-spin" />
-          <span className="text-gray-500 dark:text-white/50 text-sm">Loading balances…</span>
+          <span className="text-gray-500 dark:text-white/50 text-sm">Loading balance…</span>
         </div>
       </div>
     );
@@ -124,30 +115,9 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
         </div>
       )}
 
-      {/* USDT Balance */}
-      {balances.usdt && !balances.usdt.error && (
-        <div className="bg-blue-50 dark:bg-brand-blue/[0.06] border border-blue-200 dark:border-brand-blue/20 rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light flex items-center justify-center font-bold text-sm">₮</span>
-              <span className="text-gray-900 dark:text-white font-semibold">USDT</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-brand-blue/15 text-blue-700 dark:text-brand-blue-light text-[10px] font-bold uppercase tracking-wide">
-              Polygon
-            </span>
-          </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">
-            {balances.usdt.balanceFormatted}
-          </div>
-          <div className="text-gray-500 dark:text-white/45 text-sm font-mono">
-            ${balances.usdt.balanceUSD} USD
-          </div>
-        </div>
-      )}
-
       {/* Total */}
       <div className="pt-3 border-t border-gray-100 dark:border-white/[0.07] flex items-center justify-between">
-        <span className="text-gray-500 dark:text-white/50 text-sm">Total Portfolio</span>
+        <span className="text-gray-500 dark:text-white/50 text-sm">Total Balance</span>
         <span className="text-gray-900 dark:text-white font-bold text-xl tabular-nums">${balances.totalUSD}</span>
       </div>
 

@@ -435,11 +435,14 @@ export default function ActionCard({ action }: ActionCardProps) {
                 className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] px-3 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-brand-blue/10 transition-colors"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                  <div className="flex items-center gap-2.5">
+                    <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                    </div>
                   </div>
-                  <span className="rounded-full bg-blue-100 dark:bg-brand-blue/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:text-brand-blue-light">
+                  <span className="rounded-full bg-blue-100 dark:bg-brand-blue/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:text-brand-blue-light flex-shrink-0">
                     Live
                   </span>
                 </div>
@@ -450,12 +453,15 @@ export default function ActionCard({ action }: ActionCardProps) {
                 className="w-full rounded-xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.02] px-3 py-2.5"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                  <div className="flex items-center gap-2.5 opacity-50">
+                    <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0 grayscale" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
+                    </div>
                   </div>
-                  <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-white/45">
-                    Add Link
+                  <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:text-white/45 flex-shrink-0">
+                    Soon
                   </span>
                 </div>
               </div>

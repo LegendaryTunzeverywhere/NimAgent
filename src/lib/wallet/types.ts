@@ -1,13 +1,12 @@
 // Shared wallet adapter contract.
 //
-// NimAgent runs in two environments:
-//   - "hub":     standalone web build, wallet via the Nimiq Hub popup (@nimiq/hub-api)
-//   - "miniapp": inside the Nimiq Pay app, wallet via the injected provider (@nimiq/mini-app-sdk)
+// NimAgent runs exclusively inside the Nimiq Pay mini app; wallet operations
+// go through the injected provider (@nimiq/mini-app-sdk).
 //
-// Both adapters implement this interface so the rest of the app
-// (store, ActionCard) is agnostic to where it runs.
+// The WalletAdapter interface keeps the rest of the app (store, ActionCard)
+// agnostic to the underlying transport.
 
-export type WalletKind = 'hub' | 'miniapp';
+export type WalletKind = 'miniapp';
 
 export interface SignResult {
   publicKey?: string;

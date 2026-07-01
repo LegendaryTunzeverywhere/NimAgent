@@ -21,13 +21,6 @@ export interface Balance {
     balanceUSD: string;
     error?: string;
   };
-  usdt?: {
-    balance: number;
-    balanceFormatted: string;
-    balanceUSD: string;
-    network: string;
-    error?: string;
-  };
   totalUSD: string;
 }
 

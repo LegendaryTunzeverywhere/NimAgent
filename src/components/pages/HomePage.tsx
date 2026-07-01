@@ -890,8 +890,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             {SOCIAL_LINKS.map((social) => {
-              const shortLabel = social.label === 'Instagram' ? 'IG' : social.label === 'Discord' ? 'DC' : social.label;
-              const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-2xl border text-[11px] font-black uppercase tracking-[0.14em] transition-all';
+              const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-2xl border transition-all';
               return social.href ? (
                 <button
                   key={social.label}
@@ -899,21 +898,22 @@ export default function HomePage() {
                   onClick={() => openExternalUrl(social.href!)}
                   title={social.label}
                   aria-label={social.label}
-                  className={`${sharedClasses} border-amber-300 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:scale-[1.03] hover:bg-amber-100 dark:hover:bg-gold/15`}
+                  className={`${sharedClasses} border-amber-300 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 hover:scale-[1.03] hover:bg-amber-100 dark:hover:bg-gold/15`}
                 >
-                  {shortLabel}
+                  <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain" />
                 </button>
               ) : (
                 <div
                   key={social.label}
                   title={`${social.label} coming soon`}
                   aria-label={`${social.label} coming soon`}
-                  className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] text-gray-500 dark:text-white/45`}
+                  className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40`}
                 >
-                  {shortLabel}
+                  <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain grayscale" />
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       </div>

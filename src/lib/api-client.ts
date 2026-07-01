@@ -317,7 +317,6 @@ export async function getOrders(walletAddress: string): Promise<Order[]> {
  */
 export async function getBalances(address: string): Promise<{
   nim: { balance: number; balanceUSD: number; price: number };
-  reloadly: { balance: number; currency: string };
   totalUSD: number;
 }> {
   const cleanAddress = address.replace(/\s/g, '');

@@ -4,7 +4,6 @@ import { getClientPlatformHeaders } from './client-platform';
 
 type BalanceResponse = {
   nim: { balance: number; balanceUSD: number; price: number };
-  reloadly?: { balance: number; currency: string };
   totalUSD: number;
   meta?: { source: 'bff' | 'rpc-fallback' };
 };
@@ -127,7 +126,6 @@ export async function getBalancesWithFallback(address: string): Promise<BalanceR
     const balanceUSD = balance * price;
     return {
       nim: { balance, balanceUSD, price },
-      reloadly: { balance: 0, currency: 'USD' },
       totalUSD: balanceUSD,
       meta: { source: 'rpc-fallback' },
     };
@@ -137,7 +135,6 @@ export async function getBalancesWithFallback(address: string): Promise<BalanceR
 export function formatBalanceForUi(data: BalanceResponse): Balance {
   const nimBalance = Math.max(0, data.nim.balance || 0);
   const nimBalanceUSD = Math.max(0, data.nim.balanceUSD || 0);
-  const reloadlyBalance = Math.max(0, data.reloadly?.balance || 0);
   const totalUSD = Math.max(0, data.totalUSD || nimBalanceUSD);
 
   return {
@@ -150,12 +147,6 @@ export function formatBalanceForUi(data: BalanceResponse): Balance {
             maximumFractionDigits: 2,
           }),
       balanceUSD: nimBalanceUSD < 0.01 ? '0.00' : nimBalanceUSD.toFixed(2),
-    },
-    usdt: {
-      balance: reloadlyBalance,
-      balanceFormatted: reloadlyBalance.toFixed(2),
-      balanceUSD: reloadlyBalance.toFixed(2),
-      network: 'Polygon',
     },
     totalUSD: totalUSD < 0.01 ? '0.00' : totalUSD.toFixed(2),
   };
