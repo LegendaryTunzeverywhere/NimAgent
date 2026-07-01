@@ -23,8 +23,15 @@ export interface PaymentRequest {
   data?: string;
   /** Optional fee in Luna. Omit to let the wallet choose (often 0). */
   fee?: number;
+  /** Optional block height from which the transaction is valid. */
+  validityStartHeight?: number;
   /** Optional sender address (skips address selection in Hub mode). */
   sender?: string;
+}
+
+export interface NetworkState {
+  consensusEstablished: boolean;
+  blockNumber: number | null;
 }
 
 export interface WalletAdapter {
@@ -35,6 +42,8 @@ export interface WalletAdapter {
   requestPayment(req: PaymentRequest): Promise<string>;
   /** Sign an arbitrary message for identity verification. */
   signMessage(message: string, signer?: string): Promise<SignResult>;
+  /** Read-only wallet/network state for mini-app readiness checks. */
+  getNetworkState(): Promise<NetworkState>;
   /** Best-effort warm-up so the eventual wallet call resolves quickly. */
   prewarm(): void;
 }

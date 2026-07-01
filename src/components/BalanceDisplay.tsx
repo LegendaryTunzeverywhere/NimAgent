@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatBalanceForUi, getBalancesWithFallback } from '@/lib/balance';
+import { formatBalanceForUi, getBalancesWithFallback, NimiqSyncingError } from '@/lib/balance';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 
@@ -21,11 +21,11 @@ interface BalanceData {
 export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
   const [balances, setBalances] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { sendMessageToAI } = useAppStore();
 
   useEffect(() => {
-    if (!walletAddress) { setError(true); setLoading(false); return; }
+    if (!walletAddress) { setError('Wallet address missing'); setLoading(false); return; }
 
     getBalancesWithFallback(walletAddress)
       .then((data) => {
@@ -39,7 +39,13 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
         });
         setLoading(false);
       })
-      .catch(() => { setError(true); setLoading(false); });
+      .catch((err: unknown) => {
+        const message = err instanceof NimiqSyncingError
+          ? 'Nimiq Pay is syncing with the Nimiq network.'
+          : "Couldn't load your balance";
+        setError(message);
+        setLoading(false);
+      });
   }, [walletAddress]);
 
   const handleSend = () => sendMessageToAI('I want to send NIM', walletAddress || undefined);
@@ -64,7 +70,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
             <circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" />
           </svg>
         </div>
-        <p className="text-gray-500 dark:text-white/70 text-sm">Couldn't load your balance</p>
+        <p className="text-gray-500 dark:text-white/70 text-sm">{error}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white text-sm hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors"

@@ -5,6 +5,8 @@ import { useAppStore } from '@/store/useAppStore';
 import ActionCard from '@/components/ActionCard';
 import Icon, { type IconName } from '@/components/Icon';
 import Modal from '@/components/Modal';
+import WalletSessionBanner from '@/components/WalletSessionBanner';
+import { isWalletSessionRequiredError } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -34,7 +36,7 @@ export default function ChatPage() {
   const {
     wallet, messages, addMessage, clearMessages,
     sendMessageToAI, startNewSession, loadOrCreateSession, currentSessionId,
-    aiLoading, aiStatus,
+    aiLoading, aiStatus, markWalletSessionExpired, clearWalletSessionExpired,
   } = useAppStore();
 
   const [input,           setInput]           = useState('');
@@ -47,6 +49,7 @@ export default function ChatPage() {
   const [showScrollBtn,   setShowScrollBtn]   = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const [copiedTxHash, setCopiedTxHash] = useState<string | null>(null);
+  const [voiceUnavailableReason, setVoiceUnavailableReason] = useState<string | null>(null);
 
   // Sessions
   const [sessions,        setSessions]        = useState<ChatSession[]>([]);
@@ -74,6 +77,33 @@ export default function ChatPage() {
     };
     window.visualViewport.addEventListener('resize', handle);
     return () => window.visualViewport!.removeEventListener('resize', handle);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const insideNimiqPay = !!window.nimiqPay;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!window.isSecureContext) {
+      setVoiceUnavailableReason(
+        insideNimiqPay
+          ? 'Voice input is not available in this Nimiq Pay session. Type your message instead.'
+          : 'Voice input requires a secure connection.'
+      );
+      return;
+    }
+
+    if (!SR) {
+      setVoiceUnavailableReason(
+        insideNimiqPay
+          ? 'Voice input is not available in this Nimiq Pay environment yet. Type your message instead.'
+          : 'Voice input is not supported on this device.'
+      );
+      return;
+    }
+
+    setVoiceUnavailableReason(null);
   }, []);
 
   // ── Scroll-to-bottom detection ──────────────────────────────────────────────
@@ -203,8 +233,13 @@ export default function ChatPage() {
     setLoadingSessions(true);
     try {
       const { getChatSessions } = await import('@/lib/api-client');
-      setSessions(await getChatSessions(wallet.address));
-    } catch { /* silent */ }
+      setSessions(await getChatSessions(wallet.address, { requireWalletSession: false }));
+      clearWalletSessionExpired();
+    } catch (error) {
+      if (isWalletSessionRequiredError(error)) {
+        markWalletSessionExpired();
+      }
+    }
     finally { setLoadingSessions(false); }
   };
 
@@ -213,13 +248,18 @@ export default function ChatPage() {
     setHasInitialized(true);
     try {
       const { getChatHistory } = await import('@/lib/api-client');
-      const msgs = await getChatHistory(id, wallet.address);
+      const msgs = await getChatHistory(id, wallet.address, { requireWalletSession: false });
+      clearWalletSessionExpired();
       useAppStore.setState({
         currentSessionId: id,
         messages: msgs.map((m: any) => ({ role: m.role, content: m.content, action: m.action, timestamp: new Date(m.created_at).getTime() })),
       });
       setShowSessions(false);
-    } catch { /* silent */ }
+    } catch (error) {
+      if (isWalletSessionRequiredError(error)) {
+        markWalletSessionExpired();
+      }
+    }
   };
 
   const confirmDelete = async () => {
@@ -306,6 +346,17 @@ export default function ChatPage() {
       </div>
 
       {/* ── Sessions panel ──────────────────────────────────────────────────── */}
+      <div className="px-4 pt-3">
+        <WalletSessionBanner
+          onReconnect={async () => {
+            await loadOrCreateSession();
+            if (showSessions) {
+              await fetchSessions();
+            }
+          }}
+        />
+      </div>
+
       {showSessions && (
         <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 bg-white dark:bg-[#16182a] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden animate-modal-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">
@@ -527,13 +578,13 @@ export default function ChatPage() {
           {/* Mic button */}
           <button
             onClick={toggleVoice}
-            disabled={aiLoading}
+            disabled={aiLoading || !!voiceUnavailableReason}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
                 : 'text-gray-500 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.06]'
             } disabled:opacity-40`}
-            title={isListening ? 'Stop' : 'Voice input'}
+            title={voiceUnavailableReason || (isListening ? 'Stop' : 'Voice input')}
           >
             {isListening ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -583,6 +634,11 @@ export default function ChatPage() {
           <p className="text-[11px] text-red-500 dark:text-error text-center mt-1.5 flex items-center justify-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-error animate-pulse inline-block" />
             Listening, speak now
+          </p>
+        )}
+        {!isListening && voiceUnavailableReason && !aiLoading && (
+          <p className="text-[11px] text-amber-600 dark:text-gold text-center mt-1.5">
+            {voiceUnavailableReason}
           </p>
         )}
         {!wallet.connected && !isListening && !aiLoading && (

@@ -14,6 +14,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const { addMessage } = useAppStore();
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cameraUnavailableReason, setCameraUnavailableReason] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
@@ -53,12 +54,43 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     };
   }, [stopScanning]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const insideNimiqPay = !!window.nimiqPay;
+    if (!window.isSecureContext) {
+      setCameraUnavailableReason(
+        insideNimiqPay
+          ? 'Camera scanning is not available in this Nimiq Pay session. Use manual entry instead.'
+          : 'Camera scanning requires a secure connection (HTTPS or localhost).'
+      );
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraUnavailableReason(
+        insideNimiqPay
+          ? 'Camera scanning is not available in this Nimiq Pay environment yet. Use manual entry instead.'
+          : 'Camera access is not supported in this browser.'
+      );
+      return;
+    }
+
+    setCameraUnavailableReason(null);
+  }, []);
+
   const startScanning = async () => {
     try {
       stopScanning(); // Ensure any previous scan is stopped first
       setError(null);
       setScanSuccess(false);
       setIsScanning(true);
+
+      if (cameraUnavailableReason) {
+        setError(cameraUnavailableReason);
+        setIsScanning(false);
+        return;
+      }
 
       // Check secure context — camera API requires HTTPS or localhost
       if (typeof window !== 'undefined' && !window.isSecureContext) {
@@ -402,6 +434,15 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           </div>
         )}
 
+        {cameraUnavailableReason && !error && (
+          <div className="bg-amber-50 dark:bg-gold/10 border border-amber-200 dark:border-gold/20 rounded-xl p-3 flex items-start gap-2">
+            <span className="text-amber-600 dark:text-gold mt-0.5">
+              <Icon name="info" size={15} strokeWidth={2} />
+            </span>
+            <p className="text-amber-700 dark:text-gold text-sm">{cameraUnavailableReason}</p>
+          </div>
+        )}
+
         {isScanning && (
           <div className="relative">
             <video
@@ -457,10 +498,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           {!isScanning ? (
             <button
               onClick={startScanning}
+              disabled={!!cameraUnavailableReason}
               className="btn-gold flex-1 py-3 rounded-xl flex items-center justify-center gap-2"
             >
               <Icon name="qr-scan" size={17} strokeWidth={2} />
-              Start Scanning
+              {cameraUnavailableReason ? 'Camera Unavailable' : 'Start Scanning'}
             </button>
           ) : (
             <button

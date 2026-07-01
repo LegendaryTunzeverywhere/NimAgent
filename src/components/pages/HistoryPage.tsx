@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { retrieveGiftCardCode } from '@/lib/api-client';
-import { getClientPlatformHeaders } from '@/lib/client-platform';
+import { retrieveGiftCardCode, getWalletRequestHeaders } from '@/lib/api-client';
+import WalletSessionBanner from '@/components/WalletSessionBanner';
 import { openExternalUrl } from '@/lib/external-links';
 import Icon, { type IconName } from '@/components/Icon';
 
@@ -75,7 +75,7 @@ const TRANSACTION_COLORS: Record<string, string> = {
 };
 
 export default function HistoryPage() {
-  const { wallet } = useAppStore();
+  const { wallet, markWalletSessionExpired, clearWalletSessionExpired } = useAppStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('All');
@@ -104,7 +104,10 @@ export default function HistoryPage() {
     }
   };
 
-  const fetchTransactions = useCallback(async (showLoading = false) => {
+  const fetchTransactions = useCallback(async (
+    showLoading = false,
+    options?: { requireWalletSession?: boolean }
+  ) => {
     if (!wallet.address) return;
     
     if (showLoading) {
@@ -125,13 +128,20 @@ export default function HistoryPage() {
       params.set('wallet', normalizedAddress);
       if (startDate) params.set('start_date', startDate);
       if (endDate) params.set('end_date', endDate);
-      const platformHeaders = await getClientPlatformHeaders();
+      const walletHeaders = await getWalletRequestHeaders('GET', normalizedAddress, options);
       
       // Fetch from both transactions and orders tables
       const [transactionsRes, ordersRes] = await Promise.all([
-        fetch(`/api/transactions?${params.toString()}`, { headers: platformHeaders }),
-        fetch(`/api/orders?${params.toString()}`, { headers: platformHeaders })
+        fetch(`/api/transactions?${params.toString()}`, { headers: walletHeaders }),
+        fetch(`/api/orders?${params.toString()}`, { headers: walletHeaders })
       ]);
+
+      if ([transactionsRes.status, ordersRes.status].some((status) => status === 401 || status === 403)) {
+        markWalletSessionExpired();
+        return;
+      }
+
+      clearWalletSessionExpired();
       
       let allTransactions: Transaction[] = [];
       
@@ -228,11 +238,18 @@ export default function HistoryPage() {
         setLoading(false);
       }
     }
-  }, [wallet.address, isInitialLoad, startDate, endDate]);
+  }, [
+    wallet.address,
+    isInitialLoad,
+    startDate,
+    endDate,
+    clearWalletSessionExpired,
+    markWalletSessionExpired,
+  ]);
 
   useEffect(() => {
     if (wallet.connected && wallet.address) {
-      fetchTransactions(true); // Initial load with loading state
+      fetchTransactions(true, { requireWalletSession: false }); // Initial load with loading state
     }
   }, [wallet.connected, wallet.address, fetchTransactions]);
 
@@ -242,7 +259,7 @@ export default function HistoryPage() {
       if (!document.hidden && wallet.connected && wallet.address) {
         // Only refresh if last fetch was more than 3 seconds ago
         if (Date.now() - lastFetch > 3000) {
-          fetchTransactions(false); // Silent refresh
+          fetchTransactions(false, { requireWalletSession: false }); // Silent refresh
         }
       }
     };
@@ -252,7 +269,7 @@ export default function HistoryPage() {
     // Auto-refresh every 10 seconds when page is visible
     const interval = setInterval(() => {
       if (!document.hidden && wallet.connected && wallet.address) {
-        fetchTransactions(false); // Silent refresh
+        fetchTransactions(false, { requireWalletSession: false }); // Silent refresh
       }
     }, 10000);
 
@@ -349,6 +366,10 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4 pb-8">
+      <WalletSessionBanner
+        onReconnect={() => fetchTransactions(true, { requireWalletSession: false })}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">

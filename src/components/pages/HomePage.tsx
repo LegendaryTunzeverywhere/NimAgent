@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
+import WalletSessionBanner from '@/components/WalletSessionBanner';
 import type { Transaction } from '@/types';
-import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
+import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals, getWalletRequestHeaders, isWalletSessionRequiredError } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
-import { getClientPlatformHeaders } from '@/lib/client-platform';
 
 interface QuickAction {
   icon: IconName;
@@ -74,7 +74,17 @@ function txIconFor(tx: Transaction): IconName {
 }
 
 export default function HomePage() {
-  const { wallet, connectWallet, disconnectWallet, setActiveTab, sendMessageToAI, fetchBalance, addMessage } = useAppStore();
+  const {
+    wallet,
+    connectWallet,
+    disconnectWallet,
+    setActiveTab,
+    sendMessageToAI,
+    fetchBalance,
+    addMessage,
+    markWalletSessionExpired,
+    clearWalletSessionExpired,
+  } = useAppStore();
   const [nimPrice, setNimPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
   const [sentToday, setSentToday] = useState<number>(0);
@@ -98,12 +108,12 @@ export default function HomePage() {
   const [referralClaimNotice, setReferralClaimNotice] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
 
-  const refreshReferralData = useCallback(async () => {
+  const refreshReferralData = useCallback(async (options?: { requireWalletSession?: boolean }) => {
     if (!wallet.address) return;
 
     const [linkData, statusData] = await Promise.all([
-      getReferralLink(wallet.address),
-      getReferralStatus(wallet.address),
+      getReferralLink(wallet.address, options),
+      getReferralStatus(wallet.address, options),
     ]);
 
     setReferralLink(linkData.referralLink);
@@ -116,11 +126,164 @@ export default function HomePage() {
     setReferralStatus(statusData);
   }, [wallet.address]);
 
-  const refreshReferralList = useCallback(async () => {
+  const refreshReferralList = useCallback(async (options?: { requireWalletSession?: boolean }) => {
     if (!wallet.address) return;
-    const data = await getReferrals(wallet.address);
+    const data = await getReferrals(wallet.address, options);
     setReferrals(data.referrals || []);
   }, [wallet.address]);
+
+  const fetchRecentTransactions = useCallback(async () => {
+    if (!wallet.address) return;
+
+    try {
+      const normalizedAddress = wallet.address.replace(/\s/g, '');
+      const walletHeaders = await getWalletRequestHeaders('GET', normalizedAddress, {
+        requireWalletSession: false,
+      });
+
+      const [ordersRes, transactionsRes] = await Promise.all([
+        fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: walletHeaders }),
+        fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: walletHeaders }),
+      ]);
+
+      if ([ordersRes.status, transactionsRes.status].some((status) => status === 401 || status === 403)) {
+        markWalletSessionExpired();
+        return;
+      }
+
+      clearWalletSessionExpired();
+
+      let allOrders: any[] = [];
+      let allTransactions: any[] = [];
+
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        allOrders = ordersData.orders || [];
+      }
+
+      if (transactionsRes.ok) {
+        const transData = await transactionsRes.json();
+        allTransactions = transData.transactions || [];
+      }
+
+      const combinedData = [
+        ...allOrders.map((o: any) => ({ ...o, source: 'order' })),
+        ...allTransactions.map((t: any) => ({ ...t, source: 'transaction' })),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      const transactions: Transaction[] = combinedData.slice(0, 3).map((item, index) => {
+        if (item.source === 'order') {
+          const typeMap: { [key: string]: { icon: string; color: string; label: string } } = {
+            'gift-card': { icon: '🎁', color: 'info', label: 'Gift Card' },
+            'airtime': { icon: '📱', color: 'info', label: 'Airtime Top-up' },
+            'bill': { icon: '💵', color: 'info', label: item.details?.service || 'Bill Payment' },
+          };
+
+          const typeInfo = typeMap[item.type] || { icon: '💰', color: 'info', label: 'Transaction' };
+          const createdAt = new Date(item.created_at);
+          const now = new Date();
+          const diffMs = now.getTime() - createdAt.getTime();
+          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffDays = Math.floor(diffHours / 24);
+
+          let timeAgo = '';
+          if (diffDays > 0) {
+            timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+          } else if (diffHours > 0) {
+            timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+          } else {
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            timeAgo = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+          }
+
+          return {
+            id: parseInt(item.id) || index,
+            type: item.type as any,
+            label: typeInfo.label,
+            amount: `-${(item.amount_luna / 100000).toFixed(2)}`,
+            usd: nimPrice ? `$${((item.amount_luna / 100000) * nimPrice).toFixed(2)}` : undefined,
+            time: timeAgo,
+            icon: typeInfo.icon,
+            color: typeInfo.color,
+            status: item.status as any,
+            category: item.type,
+            hash: item.tx_hash,
+          };
+        }
+
+        const isSent = item.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
+        let typeInfo: { icon: string; color: string; label: string };
+        if (item.type === 'gift-card') {
+          const product = item.details?.product || 'Gift Card';
+          typeInfo = { icon: '🎁', color: 'error', label: `${product} Purchase` };
+        } else if (item.type === 'airtime') {
+          const phone = item.details?.phone;
+          typeInfo = { icon: '📱', color: 'error', label: phone ? `Airtime to ${phone.slice(-4)}` : 'Airtime Top-up' };
+        } else if (item.type === 'bill') {
+          const service = item.details?.service || 'Bill';
+          typeInfo = { icon: '🧾', color: 'error', label: `${service} Payment` };
+        } else if (isSent) {
+          const shortAddr = item.to_address ? `${item.to_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
+          typeInfo = { icon: '↗', color: 'error', label: `Sent to ${shortAddr}` };
+        } else {
+          const shortAddr = item.from_address ? `${item.from_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
+          typeInfo = { icon: '↙', color: 'success', label: `Received from ${shortAddr}` };
+        }
+
+        const createdAt = new Date(item.created_at);
+        const now = new Date();
+        const diffMs = now.getTime() - createdAt.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        let timeAgo = '';
+        if (diffDays > 0) {
+          timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        } else if (diffHours > 0) {
+          timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        } else {
+          const diffMins = Math.floor(diffMs / (1000 * 60));
+          timeAgo = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+        }
+
+        return {
+          id: parseInt(item.id) || index,
+          type: item.type as any,
+          label: typeInfo.label,
+          amount: isSent ? `-${(item.amount_luna / 100000).toFixed(2)}` : `+${(item.amount_luna / 100000).toFixed(2)}`,
+          usd: nimPrice ? `$${((item.amount_luna / 100000) * nimPrice).toFixed(2)}` : undefined,
+          time: timeAgo,
+          icon: typeInfo.icon,
+          color: typeInfo.color,
+          status: item.status as any,
+          category: item.type,
+          hash: item.tx_hash,
+        };
+      });
+
+      setRecentTransactions(transactions);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const todayOrders = allOrders.filter((order) => {
+        const orderDate = new Date(order.created_at);
+        return orderDate >= today;
+      });
+      const totalFromOrders = todayOrders.reduce((sum, order) => sum + (order.amount_luna / 100000), 0);
+
+      const todayTransactions = allTransactions.filter((tx) => {
+        const txDate = new Date(tx.created_at);
+        const isSent = tx.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
+        return txDate >= today && isSent;
+      });
+      const totalFromTransactions = todayTransactions.reduce((sum, tx) => sum + (tx.amount_luna / 100000), 0);
+
+      setSentToday(totalFromOrders + totalFromTransactions);
+    } catch (error) {
+      // Silent failure
+    }
+  }, [wallet.address, nimPrice, markWalletSessionExpired, clearWalletSessionExpired]);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy, then get 24h change directly from CoinGecko
@@ -210,8 +373,12 @@ export default function HomePage() {
       
       // Fetch referral link, live reward totals, and status
       try {
-        await refreshReferralData();
+        await refreshReferralData({ requireWalletSession: false });
+        clearWalletSessionExpired();
       } catch (error) {
+        if (isWalletSessionRequiredError(error)) {
+          markWalletSessionExpired();
+        }
         // Silent failure
       }
     };
@@ -219,172 +386,19 @@ export default function HomePage() {
     if (wallet.connected && wallet.address) {
       fetchReferralInfo();
     }
-  }, [wallet.connected, wallet.address, refreshReferralData]);
+  }, [
+    wallet.connected,
+    wallet.address,
+    refreshReferralData,
+    clearWalletSessionExpired,
+    markWalletSessionExpired,
+  ]);
 
   useEffect(() => {
-    // Fetch recent transactions when wallet connects
-    const fetchRecentTransactions = async () => {
-      if (!wallet.address) return;
-
-      try {
-        // Normalize wallet address - remove spaces for consistent querying
-        const normalizedAddress = wallet.address.replace(/\s/g, '');
-        const platformHeaders = await getClientPlatformHeaders();
-        
-        // Fetch both orders and transactions via BFF proxy
-        const [ordersRes, transactionsRes] = await Promise.all([
-          fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: platformHeaders }),
-          fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: platformHeaders })
-        ]);
-
-        let allOrders: any[] = [];
-        let allTransactions: any[] = [];
-
-        if (ordersRes.ok) {
-          const ordersData = await ordersRes.json();
-          allOrders = ordersData.orders || [];
-        }
-
-        if (transactionsRes.ok) {
-          const transData = await transactionsRes.json();
-          allTransactions = transData.transactions || [];
-        }
-
-        // Combine orders and transactions for recent activity
-        const combinedData = [
-          ...allOrders.map((o: any) => ({ ...o, source: 'order' })),
-          ...allTransactions.map((t: any) => ({ ...t, source: 'transaction' }))
-        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        // Convert to transaction format and get last 3
-        const transactions: Transaction[] = combinedData.slice(0, 3).map((item, index) => {
-          if (item.source === 'order') {
-            const typeMap: { [key: string]: { icon: string; color: string; label: string } } = {
-              'gift-card': { icon: '🎁', color: 'info', label: 'Gift Card' },
-              'airtime': { icon: '📱', color: 'info', label: 'Airtime Top-up' },
-              'bill': { icon: '💵', color: 'info', label: item.details?.service || 'Bill Payment' },
-            };
-
-            const typeInfo = typeMap[item.type] || { icon: '💰', color: 'info', label: 'Transaction' };
-            
-            // Calculate time ago
-            const createdAt = new Date(item.created_at);
-            const now = new Date();
-            const diffMs = now.getTime() - createdAt.getTime();
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.floor(diffHours / 24);
-            
-            let timeAgo = '';
-            if (diffDays > 0) {
-              timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            } else if (diffHours > 0) {
-              timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            } else {
-              const diffMins = Math.floor(diffMs / (1000 * 60));
-              timeAgo = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-            }
-
-            return {
-              id: parseInt(item.id) || index,
-              type: item.type as any,
-              label: typeInfo.label,
-              amount: `-${(item.amount_luna / 100000).toFixed(2)}`, // Convert luna to NIM
-              usd: nimPrice ? `$${((item.amount_luna / 100000) * nimPrice).toFixed(2)}` : undefined,
-              time: timeAgo,
-              icon: typeInfo.icon,
-              color: typeInfo.color,
-              status: item.status as any,
-              category: item.type,
-              hash: item.tx_hash,
-            };
-          } else {
-            // Transaction from transactions table
-            const isSent = item.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
-            
-            // Build label based on transaction type first, then fall back to send/receive
-            let typeInfo: { icon: string; color: string; label: string };
-            if (item.type === 'gift-card') {
-              const product = item.details?.product || 'Gift Card';
-              typeInfo = { icon: '🎁', color: 'error', label: `${product} Purchase` };
-            } else if (item.type === 'airtime') {
-              const phone = item.details?.phone;
-              typeInfo = { icon: '📱', color: 'error', label: phone ? `Airtime to ${phone.slice(-4)}` : 'Airtime Top-up' };
-            } else if (item.type === 'bill') {
-              const service = item.details?.service || 'Bill';
-              typeInfo = { icon: '🧾', color: 'error', label: `${service} Payment` };
-            } else if (isSent) {
-              const shortAddr = item.to_address ? `${item.to_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
-              typeInfo = { icon: '↗', color: 'error', label: `Sent to ${shortAddr}` };
-            } else {
-              const shortAddr = item.from_address ? `${item.from_address.replace(/\s/g, '').slice(0, 8)}…` : 'Unknown';
-              typeInfo = { icon: '↙', color: 'success', label: `Received from ${shortAddr}` };
-            }
-
-            // Calculate time ago
-            const createdAt = new Date(item.created_at);
-            const now = new Date();
-            const diffMs = now.getTime() - createdAt.getTime();
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.floor(diffHours / 24);
-            
-            let timeAgo = '';
-            if (diffDays > 0) {
-              timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            } else if (diffHours > 0) {
-              timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            } else {
-              const diffMins = Math.floor(diffMs / (1000 * 60));
-              timeAgo = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-            }
-
-            return {
-              id: parseInt(item.id) || index,
-              type: item.type as any,
-              label: typeInfo.label,
-              amount: isSent ? `-${(item.amount_luna / 100000).toFixed(2)}` : `+${(item.amount_luna / 100000).toFixed(2)}`,
-              usd: nimPrice ? `$${((item.amount_luna / 100000) * nimPrice).toFixed(2)}` : undefined,
-              time: timeAgo,
-              icon: typeInfo.icon,
-              color: typeInfo.color,
-              status: item.status as any,
-              category: item.type,
-              hash: item.tx_hash,
-            };
-          }
-        });
-
-        setRecentTransactions(transactions);
-
-        // Calculate sent today - include both orders and sent transactions
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // Sum from orders
-        const todayOrders = allOrders.filter(order => {
-          const orderDate = new Date(order.created_at);
-          return orderDate >= today;
-        });
-        const totalFromOrders = todayOrders.reduce((sum, order) => sum + (order.amount_luna / 100000), 0);
-        
-        // Sum from sent transactions
-        const todayTransactions = allTransactions.filter(tx => {
-          const txDate = new Date(tx.created_at);
-          const isSent = tx.from_address?.replace(/\s/g, '') === wallet.address?.replace(/\s/g, '');
-          return txDate >= today && isSent;
-        });
-        const totalFromTransactions = todayTransactions.reduce((sum, tx) => sum + (tx.amount_luna / 100000), 0);
-        
-        const totalSent = totalFromOrders + totalFromTransactions;
-        setSentToday(totalSent);
-      } catch (error) {
-        // Silent failure
-      }
-    };
-
     if (wallet.connected && wallet.address) {
       fetchRecentTransactions();
     }
-  }, [wallet.connected, wallet.address, nimPrice]);
+  }, [wallet.connected, wallet.address, fetchRecentTransactions]);
 
   const handleConnect = async () => {
     if (wallet.loading) return;
@@ -515,6 +529,15 @@ export default function HomePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
+      <WalletSessionBanner
+        onReconnect={async () => {
+          await Promise.all([
+            refreshReferralData({ requireWalletSession: false }),
+            fetchRecentTransactions(),
+          ]);
+        }}
+      />
+
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
       <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
@@ -569,15 +592,19 @@ export default function HomePage() {
             </>
           ) : (
             <div className="mb-6 rounded-2xl border border-red-200 dark:border-error/20 bg-red-50 dark:bg-error/10 p-4 text-center">
-              <p className="text-sm font-semibold text-red-700 dark:text-error">Couldn&apos;t load your balance</p>
+              <p className="text-sm font-semibold text-red-700 dark:text-error">
+                {wallet.error?.includes('syncing') ? 'Nimiq Pay is syncing' : 'Couldn&apos;t load your balance'}
+              </p>
               <p className="mt-1 text-xs text-red-600/80 dark:text-error/80">
-                Try again. NimAgent will fall back to direct network balance lookup inside Nimiq Pay.
+                {wallet.error?.includes('syncing')
+                  ? 'Wait a moment for the wallet to establish Nimiq consensus, then refresh the balance.'
+                  : 'Try again. NimAgent will fall back to direct network balance lookup inside Nimiq Pay.'}
               </p>
               <button
                 onClick={() => fetchBalance()}
                 className="mt-3 inline-flex items-center justify-center rounded-xl border border-red-300 dark:border-error/30 px-4 py-2 text-xs font-semibold text-red-700 dark:text-error hover:bg-red-100 dark:hover:bg-error/15 transition-colors"
               >
-                Retry balance
+                {wallet.error?.includes('syncing') ? 'Check again' : 'Retry balance'}
               </button>
             </div>
           )}

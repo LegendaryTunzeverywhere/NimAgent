@@ -4,7 +4,7 @@
 // `@/lib/nimiq-hub`, so call sites (store, ActionCard) need only swap the
 // import path.
 
-import type { WalletAdapter, SignResult } from './types';
+import type { WalletAdapter, SignResult, NetworkState } from './types';
 import { isInsideNimiqPay } from './detect';
 
 let adapterPromise: Promise<WalletAdapter> | null = null;
@@ -48,6 +48,12 @@ export async function getUserAddress(): Promise<string> {
   return adapter.getUserAddress();
 }
 
+/** Read-only Nimiq wallet/network state exposed by the mini-app provider. */
+export async function getNimiqNetworkState(): Promise<NetworkState> {
+  const adapter = await getWalletAdapter();
+  return adapter.getNetworkState();
+}
+
 /**
  * Send a NIM payment. Signature matches the legacy helper:
  *   requestPayment(recipient, amountLuna, context, memo?, sender?)
@@ -62,11 +68,16 @@ export async function requestPayment(
 ): Promise<string> {
   const adapter = await getWalletAdapter();
   const data = memo ? `${context}:${memo}` : context;
+  const networkState = await adapter.getNetworkState();
+  if (!networkState.consensusEstablished) {
+    throw new Error('Nimiq Pay is still syncing with the Nimiq network. Please wait a moment and try again.');
+  }
+
   return adapter.requestPayment({
     recipient: recipientAddress,
     value: amountLuna,
     data,
-    fee: 0,
+    ...(networkState.blockNumber != null ? { validityStartHeight: networkState.blockNumber } : {}),
     sender: senderAddress,
   });
 }

@@ -6,7 +6,7 @@
 // workaround is needed.
 
 import type { ErrorResponse, NimiqProvider, SignatureResult } from '@nimiq/mini-app-sdk';
-import type { WalletAdapter, PaymentRequest, SignResult } from './types';
+import type { WalletAdapter, PaymentRequest, SignResult, NetworkState } from './types';
 import { getNimiqProvider } from './detect';
 
 const APP_NAME = 'NimAgent';
@@ -74,6 +74,7 @@ export const miniAppAdapter: WalletAdapter = {
               value: req.value,
               data: req.data,
               ...(req.fee != null ? { fee: req.fee } : {}),
+              ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
             }),
           )
         : unwrap(
@@ -81,6 +82,7 @@ export const miniAppAdapter: WalletAdapter = {
               recipient: req.recipient,
               value: req.value,
               ...(req.fee != null ? { fee: req.fee } : {}),
+              ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
             }),
           );
     } catch (err) {
@@ -97,6 +99,26 @@ export const miniAppAdapter: WalletAdapter = {
     const nimiq = await provider();
     const result = unwrap<SignatureResult>(await nimiq.sign(message));
     return { publicKey: result.publicKey, signature: result.signature };
+  },
+
+  async getNetworkState(): Promise<NetworkState> {
+    const nimiq = await provider();
+    const consensusEstablished = unwrap(await nimiq.isConsensusEstablished());
+    let blockNumber: number | null = null;
+
+    if (consensusEstablished) {
+      try {
+        const currentHeight = unwrap(await nimiq.getBlockNumber());
+        blockNumber = typeof currentHeight === 'number' ? currentHeight : null;
+      } catch {
+        blockNumber = null;
+      }
+    }
+
+    return {
+      consensusEstablished,
+      blockNumber,
+    };
   },
 };
 

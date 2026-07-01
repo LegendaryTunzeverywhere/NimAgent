@@ -8,6 +8,13 @@ type BalanceResponse = {
   meta?: { source: 'bff' | 'rpc-fallback' };
 };
 
+export class NimiqSyncingError extends Error {
+  constructor(message = 'Nimiq Pay is still syncing with the Nimiq network.') {
+    super(message);
+    this.name = 'NimiqSyncingError';
+  }
+}
+
 const NIM_LUNA = 100_000;
 
 function getActiveNetwork(): 'mainnet' | 'testnet' {
@@ -118,6 +125,16 @@ export async function getBalancesWithFallback(address: string): Promise<BalanceR
     const data = await getBalances(address);
     return { ...data, meta: { source: 'bff' } };
   } catch {
+    try {
+      const { getNimiqNetworkState } = await import('@/lib/wallet');
+      const networkState = await getNimiqNetworkState();
+      if (!networkState.consensusEstablished) {
+        throw new NimiqSyncingError();
+      }
+    } catch (error) {
+      if (error instanceof NimiqSyncingError) throw error;
+    }
+
     const [balance, price] = await Promise.all([
       fetchNimBalanceFromRpc(address),
       fetchNimUsdPrice().catch(() => 0),

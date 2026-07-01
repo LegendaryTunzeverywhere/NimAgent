@@ -981,6 +981,10 @@ export default function ActionCard({ action }: ActionCardProps) {
       else if (error.message?.includes('popup') || error.message?.includes('only inside the Nimiq Pay app')) {
         errorMessage = '🚫 Nimiq Pay Required\n\nOpen NimAgent inside the Nimiq Pay app and try again.';
       }
+      // Handle wallet/network sync state
+      else if (error.message?.includes('syncing with the Nimiq network')) {
+        errorMessage = '⏳ Wallet Syncing\n\nNimiq Pay is still syncing with the Nimiq network. Wait a moment, refresh your balance, and try again.';
+      }
       // Handle locked order from backend
       else if (error.message?.includes('locked') || error.message?.includes('already failed')) {
         errorMessage = `❌ Order Locked\n\n${error.message}\n\n⚠️ This transaction is locked. Do not retry. If your payment was deducted, a refund will be processed within 24 hours.`;

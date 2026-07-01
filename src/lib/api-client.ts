@@ -25,11 +25,50 @@ interface CachedSignature {
   publicKey: string;
   expiresAt: string;
 }
+
+interface CachedWalletSession {
+  walletAddress: string;
+  expiresAt: string;
+}
+
+export interface WalletRequestOptions {
+  requireWalletSession?: boolean;
+}
+
+export class WalletSessionRequiredError extends Error {
+  status: number;
+
+  constructor(message = 'Reconnect your wallet to refresh protected data.', status = 401) {
+    super(message);
+    this.name = 'WalletSessionRequiredError';
+    this.status = status;
+  }
+}
+
+export function isWalletSessionRequiredError(error: unknown): error is WalletSessionRequiredError {
+  return error instanceof WalletSessionRequiredError;
+}
+
+const SIGNATURE_CACHE_KEY = 'nimagent-signature-cache';
+const SESSION_CACHE_KEY = 'nimagent-wallet-session';
+
 // Load signature cache from localStorage
 const signatureCache: Record<string, CachedSignature> = (() => {
   if (typeof window !== 'undefined') {
     try {
-      const stored = localStorage.getItem('nimagent-signature-cache');
+      const stored = localStorage.getItem(SIGNATURE_CACHE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+})();
+
+const sessionCache: Record<string, CachedWalletSession> = (() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(SESSION_CACHE_KEY);
       return stored ? JSON.parse(stored) : {};
     } catch {
       return {};
@@ -41,8 +80,41 @@ const signatureCache: Record<string, CachedSignature> = (() => {
 // Helper to save signature cache to localStorage
 function saveSignatureCache() {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('nimagent-signature-cache', JSON.stringify(signatureCache));
+    localStorage.setItem(SIGNATURE_CACHE_KEY, JSON.stringify(signatureCache));
   }
+}
+
+function saveSessionCache() {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessionCache));
+  }
+}
+
+function getCachedSession(walletAddress: string): CachedWalletSession | null {
+  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
+  const cached = sessionCache[cleanAddress];
+  if (!cached) return null;
+  if (new Date(cached.expiresAt) <= new Date()) {
+    delete sessionCache[cleanAddress];
+    saveSessionCache();
+    return null;
+  }
+  return cached;
+}
+
+function setCachedSession(walletAddress: string, expiresAt: string) {
+  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
+  sessionCache[cleanAddress] = {
+    walletAddress: cleanAddress,
+    expiresAt,
+  };
+  saveSessionCache();
+}
+
+async function ensureWalletSession(walletAddress: string): Promise<void> {
+  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
+  if (getCachedSession(cleanAddress)) return;
+  await loginWithWallet(cleanAddress);
 }
 
 /**
@@ -92,7 +164,7 @@ async function signChallenge(challenge: string): Promise<{ signature: string; pu
  * Get or create a valid signature for a wallet address.
  * Exported so connectWallet can pre-warm the cache before parallel API calls.
  */
-export async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string }> {
+export async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string; expiresAt: string }> {
   const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
   
   // Check cache for valid signature
@@ -111,7 +183,7 @@ export async function getSignature(walletAddress: string): Promise<{ nonce: stri
   signatureCache[cleanAddress] = { nonce, signature, publicKey, expiresAt };
   saveSignatureCache();
   
-  return { nonce, signature, publicKey };
+  return { nonce, signature, publicKey, expiresAt };
 }
 
 /**
@@ -126,25 +198,22 @@ function isValidNimAddress(address: string): boolean {
 
 /**
  * Get headers for API requests
- * Includes CSRF token and signature headers for state-changing requests
+ * Includes CSRF token for state-changing requests.
+ * Wallet-scoped requests rely on the 24h backend session instead of re-sending
+ * signed wallet proof on every call.
  */
-async function getHeaders(method: string, walletAddress?: string): Promise<HeadersInit> {
+async function getHeaders(
+  method: string,
+  walletAddress?: string,
+  options: WalletRequestOptions = {}
+): Promise<HeadersInit> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(await getClientPlatformHeaders()),
   };
 
-  // Add signature headers if wallet address is provided for any method
-  if (walletAddress) {
-    try {
-      const { nonce, signature, publicKey } = await getSignature(walletAddress);
-      headers['X-Wallet-Address'] = walletAddress;
-      headers['X-Nonce'] = nonce;
-      headers['X-Signature'] = signature;
-      headers['X-Public-Key'] = publicKey;
-    } catch (err) {
-      // Silent failure - proceed without signature
-    }
+  if (walletAddress && options.requireWalletSession !== false) {
+    await ensureWalletSession(walletAddress);
   }
 
   // Add CSRF token for state-changing requests
@@ -154,6 +223,20 @@ async function getHeaders(method: string, walletAddress?: string): Promise<Heade
   }
 
   return headers;
+}
+
+function assertWalletSessionResponse(res: Response, options: WalletRequestOptions = {}) {
+  if (options.requireWalletSession === false && (res.status === 401 || res.status === 403)) {
+    throw new WalletSessionRequiredError(undefined, res.status);
+  }
+}
+
+export async function getWalletRequestHeaders(
+  method: string,
+  walletAddress?: string,
+  options: WalletRequestOptions = {}
+): Promise<HeadersInit> {
+  return getHeaders(method, walletAddress, options);
 }
 
 export interface ChatMessage {
@@ -227,7 +310,7 @@ export async function recordTransaction(data: {
 }): Promise<Transaction> {
   const res = await fetch(`${API_URL}/transactions`, {
     method: 'POST',
-    headers: await getHeaders('POST'),
+    headers: await getHeaders('POST', data.fromAddress),
     credentials: 'include',
     body: JSON.stringify(data),
   });
@@ -301,7 +384,7 @@ export async function getOrders(walletAddress: string): Promise<Order[]> {
   }
   
   const res = await fetch(`${API_URL}/orders?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
     credentials: 'include',
   });
   
@@ -372,16 +455,22 @@ export async function saveChatMessage(data: {
 /**
  * Get chat history for a session
  */
-export async function getChatHistory(sessionId: string, walletAddress: string): Promise<any[]> {
+export async function getChatHistory(
+  sessionId: string,
+  walletAddress: string,
+  options: WalletRequestOptions = {}
+): Promise<any[]> {
   // FIX 4 FRONTEND: Validate address before API call
   if (!isValidNimAddress(walletAddress)) {
     throw new Error('Invalid NIM wallet address format');
   }
   
   const res = await fetch(`${API_URL}/chat/history/${sessionId}?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET', walletAddress),
+    headers: await getHeaders('GET', walletAddress, options),
     credentials: 'include',
   });
+
+  assertWalletSessionResponse(res, options);
   
   if (!res.ok) {
     throw new Error('Failed to fetch chat history');
@@ -394,16 +483,21 @@ export async function getChatHistory(sessionId: string, walletAddress: string): 
 /**
  * Get all chat sessions for a wallet
  */
-export async function getChatSessions(walletAddress: string): Promise<any[]> {
+export async function getChatSessions(
+  walletAddress: string,
+  options: WalletRequestOptions = {}
+): Promise<any[]> {
   // FIX 4 FRONTEND: Validate address before API call
   if (!isValidNimAddress(walletAddress)) {
     throw new Error('Invalid NIM wallet address format');
   }
   
   const res = await fetch(`${API_URL}/chat/sessions?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET', walletAddress),
+    headers: await getHeaders('GET', walletAddress, options),
     credentials: 'include',
   });
+
+  assertWalletSessionResponse(res, options);
   
   if (!res.ok) {
     throw new Error('Failed to fetch chat sessions');
@@ -459,7 +553,7 @@ export async function getSavedAddresses(walletAddress: string): Promise<SavedAdd
   }
   
   const res = await fetch(`${API_URL}/saved-addresses?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
     credentials: 'include',
   });
   
@@ -586,7 +680,7 @@ export async function findAddressByNickname(wallet: string, nickname: string): P
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/find?wallet=${encodeURIComponent(wallet)}&nickname=${encodeURIComponent(nickname)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', wallet),
     credentials: 'include',
   });
   
@@ -608,7 +702,7 @@ export async function getFrequentAddresses(wallet: string, limit: number = 5): P
   }
   
   const res = await fetch(`${API_URL}/saved-addresses/frequent?wallet=${encodeURIComponent(wallet)}&limit=${limit}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', wallet),
     credentials: 'include',
   });
   
@@ -649,7 +743,10 @@ export async function getCountryServices(
 // REFERRAL SYSTEM API
 // ============================================================================
 
-export async function getReferralLink(walletAddress: string): Promise<{
+export async function getReferralLink(
+  walletAddress: string,
+  options: WalletRequestOptions = {}
+): Promise<{
   success: boolean;
   referralLink: string;
   referralCode: string;
@@ -667,9 +764,11 @@ export async function getReferralLink(walletAddress: string): Promise<{
   }
   
   const res = await fetch(`${API_URL}/referrals/link?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress, options),
     credentials: 'include',
   });
+
+  assertWalletSessionResponse(res, options);
   
   if (!res.ok) {
     throw new Error('Failed to fetch referral link');
@@ -690,7 +789,7 @@ export async function getReferralCount(walletAddress: string): Promise<{
   }
   
   const res = await fetch(`${API_URL}/referrals/count?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
     credentials: 'include',
   });
   
@@ -701,7 +800,10 @@ export async function getReferralCount(walletAddress: string): Promise<{
   return res.json();
 }
 
-export async function getReferralStatus(walletAddress: string): Promise<{
+export async function getReferralStatus(
+  walletAddress: string,
+  options: WalletRequestOptions = {}
+): Promise<{
   success: boolean;
   isReferred: boolean;
   referrer: string | null;
@@ -714,9 +816,11 @@ export async function getReferralStatus(walletAddress: string): Promise<{
   }
   
   const res = await fetch(`${API_URL}/referrals/status?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress, options),
     credentials: 'include',
   });
+
+  assertWalletSessionResponse(res, options);
   
   if (!res.ok) {
     throw new Error('Failed to fetch referral status');
@@ -771,7 +875,10 @@ export async function getLeaderboard(limit: number = 20): Promise<{
   return res.json();
 }
 
-export async function getReferrals(walletAddress: string): Promise<{
+export async function getReferrals(
+  walletAddress: string,
+  options: WalletRequestOptions = {}
+): Promise<{
   success: boolean;
   referrals: Array<{
     id: number;
@@ -791,9 +898,11 @@ export async function getReferrals(walletAddress: string): Promise<{
   }
   
   const res = await fetch(`${API_URL}/referrals?wallet=${encodeURIComponent(walletAddress)}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress, options),
     credentials: 'include',
   });
+
+  assertWalletSessionResponse(res, options);
   
   if (!res.ok) {
     throw new Error('Failed to fetch referrals');
@@ -833,7 +942,7 @@ export async function getCashback(walletAddress: string, limit: number = 50): Pr
   }
   
   const res = await fetch(`${API_URL}/cashback?wallet=${encodeURIComponent(walletAddress)}&limit=${limit}`, {
-    headers: await getHeaders('GET'),
+    headers: await getHeaders('GET', walletAddress),
     credentials: 'include',
   });
   
@@ -857,7 +966,7 @@ export async function retrieveGiftCardCode(orderId: string, walletAddress: strin
   const res = await fetch(
     `${API_URL}/orders/${encodeURIComponent(orderId)}/retrieve-code?wallet=${encodeURIComponent(cleanAddress)}`,
     {
-      headers: await getHeaders('GET'),
+      headers: await getHeaders('GET', cleanAddress),
       credentials: 'include',
     }
   );
@@ -882,24 +991,21 @@ export async function loginWithWallet(walletAddress: string): Promise<{
     throw new Error('Invalid NIM wallet address format');
   }
 
-  // Get challenge
-  const challenge = await fetchChallenge(walletAddress);
-  
-  // Sign challenge
-  const { signature, publicKey } = await signChallenge(challenge.challenge);
+  const { nonce, signature, publicKey, expiresAt } = await getSignature(walletAddress);
 
   // Login with signature
   const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(await getClientPlatformHeaders()),
     },
     credentials: 'include',
     body: JSON.stringify({
       walletAddress,
       signature,
       publicKey,
-      nonce: challenge.nonce,
+      nonce,
     }),
   });
 
@@ -908,7 +1014,9 @@ export async function loginWithWallet(walletAddress: string): Promise<{
     throw new Error(body.error || 'Login failed');
   }
 
-  return res.json();
+  const result = await res.json();
+  setCachedSession(walletAddress, expiresAt);
+  return result;
 }
 
 export async function logout(): Promise<void> {
@@ -920,6 +1028,11 @@ export async function logout(): Promise<void> {
   if (!res.ok) {
     throw new Error('Logout failed');
   }
+
+  Object.keys(sessionCache).forEach((key) => {
+    delete sessionCache[key];
+  });
+  saveSessionCache();
 }
 
 

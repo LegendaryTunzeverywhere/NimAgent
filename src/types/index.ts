@@ -115,12 +115,17 @@ export interface AppState {
   network: 'testnet' | 'mainnet';
   aiLoading: boolean;
   aiStatus: string | null;
+  walletSessionExpired: boolean;
+  walletSessionError: string | null;
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   setNetwork: (network: 'testnet' | 'mainnet') => void;
   setAiStatus: (status: string | null) => void;
+  markWalletSessionExpired: (message?: string) => void;
+  clearWalletSessionExpired: () => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  refreshWalletSession: () => Promise<boolean>;
   fetchBalance: () => Promise<void>;
   loadOrCreateSession: () => Promise<void>;
   startNewSession: () => void;
