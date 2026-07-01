@@ -6,7 +6,14 @@ import Logo from './Logo';
 import SettingsModal from './SettingsModal';
 
 export default function Navigation() {
-  const { wallet, theme, setTheme } = useAppStore();
+  const {
+    wallet,
+    theme,
+    setTheme,
+    walletSessionExpired,
+    walletSessionError,
+    refreshWalletSession,
+  } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -64,6 +71,9 @@ export default function Navigation() {
         onClose={() => setShowSettings(false)}
         theme={theme}
         onThemeChange={setTheme}
+        walletSessionExpired={walletSessionExpired}
+        walletSessionError={walletSessionError}
+        onReconnect={refreshWalletSession}
       />
     </>
   );

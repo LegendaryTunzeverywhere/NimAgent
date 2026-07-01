@@ -529,14 +529,7 @@ export default function HomePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
-      <WalletSessionBanner
-        onReconnect={async () => {
-          await Promise.all([
-            refreshReferralData({ requireWalletSession: false }),
-            fetchRecentTransactions(),
-          ]);
-        }}
-      />
+      <WalletSessionBanner />
 
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (

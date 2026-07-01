@@ -347,14 +347,7 @@ export default function ChatPage() {
 
       {/* ── Sessions panel ──────────────────────────────────────────────────── */}
       <div className="px-4 pt-3">
-        <WalletSessionBanner
-          onReconnect={async () => {
-            await loadOrCreateSession();
-            if (showSessions) {
-              await fetchSessions();
-            }
-          }}
-        />
+        <WalletSessionBanner />
       </div>
 
       {showSessions && (

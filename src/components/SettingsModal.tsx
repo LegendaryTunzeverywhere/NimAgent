@@ -9,6 +9,9 @@ interface SettingsModalProps {
   onClose: () => void;
   theme: 'dark' | 'light';
   onThemeChange: (theme: 'dark' | 'light') => void;
+  walletSessionExpired: boolean;
+  walletSessionError: string | null;
+  onReconnect: () => Promise<boolean>;
 }
 
 export default function SettingsModal({
@@ -16,7 +19,23 @@ export default function SettingsModal({
   onClose,
   theme,
   onThemeChange,
+  walletSessionExpired,
+  walletSessionError,
+  onReconnect,
 }: SettingsModalProps) {
+  const [reconnecting, setReconnecting] = useState(false);
+
+  const handleReconnect = async () => {
+    setReconnecting(true);
+    try {
+      const refreshed = await onReconnect();
+      if (refreshed && typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } finally {
+      setReconnecting(false);
+    }
+  };
 
   return (
     <>
@@ -72,6 +91,33 @@ export default function SettingsModal({
               App Actions
             </h3>
             <div className="space-y-3">
+              {walletSessionExpired && (
+                <button
+                  onClick={handleReconnect}
+                  disabled={reconnecting}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-gold/10 border border-amber-200 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/15 transition-colors group disabled:opacity-60"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-gold/15 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-gold/20 transition-colors">
+                      {reconnecting ? (
+                        <span className="h-4 w-4 rounded-full border-2 border-amber-700/30 dark:border-gold/30 border-t-amber-700 dark:border-t-gold animate-spin" />
+                      ) : (
+                        <Icon name="refresh" size={16} strokeWidth={2} className="text-amber-700 dark:text-gold" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-amber-900 dark:text-gold">
+                        {reconnecting ? 'Reconnecting...' : 'Reconnect to Refresh'}
+                      </p>
+                      <p className="text-xs text-amber-700/80 dark:text-gold/80 mt-0.5">
+                        {walletSessionError || 'Refresh protected wallet data after reconnecting.'}
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="chevron-right" size={16} strokeWidth={2} className="text-amber-700 dark:text-gold group-hover:text-amber-800 dark:group-hover:text-gold transition-colors" />
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   // Clear all caches

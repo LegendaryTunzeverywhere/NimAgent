@@ -366,9 +366,7 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4 pb-8">
-      <WalletSessionBanner
-        onReconnect={() => fetchTransactions(true, { requireWalletSession: false })}
-      />
+      <WalletSessionBanner />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
