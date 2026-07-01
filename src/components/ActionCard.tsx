@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { openExternalUrl } from '@/lib/external-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, getLeaderboard } from '@/lib/api-client';
 import QRCodeDisplay from './QRCodeDisplay';
@@ -424,10 +425,9 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
         </div>
         {action.formUrl ? (
-          <a
-            href={action.formUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => openExternalUrl(action.formUrl!)}
             className="w-full py-2.5 px-4 rounded-xl bg-blue-600 dark:bg-brand-blue text-white font-semibold hover:bg-blue-700 dark:hover:bg-brand-blue/90 transition-colors flex items-center justify-center gap-2"
           >
             Open Support Form
@@ -436,7 +436,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               <polyline points="15,3 21,3 21,9" />
               <line x1="10" y1="14" x2="21" y2="3" />
             </svg>
-          </a>
+          </button>
         ) : (
           <p className="text-sm text-gray-600 dark:text-white/65">Support form coming soon! Please check back later.</p>
         )}

@@ -9,7 +9,7 @@
 // import path.
 
 import type { WalletAdapter, SignResult } from './types';
-import { isInsideNimiqPay } from './detect';
+import { hasNimiqPayHostHint, isInsideNimiqPay } from './detect';
 
 let adapterPromise: Promise<WalletAdapter> | null = null;
 
@@ -24,9 +24,18 @@ async function resolveAdapter(): Promise<WalletAdapter> {
 }
 
 /** Resolve (and cache) the active wallet adapter for this session. */
-export function getWalletAdapter(): Promise<WalletAdapter> {
-  if (!adapterPromise) adapterPromise = resolveAdapter();
-  return adapterPromise;
+export async function getWalletAdapter(): Promise<WalletAdapter> {
+  if (!adapterPromise) {
+    adapterPromise = resolveAdapter();
+  }
+
+  let adapter = await adapterPromise;
+  if (adapter.kind === 'hub' && hasNimiqPayHostHint()) {
+    adapterPromise = resolveAdapter();
+    adapter = await adapterPromise;
+  }
+
+  return adapter;
 }
 
 /** Which wallet backend is active, once resolved. Useful for UI hints. */

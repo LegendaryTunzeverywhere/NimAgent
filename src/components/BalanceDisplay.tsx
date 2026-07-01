@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBalances } from '@/lib/api-client';
+import { formatBalanceForUi, getBalancesWithFallback } from '@/lib/balance';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 
@@ -32,18 +32,19 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
   useEffect(() => {
     if (!walletAddress) { setError(true); setLoading(false); return; }
 
-    getBalances(walletAddress)
+    getBalancesWithFallback(walletAddress)
       .then((data) => {
+        const formatted = formatBalanceForUi(data);
         setBalances({
           nim: {
-            balanceFormatted: data.nim.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            balanceUSD: data.nim.balanceUSD.toFixed(2),
+            balanceFormatted: formatted.nim.balanceFormatted,
+            balanceUSD: formatted.nim.balanceUSD,
           },
-          usdt: data.reloadly ? {
-            balanceFormatted: data.reloadly.balance.toFixed(2),
-            balanceUSD: data.reloadly.balance.toFixed(2),
+          usdt: formatted.usdt ? {
+            balanceFormatted: formatted.usdt.balanceFormatted,
+            balanceUSD: formatted.usdt.balanceUSD,
           } : undefined,
-          totalUSD: data.totalUSD.toFixed(2),
+          totalUSD: formatted.totalUSD,
         });
         setLoading(false);
       })

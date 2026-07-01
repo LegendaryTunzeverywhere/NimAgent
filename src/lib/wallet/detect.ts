@@ -10,6 +10,10 @@ import type { NimiqProvider } from '@nimiq/mini-app-sdk';
 let cachedProvider: NimiqProvider | null = null;
 let detection: Promise<boolean> | null = null;
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Synchronous hint that we're inside Nimiq Pay. Safe to read during init
  * because Nimiq Pay seeds `window.nimiqPay` before the page script runs.
@@ -17,7 +21,9 @@ let detection: Promise<boolean> | null = null;
  */
 export function hasNimiqPayHostHint(): boolean {
   const hasHint = typeof window !== 'undefined' && !!window.nimiqPay;
-  console.log('[detect] hasNimiqPayHostHint():', hasHint, 'window.nimiqPay:', window.nimiqPay);
+  if (typeof window !== 'undefined') {
+    console.log('[detect] hasNimiqPayHostHint():', hasHint, 'window.nimiqPay:', window.nimiqPay);
+  }
   return hasHint;
 }
 
@@ -56,14 +62,23 @@ export function isInsideNimiqPay(timeout = 2500): Promise<boolean> {
   console.log('[detect] isInsideNimiqPay called');
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (!detection) {
-    // If there's no host hint, skip the full timeout — fail fast to Hub mode.
-    const probeTimeout = hasNimiqPayHostHint() ? timeout : 600;
-    console.log('[detect] Probe timeout:', probeTimeout);
-    detection = getNimiqProvider(probeTimeout).then((p) => {
-      const result = p !== null;
-      console.log('[detect] isInsideNimiqPay result:', result);
-      return result;
-    });
+    detection = (async () => {
+      const attempts = hasNimiqPayHostHint()
+        ? [{ wait: 0, timeout }, { wait: 250, timeout }]
+        : [{ wait: 0, timeout: 900 }, { wait: 300, timeout: 1200 }, { wait: 700, timeout: 1800 }];
+
+      for (const attempt of attempts) {
+        if (attempt.wait) await delay(attempt.wait);
+        const provider = await getNimiqProvider(attempt.timeout);
+        if (provider) {
+          console.log('[detect] isInsideNimiqPay result: true');
+          return true;
+        }
+      }
+
+      console.log('[detect] isInsideNimiqPay result: false');
+      return false;
+    })();
   }
   return detection;
 }

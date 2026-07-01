@@ -124,45 +124,16 @@ export const useAppStore = create<AppState>()(
         }));
 
         try {
-          // Fetch actual balance from API
-          const { getBalances } = await import('@/lib/api-client');
-          const balances = await getBalances(wallet.address);
-
-          // Ensure balance values are valid numbers
-          const nimBalance = Math.max(0, balances.nim.balance || 0);
-          const nimBalanceUSD = Math.max(0, balances.nim.balanceUSD || 0);
-          const reloadlyBalance = Math.max(0, balances.reloadly.balance || 0);
-          const totalUSD = Math.max(0, balances.totalUSD || 0);
-
-          const balance: Balance = {
-            nim: {
-              balance: nimBalance,
-              balanceFormatted: nimBalance < 0.01 
-                ? '0.00'
-                : nimBalance.toLocaleString('en-US', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  }),
-              balanceUSD: nimBalanceUSD < 0.01
-                ? '0.00'
-                : nimBalanceUSD.toFixed(2),
-            },
-            usdt: {
-              balance: reloadlyBalance,
-              balanceFormatted: reloadlyBalance.toFixed(2),
-              balanceUSD: reloadlyBalance.toFixed(2),
-              network: 'Polygon',
-            },
-            totalUSD: totalUSD < 0.01
-              ? '0.00'
-              : totalUSD.toFixed(2),
-          };
+          const { formatBalanceForUi, getBalancesWithFallback } = await import('@/lib/balance');
+          const balances = await getBalancesWithFallback(wallet.address);
+          const balance: Balance = formatBalanceForUi(balances);
 
           set((state) => ({
             wallet: {
               ...state.wallet,
               balance,
               loading: false,
+              error: null,
             },
           }));
         } catch (error) {

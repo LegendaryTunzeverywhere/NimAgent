@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { retrieveGiftCardCode } from '@/lib/api-client';
+import { openExternalUrl } from '@/lib/external-links';
 import Icon, { type IconName } from '@/components/Icon';
 
 interface Transaction {
@@ -327,7 +328,7 @@ export default function HistoryPage() {
     const baseUrl = network === 'mainnet' 
       ? 'https://nimiq.watch/#' 
       : 'https://test.nimiq.watch/#';
-    window.open(`${baseUrl}${txHash}`, '_blank');
+    openExternalUrl(`${baseUrl}${txHash}`);
   };
 
   // Calculate stats

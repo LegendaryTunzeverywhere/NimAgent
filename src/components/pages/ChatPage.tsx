@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import ActionCard from '@/components/ActionCard';
 import Icon, { type IconName } from '@/components/Icon';
 import Modal from '@/components/Modal';
+import { openExternalUrl } from '@/lib/external-links';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -403,7 +404,7 @@ export default function ChatPage() {
                             <Icon name="copy" size={11} strokeWidth={2} className="opacity-40 group-hover/hash:opacity-80 transition-opacity" />
                           )}
                         </div>
-                        <a href={`${base}${hash}`} target="_blank" rel="noopener noreferrer"
+                        <a href={`${base}${hash}`} onClick={(e) => { e.preventDefault(); openExternalUrl(`${base}${hash}`); }}
                           className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors break-all">
                           <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                           <span className="underline underline-offset-2">View on Explorer</span>
@@ -417,7 +418,7 @@ export default function ChatPage() {
                     const trusted = ['nimiq.watch', 'test.nimiq.watch'].some(h => host === h || host.endsWith('.' + h));
                     if (!trusted) return <p key={idx} className="break-all">{line}</p>;
                     return (
-                      <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                      <a key={idx} href={url} onClick={(e) => { e.preventDefault(); openExternalUrl(url); }}
                         className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors mt-1 break-all">
                         <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                         <span className="underline underline-offset-2">View on Explorer</span>

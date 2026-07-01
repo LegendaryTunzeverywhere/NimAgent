@@ -6,6 +6,7 @@ import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
 import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals } from '@/lib/api-client';
+import { openExternalUrl } from '@/lib/external-links';
 
 interface QuickAction {
   icon: IconName;
@@ -554,7 +555,7 @@ export default function HomePage() {
                 )}
               </div>
             </>
-          ) : (
+          ) : wallet.loading ? (
             <>
               <div className="mb-2 space-y-2">
                 <div className="skeleton h-12 w-48 rounded-xl" />
@@ -562,6 +563,19 @@ export default function HomePage() {
               </div>
               <div className="mb-4" />
             </>
+          ) : (
+            <div className="mb-6 rounded-2xl border border-red-200 dark:border-error/20 bg-red-50 dark:bg-error/10 p-4 text-center">
+              <p className="text-sm font-semibold text-red-700 dark:text-error">Couldn&apos;t load your balance</p>
+              <p className="mt-1 text-xs text-red-600/80 dark:text-error/80">
+                Try again. NimAgent will fall back to direct network balance lookup inside Nimiq Pay.
+              </p>
+              <button
+                onClick={() => fetchBalance()}
+                className="mt-3 inline-flex items-center justify-center rounded-xl border border-red-300 dark:border-error/30 px-4 py-2 text-xs font-semibold text-red-700 dark:text-error hover:bg-red-100 dark:hover:bg-error/15 transition-colors"
+              >
+                Retry balance
+              </button>
+            </div>
           )}
 
           <div className="flex gap-3">
@@ -769,7 +783,7 @@ export default function HomePage() {
                               const baseUrl = network === 'mainnet' 
                                 ? 'https://nimiq.watch/#' 
                                 : 'https://test.nimiq.watch/#';
-                              window.open(`${baseUrl}${tx.hash}`, '_blank');
+                              openExternalUrl(`${baseUrl}${tx.hash}`);
                             }}
                             className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
