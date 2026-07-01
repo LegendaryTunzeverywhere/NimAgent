@@ -387,10 +387,11 @@ export default function HomePage() {
   }, [wallet.connected, wallet.address, nimPrice]);
 
   const handleConnect = async () => {
+    if (wallet.loading) return;
     try {
       await connectWallet();
     } catch (error) {
-      // Silent failure
+      // Silent failure — store already sets wallet.error
     }
   };
 

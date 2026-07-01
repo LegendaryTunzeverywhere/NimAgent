@@ -47,12 +47,14 @@ export const useAppStore = create<AppState>()(
       setAiStatus: (status) => set({ aiStatus: status }),
 
       connectWallet: async () => {
+        // Guard against concurrent connect calls
+        if (get().wallet.loading) return;
+
         set((state) => ({
           wallet: { ...state.wallet, loading: true, error: null },
         }));
 
         try {
-          // Resolve the active wallet from the Nimiq Pay mini-app provider.
           const { getUserAddress } = await import('@/lib/wallet');
           const address = await getUserAddress();
           
@@ -65,14 +67,21 @@ export const useAppStore = create<AppState>()(
             },
           }));
 
-          // Fetch balance after connecting
-          get().fetchBalance();
-          
-          // Load last chat session or create new one
+          // Pre-warm the signature cache with one sign prompt BEFORE any API
+          // calls need it — this prevents multiple concurrent sign prompts
+          // from fetchBalance and loadOrCreateSession racing each other.
+          try {
+            const { getSignature } = await import('@/lib/api-client');
+            await getSignature(address);
+          } catch {
+            // Signature pre-warm is best-effort; API calls fall back to
+            // signing individually if this fails.
+          }
+
+          // Now run balance + session serially so they share the cached sig
+          await get().fetchBalance();
           get().loadOrCreateSession();
         } catch (error: any) {
-          
-          // Provide specific error messages
           let errorMessage = 'Failed to connect wallet';
           if (error?.message?.includes('only inside the Nimiq Pay app')) {
             errorMessage = 'Open NimAgent inside the Nimiq Pay app to continue.';

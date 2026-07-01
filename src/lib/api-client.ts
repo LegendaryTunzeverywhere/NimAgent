@@ -89,9 +89,10 @@ async function signChallenge(challenge: string): Promise<{ signature: string; pu
 }
 
 /**
- * Get or create a valid signature for a wallet address
+ * Get or create a valid signature for a wallet address.
+ * Exported so connectWallet can pre-warm the cache before parallel API calls.
  */
-async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string }> {
+export async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string }> {
   const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
   
   // Check cache for valid signature
@@ -313,7 +314,8 @@ export async function getOrders(walletAddress: string): Promise<Order[]> {
 }
 
 /**
- * Get wallet balances
+ * Get wallet balances.
+ * Balance is public on-chain data — no wallet signature required.
  */
 export async function getBalances(address: string): Promise<{
   nim: { balance: number; balanceUSD: number; price: number };
@@ -321,7 +323,8 @@ export async function getBalances(address: string): Promise<{
 }> {
   const cleanAddress = address.replace(/\s/g, '');
   const res = await fetch(`${API_URL}/balances/${cleanAddress}`, {
-    headers: await getHeaders('GET', cleanAddress),
+    // No walletAddress arg — balance is public, no signature needed
+    headers: await getHeaders('GET'),
     credentials: 'include',
   });
   
