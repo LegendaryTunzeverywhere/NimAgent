@@ -918,200 +918,228 @@ export default function HomePage() {
 
       {/* Referral Modal */}
       {showReferralModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowReferralModal(false)}>
-          <div className="max-w-md w-full card-premium rounded-3xl p-6 animate-fade-up" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
-                  <Icon name="gift" size={18} className="text-amber-600 dark:text-gold" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Your Referral Link</h2>
-                  <p className="text-xs text-gray-500 dark:text-white/55">Share to earn rewards!</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowReferralModal(false)}
-                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
-              >
-                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
-              </button>
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+          onClick={() => setShowReferralModal(false)}
+        >
+          <div
+            className="max-w-md w-full card-premium rounded-t-[2rem] sm:rounded-[2rem] animate-fade-up overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle (mobile) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-white/20" />
             </div>
 
-            {/* Referral Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Total Referrals</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{totalReferrals}</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Qualified</p>
-                <p className="text-xl font-bold text-success">{qualifiedReferrals}</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Claimable NIM</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-gold">{totalClaimableNim.toFixed(4)}</p>
-              </div>
-              <div className="card-premium rounded-2xl p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-white/55 mb-1">Claimed NIM</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{totalClaimedNim.toFixed(4)}</p>
-              </div>
-            </div>
+            {/* Scrollable content */}
+            <div className="overflow-y-auto max-h-[88vh] px-5 pb-6 pt-2 sm:pt-5 sm:px-6 sm:pb-6">
 
-            <div className="card-premium rounded-2xl p-4 mb-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-gray-700 dark:text-white/70">Referral Rewards</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/55 mt-1">
-                    Rewards accrue in real NIM and can be claimed to your wallet.
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-black text-amber-600 dark:text-gold">{totalEarnedNim.toFixed(4)} NIM</p>
-                  <p className="text-[10px] text-gray-500 dark:text-white/55">Lifetime earned</p>
-                </div>
-              </div>
-              <button
-                onClick={handleClaimReferralRewards}
-                disabled={claimingReferralRewards || totalClaimableNim <= 0}
-                className={`mt-4 w-full rounded-2xl py-3 text-sm font-bold transition-all ${
-                  claimingReferralRewards || totalClaimableNim <= 0
-                    ? 'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-white/35 cursor-not-allowed'
-                    : 'btn-gold'
-                }`}
-              >
-                {claimingReferralRewards ? 'Claiming rewards...' : totalClaimableNim > 0 ? `Claim ${totalClaimableNim.toFixed(4)} NIM` : 'No claimable rewards yet'}
-              </button>
-              {referralClaimNotice && (
-                <p className="mt-3 text-xs font-medium text-gray-600 dark:text-white/65">{referralClaimNotice}</p>
-              )}
-            </div>
-
-            {/* Referral Link Copy */}
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-2">Your Link</p>
-              <div className="flex gap-2">
-                <div className="flex-1 bg-gray-100 dark:bg-white/5 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-white/70 font-mono overflow-x-auto border border-gray-200 dark:border-white/10">
-                  {referralLink}
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Icon name="gift" size={18} className="text-amber-600 dark:text-gold" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-gray-900 dark:text-white">Referral Program</h2>
+                    <p className="text-[11px] text-gray-500 dark:text-white/50">Earn NIM for every qualified friend</p>
+                  </div>
                 </div>
                 <button
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(referralLink);
-                    setCopyToastVisible(true);
-                    setTimeout(() => setCopyToastVisible(false), 2000);
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-                    copyToastVisible 
-                      ? 'bg-green-500 hover:bg-green-600 text-white' 
+                  onClick={() => setShowReferralModal(false)}
+                  className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all flex-shrink-0"
+                >
+                  <Icon name="close" size={14} className="text-gray-500 dark:text-white/50" />
+                </button>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {[
+                  { label: 'Total', value: totalReferrals, color: 'text-gray-900 dark:text-white' },
+                  { label: 'Qualified', value: qualifiedReferrals, color: 'text-success' },
+                  { label: 'Claimable', value: `${totalClaimableNim.toFixed(2)}`, color: 'text-amber-600 dark:text-gold', sub: 'NIM' },
+                  { label: 'Claimed', value: `${totalClaimedNim.toFixed(2)}`, color: 'text-gray-900 dark:text-white', sub: 'NIM' },
+                ].map(({ label, value, color, sub }) => (
+                  <div key={label} className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.03] p-2.5 text-center">
+                    <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-1">{label}</p>
+                    <p className={`text-sm font-black tabular-nums ${color} leading-tight`}>{value}</p>
+                    {sub && <p className="text-[8px] font-bold text-gray-400 dark:text-white/30 mt-0.5">{sub}</p>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rewards card */}
+              <div className="rounded-2xl border border-amber-200 dark:border-gold/20 bg-amber-50/60 dark:bg-gold/[0.06] p-4 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-white/80">Lifetime Earnings</p>
+                    <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">Rewards paid in real NIM</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-black text-amber-600 dark:text-gold tabular-nums">{totalEarnedNim.toFixed(4)}</p>
+                    <p className="text-[10px] font-bold text-amber-500 dark:text-gold/70">NIM</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleClaimReferralRewards}
+                  disabled={claimingReferralRewards || totalClaimableNim <= 0}
+                  className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all ${
+                    claimingReferralRewards || totalClaimableNim <= 0
+                      ? 'bg-gray-200 text-gray-400 dark:bg-white/10 dark:text-white/30 cursor-not-allowed'
                       : 'btn-gold'
                   }`}
                 >
-                  {copyToastVisible ? (
-                    <>
-                      <Icon name="check" size={12} />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="copy" size={12} />
-                      Copy
-                    </>
-                  )}
+                  {claimingReferralRewards
+                    ? 'Claiming…'
+                    : totalClaimableNim > 0
+                      ? `Claim ${totalClaimableNim.toFixed(4)} NIM`
+                      : 'No claimable rewards yet'}
                 </button>
-              </div>
-            </div>
-
-            {/* Referral Status */}
-            {referralStatus?.isReferred && (
-              <div className="card-premium rounded-2xl p-4 mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="info" size={14} className="text-amber-600 dark:text-gold" />
-                  <p className="text-xs font-semibold text-gray-700 dark:text-white/70">Your Referral Progress</p>
-                </div>
-                {referralStatus.qualified ? (
-                  <p className="text-sm text-green-600 dark:text-success font-semibold">
-                    🎉 You've qualified your referral by spending over $1000!
-                  </p>
-                ) : (
-                  <div>
-                    <p className="text-sm text-gray-700 dark:text-white/70 mb-2">
-                      You've spent ${referralStatus.totalSpent?.toFixed(2) || '0.00'} so far.
-                    </p>
-                    <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-600 dark:bg-gold transition-all"
-                        style={{ width: `${Math.min(((referralStatus.totalSpent || 0) / 1000) * 100, 100)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-white/55 mt-1">
-                      Only ${referralStatus.remaining?.toFixed(2)} more to qualify!
-                    </p>
-                  </div>
+                {referralClaimNotice && (
+                  <p className="mt-2 text-xs text-center font-medium text-gray-600 dark:text-white/60">{referralClaimNotice}</p>
                 )}
               </div>
-            )}
 
-            {/* Referral List */}
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-3">Your Referrals</p>
-              {loadingReferral ? (
-                <div className="text-center py-4">
-                  <div className="w-8 h-8 mx-auto border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
-                  <p className="text-sm text-gray-600 dark:text-white/60 mt-2">Loading referrals...</p>
-                </div>
-              ) : referrals.length === 0 ? (
-                <div className="card-premium rounded-2xl p-6 text-center">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center mb-3 text-gray-400">
-                    <Icon name="gift" size={24} />
+              {/* Referral link */}
+              <div className="mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referral Link</p>
+                <div className="flex gap-2 items-stretch">
+                  <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 flex items-center">
+                    <p className="text-[11px] text-gray-700 dark:text-white/70 font-mono truncate">
+                      {referralLink || 'Loading…'}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-white/60 mb-1">No referrals yet</p>
-                  <p className="text-xs text-gray-500 dark:text-white/55">Share your link to start earning!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {referrals.map((referral: any) => (
-                    <div
-                      key={referral.id}
-                      className="card-premium rounded-2xl p-3 flex items-center justify-between"
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(referralLink);
+                        setCopyToastVisible(true);
+                        setTimeout(() => setCopyToastVisible(false), 2000);
+                      }}
+                      disabled={!referralLink}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        copyToastVisible
+                          ? 'bg-success/20 text-success border border-success/30'
+                          : referralLink
+                            ? 'btn-gold'
+                            : 'bg-gray-200 text-gray-400 dark:bg-white/10 dark:text-white/30 cursor-not-allowed'
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400">
-                          <Icon name="wallet" size={16} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
-                            {referral.referred_wallet.slice(0, 10)}...{referral.referred_wallet.slice(-4)}
-                          </p>
-                          <p className="text-[10px] text-gray-500 dark:text-white/55">
-                            Spent: ${(referral.total_spent_usd || 0).toFixed(2)}
-                          </p>
-                          <p className="text-[10px] text-amber-600 dark:text-gold">
-                            Earned: {(referral.amount_earned_nim || 0).toFixed(4)} NIM
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {referral.is_qualified ? (
-                          <div className="flex items-center gap-1 text-xs font-semibold text-success bg-success/10 px-2 py-1 rounded-full">
-                            <Icon name="check" size={10} />
-                            Qualified
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-gray-500 dark:text-white/55">Pending</p>
-                        )}
-                      </div>
+                      <Icon name={copyToastVisible ? 'check' : 'copy'} size={12} strokeWidth={2.2} />
+                      {copyToastVisible ? 'Copied!' : 'Copy'}
+                    </button>
+                    {referralLink && (
+                      <button
+                        onClick={() => {
+                          if (navigator.share) {
+                            navigator.share({ title: 'Join NimAgent', text: 'Use my referral link!', url: referralLink }).catch(() => {});
+                          }
+                        }}
+                        className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-gray-700 dark:text-white/70 text-xs font-bold flex items-center gap-1.5 hover:bg-gray-50 dark:hover:bg-white/[0.08] transition-all"
+                      >
+                        <Icon name="send" size={12} strokeWidth={2.2} />
+                        Share
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* How it works */}
+              <div className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.02] p-4 mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-3">How It Works</p>
+                <div className="space-y-2.5">
+                  {[
+                    { step: '1', text: 'Share your referral link with friends' },
+                    { step: '2', text: 'They sign up and use NimAgent' },
+                    { step: '3', text: 'Earn NIM when they spend $1,000 total' },
+                  ].map(({ step, text }) => (
+                    <div key={step} className="flex items-center gap-3">
+                      <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0">{step}</span>
+                      <p className="text-xs text-gray-700 dark:text-white/65">{text}</p>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <button
-              onClick={() => setShowReferralModal(false)}
-              className="w-full btn-gold rounded-2xl py-3 text-sm font-bold"
-            >
-              Done
-            </button>
+              {/* Progress (if referred) */}
+              {referralStatus?.isReferred && (
+                <div className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.02] p-4 mb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-3">Your Progress</p>
+                  {referralStatus.qualified ? (
+                    <p className="text-sm text-success font-semibold">🎉 Qualified — you've spent over $1,000!</p>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-xs text-gray-600 dark:text-white/60 mb-1.5">
+                        <span>${(referralStatus.totalSpent || 0).toFixed(2)} spent</span>
+                        <span>$1,000 goal</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500 dark:bg-gold transition-all rounded-full"
+                          style={{ width: `${Math.min(((referralStatus.totalSpent || 0) / 1000) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-white/45 mt-1.5">
+                        ${referralStatus.remaining?.toFixed(2)} more to qualify
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Your referrals list */}
+              <div className="mb-5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referrals</p>
+                {loadingReferral ? (
+                  <div className="flex items-center justify-center gap-2 py-6">
+                    <div className="w-5 h-5 border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+                    <p className="text-sm text-gray-500 dark:text-white/50">Loading…</p>
+                  </div>
+                ) : referrals.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-6 text-center">
+                    <Icon name="gift" size={24} className="mx-auto text-gray-300 dark:text-white/20 mb-2" />
+                    <p className="text-sm text-gray-500 dark:text-white/50">No referrals yet</p>
+                    <p className="text-[11px] text-gray-400 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {referrals.map((referral: any) => (
+                      <div key={referral.id} className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.02] p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white font-mono truncate">
+                            {referral.referred_wallet.slice(0, 8)}…{referral.referred_wallet.slice(-4)}
+                          </p>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <p className="text-[10px] text-gray-500 dark:text-white/45">
+                              ${(referral.total_spent_usd || 0).toFixed(2)} spent
+                            </p>
+                            <p className="text-[10px] text-amber-600 dark:text-gold">
+                              +{(referral.amount_earned_nim || 0).toFixed(4)} NIM
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-full ${
+                          referral.is_qualified
+                            ? 'bg-success/10 text-success'
+                            : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-white/40'
+                        }`}>
+                          {referral.is_qualified ? '✓ Qualified' : 'Pending'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setShowReferralModal(false)}
+                className="w-full rounded-2xl py-3 text-sm font-bold border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-all"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
