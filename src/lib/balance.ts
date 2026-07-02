@@ -9,12 +9,13 @@ type BalanceResponse = {
 };
 
 export class NimiqSyncingError extends Error {
-  constructor(message = 'Nimiq Pay is still syncing with the Nimiq network.') {
+  constructor(message = 'Nimiq Pay is still syncing with the Nimiq network. Please wait a moment.') {
     super(message);
     this.name = 'NimiqSyncingError';
   }
 }
 
+// 1 NIM = 100,000 Luna — NEVER skip this division or balance reads as zero
 const NIM_LUNA = 100_000;
 
 function getActiveNetwork(): 'mainnet' | 'testnet' {
@@ -27,27 +28,43 @@ function asNumber(value: unknown): number | null {
 }
 
 /**
- * Convert a Nimiq address to the user-friendly grouped format required by
- * the Nimiq RPC node (e.g. "NQ07 XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX").
- *
- * The Nimiq RPC rejects stripped addresses with "Unknown format / Invalid params".
- * This must be called before any RPC `getAccountByAddress` call.
+ * Convert to the human-friendly grouped format required by Nimiq RPC nodes.
+ * Stripped addresses are rejected with "Unknown format / Invalid params".
  */
 function toRpcAddress(address: string): string {
   const stripped = address.replace(/\s/g, '').toUpperCase();
-  // NQ + 2 check digits + 32 base-32 chars = 36 chars total
-  // Group into: NQ## + 8 groups of 4
-  const prefix = stripped.slice(0, 4); // NQ##
-  const rest = stripped.slice(4);       // 32 chars
+  const prefix = stripped.slice(0, 4);
+  const rest = stripped.slice(4);
   const groups = rest.match(/.{1,4}/g) ?? [];
   return [prefix, ...groups].join(' ');
 }
 
-/**
- * Strip spaces for REST API endpoints that need clean addresses.
- */
 function toCleanAddress(address: string): string {
   return address.replace(/\s/g, '');
+}
+
+/**
+ * Wait for Nimiq Pay consensus before querying balance.
+ * As per Nimiq integration guide: always wait for onConsensusEstablished
+ * before running balance-check functions, otherwise you may get 0 temporarily.
+ *
+ * Retries up to `maxAttempts` times with 2s delay between each.
+ */
+async function waitForConsensus(maxAttempts = 5): Promise<void> {
+  try {
+    const { getNimiqNetworkState } = await import('@/lib/wallet');
+    for (let i = 0; i < maxAttempts; i++) {
+      const state = await getNimiqNetworkState();
+      if (state.consensusEstablished) return;
+      if (i < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+    throw new NimiqSyncingError();
+  } catch (err) {
+    if (err instanceof NimiqSyncingError) throw err;
+    // If we can't determine consensus state, proceed anyway (best-effort)
+  }
 }
 
 async function fetchNimUsdPrice(): Promise<number> {
@@ -63,7 +80,7 @@ async function fetchNimUsdPrice(): Promise<number> {
       if (price != null && price >= 0) return price;
     }
   } catch {
-    // Fall back to CoinGecko below.
+    // fall through to CoinGecko
   }
 
   const res = await fetch(
@@ -71,18 +88,20 @@ async function fetchNimUsdPrice(): Promise<number> {
     { cache: 'no-store' },
   );
   if (!res.ok) throw new Error('Failed to fetch NIM price');
-
   const data = await res.json();
   const price = asNumber(data?.['nimiq-2']?.usd);
   if (price == null) throw new Error('Invalid NIM price response');
   return price;
 }
 
+/**
+ * Fetch NIM balance via the RPC proxy.
+ * Divides Luna by 100,000 to get NIM — skipping this returns 0 NIM incorrectly.
+ */
 async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   const rpcAddress = toRpcAddress(address);
   const cleanAddress = toCleanAddress(address);
   const platformHeaders = await getClientPlatformHeaders();
-  console.log('[fetchNimBalanceFromRpc] rpcAddress:', rpcAddress);
 
   const rpcRes = await fetch('/api/nimiq-rpc', {
     method: 'POST',
@@ -97,21 +116,22 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
 
   if (rpcRes.ok) {
     const rpcData = await rpcRes.json();
-    console.log('[fetchNimBalanceFromRpc] RPC response:', JSON.stringify(rpcData));
+    // RPC response: { result: { data: { balance: <luna>, ... }, metadata: {...} } }
     const luna =
       asNumber(rpcData?.result?.data?.balance) ??
       asNumber(rpcData?.result?.balance) ??
       asNumber(rpcData?.result?.account?.balance);
 
-    if (luna != null) {
-      console.log('[fetchNimBalanceFromRpc] luna from RPC:', luna, '=', luna / NIM_LUNA, 'NIM');
-      return luna / NIM_LUNA;
-    }
+    // Always divide by NIM_LUNA — raw value is in Luna, not NIM
+    if (luna != null) return luna / NIM_LUNA;
   }
 
   if (getActiveNetwork() === 'mainnet') {
-    // nimiq.watch REST API accepts both stripped and spaced addresses
-    const watchRes = await fetch(`https://api.nimiq.watch/account/${cleanAddress}`, { cache: 'no-store' });
+    // nimiq.watch REST API as fallback — also returns Luna
+    const watchRes = await fetch(
+      `https://api.nimiq.watch/account/${cleanAddress}`,
+      { cache: 'no-store' }
+    );
     if (watchRes.ok) {
       const watchData = await watchRes.json();
       const luna = asNumber(watchData?.balance);
@@ -122,36 +142,42 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   throw new Error('Failed to fetch NIM balance from public RPC');
 }
 
+/**
+ * Primary balance fetch with full fallback chain:
+ *
+ * 1. BFF → Railway backend (most reliable, uses nimiq.watch REST internally)
+ * 2. If BFF fails → wait for Nimiq consensus, then query RPC directly
+ *
+ * Per Nimiq integration guide:
+ * - Always wait for consensusEstablished before querying
+ * - Always divide Luna by 100,000 to get NIM
+ * - Verify you're querying the correct address (the one holding the NIM)
+ */
 export async function getBalancesWithFallback(address: string): Promise<BalanceResponse> {
+  // Primary path: BFF → Railway → nimiq.watch
   try {
-    console.log('[getBalancesWithFallback] trying BFF for:', address.replace(/\s/g,''));
     const data = await getBalances(address);
-    console.log('[getBalancesWithFallback] BFF success:', JSON.stringify(data));
+    // BFF returns balance already in NIM (the server divides by Luna)
     return { ...data, meta: { source: 'bff' } };
-  } catch (err: any) {
-    console.warn('[getBalancesWithFallback] BFF failed:', err?.message, '— trying RPC fallback');
-    try {
-      const { getNimiqNetworkState } = await import('@/lib/wallet');
-      const networkState = await getNimiqNetworkState();
-      if (!networkState.consensusEstablished) {
-        throw new NimiqSyncingError();
-      }
-    } catch (error) {
-      if (error instanceof NimiqSyncingError) throw error;
-    }
-
-    const [balance, price] = await Promise.all([
-      fetchNimBalanceFromRpc(address),
-      fetchNimUsdPrice().catch(() => 0),
-    ]);
-
-    const balanceUSD = balance * price;
-    return {
-      nim: { balance, balanceUSD, price },
-      totalUSD: balanceUSD,
-      meta: { source: 'rpc-fallback' },
-    };
+  } catch {
+    // BFF unavailable — fall through to direct RPC
   }
+
+  // Fallback path: wait for consensus, then query RPC directly
+  // This handles the case where the app loaded before the blockchain peer connected
+  await waitForConsensus();
+
+  const [balance, price] = await Promise.all([
+    fetchNimBalanceFromRpc(address),
+    fetchNimUsdPrice().catch(() => 0),
+  ]);
+
+  const balanceUSD = balance * price;
+  return {
+    nim: { balance, balanceUSD, price },
+    totalUSD: balanceUSD,
+    meta: { source: 'rpc-fallback' },
+  };
 }
 
 export function formatBalanceForUi(data: BalanceResponse): Balance {

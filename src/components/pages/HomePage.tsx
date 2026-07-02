@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
-import WalletSessionBanner from '@/components/WalletSessionBanner';
 import type { Transaction } from '@/types';
 import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals, getWalletRequestHeaders, isWalletSessionRequiredError } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
@@ -529,7 +528,6 @@ export default function HomePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
-      <WalletSessionBanner />
 
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (

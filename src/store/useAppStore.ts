@@ -183,14 +183,20 @@ export const useAppStore = create<AppState>()(
             },
           }));
         } catch (error) {
-          const errorMessage = error instanceof Error && error.name === 'NimiqSyncingError'
-            ? 'Nimiq Pay is still syncing with the Nimiq network.'
-            : 'Failed to fetch balance';
+          const { NimiqSyncingError } = await import('@/lib/balance');
+          if (error instanceof NimiqSyncingError) {
+            // Nimiq Pay hasn't synced yet — show loading and retry in 5s
+            set((state) => ({
+              wallet: { ...state.wallet, loading: false, error: null },
+            }));
+            setTimeout(() => get().fetchBalance(), 5000);
+            return;
+          }
           set((state) => ({
             wallet: {
               ...state.wallet,
               loading: false,
-              error: errorMessage,
+              error: 'Failed to fetch balance',
             },
           }));
         }
