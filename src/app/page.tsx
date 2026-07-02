@@ -11,6 +11,7 @@ import HomePage from '@/components/pages/HomePage';
 import ChatPage from '@/components/pages/ChatPage';
 import HistoryPage from '@/components/pages/HistoryPage';
 import NimiqPayRequired from '@/components/NimiqPayRequired';
+import MaintenancePage from '@/components/MaintenancePage';
 import { isInsideNimiqPay } from '@/lib/wallet/detect';
 
 // ---------------------------------------------------------------------------
@@ -140,6 +141,15 @@ export default function Home() {
     ? new URLSearchParams(window.location.search)
     : null;
   const hasPaymentParams = (searchParams_raw?.has('to') || searchParams_raw?.has('ref')) ?? false;
+
+  // Show maintenance page immediately if flag is set — no need to check anything else
+  if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
+    return (
+      <ThemeProvider>
+        <MaintenancePage />
+      </ThemeProvider>
+    );
+  }
 
   // Redirect chat → home if wallet disconnects
   useEffect(() => {
