@@ -158,8 +158,8 @@ async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; c
  * Sign a challenge using the wallet
  */
 async function signChallenge(challenge: string): Promise<{ signature: string; publicKey: string }> {
-  // Import wallet signMessage function dynamically
   const { signMessage } = await import('./wallet');
+  console.log('[signChallenge] signing challenge len:', challenge.length, 'val:', challenge.substring(0, 80));
   const result = await signMessage(challenge);
   if (!result.publicKey) {
     throw new Error('Public key not returned from wallet');
