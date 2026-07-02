@@ -332,28 +332,6 @@ export default function HomePage() {
   }, [wallet.connected, wallet.address, fetchBalance]);
 
   useEffect(() => {
-    if (!wallet.connected || !wallet.address) return;
-
-    // Refresh every 60 s while the tab is open
-    const interval = setInterval(() => {
-      fetchBalance();
-    }, 60_000);
-
-    // Refresh immediately whenever the tab becomes visible (covers switching back)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchBalance();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [wallet.connected, wallet.address, fetchBalance]);
-
-  useEffect(() => {
     // Handle referral tracking and fetch referral info
     const fetchReferralInfo = async () => {
       if (!wallet.address) return;

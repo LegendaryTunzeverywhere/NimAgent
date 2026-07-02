@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatBalanceForUi, getBalancesWithFallback, NimiqSyncingError } from '@/lib/balance';
+import { formatBalanceForUi, getBalancesWithFallback } from '@/lib/balance';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
 
@@ -40,7 +40,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
         setLoading(false);
       })
       .catch((err: unknown) => {
-        const message = err instanceof NimiqSyncingError
+        const message = (err instanceof Error && err.name === 'NimiqSyncingError')
           ? 'Nimiq Pay is syncing with the Nimiq network.'
           : "Couldn't load your balance";
         setError(message);

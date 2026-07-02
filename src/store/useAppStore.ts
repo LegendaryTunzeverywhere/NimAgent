@@ -586,3 +586,27 @@ export const useAppStore = create<AppState>()(
     }
   )
 );
+
+// ---------------------------------------------------------------------------
+// Global balance polling — runs regardless of which tab is active.
+// HTLCs are dynamic: they can settle at any time while the user is chatting
+// or viewing history. Poll every 30s so the balance stays fresh.
+// Also refresh on visibility change so returning to the app always shows
+// the current balance.
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  const poll = () => {
+    const { wallet } = useAppStore.getState();
+    if (wallet.connected && wallet.address) {
+      useAppStore.getState().fetchBalance();
+    }
+  };
+
+  // Poll every 30 seconds
+  setInterval(poll, 30_000);
+
+  // Refresh immediately when the app regains focus
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') poll();
+  });
+}
