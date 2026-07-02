@@ -1,9 +1,4 @@
 // Mini-app adapter — runs inside the Nimiq Pay app.
-//
-// Wallet operations go through the injected Nimiq provider obtained via the
-// Mini App SDK init() helper. There is no popup: every sensitive action
-// triggers a native Nimiq Pay confirmation dialog, so no gesture/prewarm
-// workaround is needed.
 
 import type { ErrorResponse, NimiqProvider, SignatureResult } from '@nimiq/mini-app-sdk';
 import type { WalletAdapter, PaymentRequest, SignResult, NetworkState } from './types';
@@ -11,7 +6,6 @@ import { getNimiqProvider } from './detect';
 
 const APP_NAME = 'NimAgent';
 
-/** Narrow the `T | ErrorResponse` union the provider returns. */
 function isErrorResponse(value: unknown): value is ErrorResponse {
   return (
     typeof value === 'object' &&
@@ -30,113 +24,81 @@ function unwrap<T>(value: T | ErrorResponse): T {
 }
 
 async function provider(): Promise<NimiqProvider> {
-  console.log('[miniapp-adapter] Getting provider...');
   const p = await getNimiqProvider();
   if (!p) throw new Error('Nimiq Pay provider unavailable. Open NimAgent inside the Nimiq Pay app.');
-  console.log('[miniapp-adapter] Provider obtained!');
   return p;
+}
+
+/** Convert any Nimiq address format to the spaced RPC format "NQ## XXXX …" */
+function toRpcAddr(address: string): string {
+  const s = address.replace(/\s/g, '').toUpperCase();
+  const groups = s.match(/.{1,4}/g) ?? [];
+  return groups.join(' ');
 }
 
 export const miniAppAdapter: WalletAdapter = {
   kind: 'miniapp',
 
   prewarm() {
-    // No popup to warm; just kick off provider resolution so the first call
-    // doesn't pay the init() cost. Best-effort.
-    console.log('[miniapp-adapter] Prewarming...');
-    void getNimiqProvider().catch(() => {/* ignore */});
+    void getNimiqProvider().catch(() => {});
   },
 
   async getUserAddress(): Promise<string> {
-    console.log('[miniapp-adapter] getUserAddress called');
     const nimiq = await provider();
-    console.log('[miniapp-adapter] Listing accounts...');
     const accounts = unwrap(await nimiq.listAccounts());
-    console.log('[miniapp-adapter] Accounts:', accounts);
     if (!accounts.length) throw new Error('No Nimiq account available in Nimiq Pay.');
-
-    // If only one account, return it immediately.
     if (accounts.length === 1) return accounts[0];
 
-    // Multiple accounts: pick the one with the highest on-chain balance so
-    // we always connect to the funded wallet, not an empty secondary account.
+    // Multiple accounts — pick the one with the highest total balance
+    // (including HTLCs) so we connect to the funded wallet.
     try {
-      const balanceResults = await Promise.all(
+      const totals = await Promise.all(
         accounts.map(async (addr) => {
-          try {
-            const clean = addr.replace(/\s/g, '');
-            const res = await fetch(`https://api.nimiq.watch/account/${clean}`, {
-              cache: 'no-store',
-              signal: AbortSignal.timeout(5000),
-            });
-            if (!res.ok) return { addr, balance: 0 };
-            const data = await res.json();
-            return { addr, balance: Number(data?.balance ?? 0) };
-          } catch {
-            return { addr, balance: 0 };
-          }
+          const luna = await miniAppAdapter.getTotalNimBalance(addr);
+          return { addr, balance: luna ?? 0 };
         })
       );
-
-      balanceResults.sort((a, b) => b.balance - a.balance);
-      console.log('[miniapp-adapter] Account balances:', balanceResults);
-      return balanceResults[0].addr;
+      totals.sort((a, b) => b.balance - a.balance);
+      console.log('[miniapp-adapter] Account totals:', totals);
+      return totals[0].addr;
     } catch {
-      // Fallback: return first account if balance check fails
       return accounts[0];
     }
   },
 
   async requestPayment(req: PaymentRequest): Promise<string> {
-    console.log('[miniapp-adapter] requestPayment called with req:', req);
     const nimiq = await provider();
-    console.log('[miniapp-adapter] Provider ready, sending transaction...');
-
-    // Use the data-carrying variant when a memo/context is supplied, matching
-    // the Hub adapter's extraData behavior. The backend verifies recipient +
-    // value by tx hash and ignores the data, so either path fulfills orders.
     let txHash;
     try {
       txHash = req.data
-        ? unwrap(
-            await nimiq.sendBasicTransactionWithData({
-              recipient: req.recipient,
-              value: req.value,
-              data: req.data,
-              ...(req.fee != null ? { fee: req.fee } : {}),
-              ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
-            }),
-          )
-        : unwrap(
-            await nimiq.sendBasicTransaction({
-              recipient: req.recipient,
-              value: req.value,
-              ...(req.fee != null ? { fee: req.fee } : {}),
-              ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
-            }),
-          );
+        ? unwrap(await nimiq.sendBasicTransactionWithData({
+            recipient: req.recipient,
+            value: req.value,
+            data: req.data,
+            ...(req.fee != null ? { fee: req.fee } : {}),
+            ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
+          }))
+        : unwrap(await nimiq.sendBasicTransaction({
+            recipient: req.recipient,
+            value: req.value,
+            ...(req.fee != null ? { fee: req.fee } : {}),
+            ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
+          }));
     } catch (err) {
       console.error('[miniapp-adapter] Transaction failed:', err);
       throw err;
     }
-
     console.log('[miniapp-adapter] Transaction sent, hash:', txHash);
     return txHash;
   },
 
   async signMessage(message: string): Promise<SignResult> {
-    console.log('[miniapp-adapter] signMessage called, message length:', message.length);
     const nimiq = await provider();
     const result = unwrap<SignatureResult>(await nimiq.sign(message));
 
-    // Normalise hex strings: some SDK/wallet versions return base64 or
-    // mixed-case hex. @nimiq/core's Signature.fromHex / PublicKey.fromHex
-    // require lowercase hex without any prefix.
     const normaliseHex = (value: string): string => {
       if (!value) return value;
-      // Strip 0x prefix if present
       const stripped = value.startsWith('0x') ? value.slice(2) : value;
-      // If it looks like base64 (not all hex chars), decode it first
       if (!/^[0-9a-fA-F]+$/.test(stripped)) {
         try {
           const bytes = Uint8Array.from(atob(stripped), c => c.charCodeAt(0));
@@ -148,14 +110,10 @@ export const miniAppAdapter: WalletAdapter = {
 
     const publicKey = normaliseHex(result.publicKey);
     const signature = normaliseHex(result.signature);
-
-    console.log('[miniapp-adapter] sign result (normalised):', {
-      publicKeyLength: publicKey?.length,   // expect 64
-      signatureLength: signature?.length,   // expect 128
-      publicKeyPrefix: publicKey?.substring(0, 16),
-      signaturePrefix: signature?.substring(0, 16),
+    console.log('[miniapp-adapter] sign result:', {
+      publicKeyLength: publicKey?.length,
+      signatureLength: signature?.length,
     });
-
     return { publicKey, signature };
   },
 
@@ -163,22 +121,101 @@ export const miniAppAdapter: WalletAdapter = {
     const nimiq = await provider();
     const consensusEstablished = unwrap(await nimiq.isConsensusEstablished());
     let blockNumber: number | null = null;
-
     if (consensusEstablished) {
       try {
-        const currentHeight = unwrap(await nimiq.getBlockNumber());
-        blockNumber = typeof currentHeight === 'number' ? currentHeight : null;
-      } catch {
-        blockNumber = null;
-      }
+        const h = unwrap(await nimiq.getBlockNumber());
+        blockNumber = typeof h === 'number' ? h : null;
+      } catch { blockNumber = null; }
     }
+    return { consensusEstablished, blockNumber };
+  },
 
-    return {
-      consensusEstablished,
-      blockNumber,
-    };
+  /** Basic account balance only (Luna). */
+  async getNimBalance(address: string): Promise<number | null> {
+    try {
+      const nimiq  = await provider();
+      const result = await nimiq.request({ method: 'getAccountByAddress', params: [toRpcAddr(address)] }) as any;
+      const luna   = result?.data?.balance ?? result?.balance ?? result?.account?.balance;
+      return typeof luna === 'number' ? luna : null;
+    } catch { return null; }
+  },
+
+  /**
+   * Total NIM balance = basic account + active outgoing HTLC contracts.
+   *
+   * Nimiq Pay uses HTLCs for atomic swaps. When NIM is purchased or swapped
+   * it gets locked in an HTLC contract (type=2) until the hash pre-image is
+   * revealed. During this period the basic account shows 0, but the NIM
+   * belongs to the user. We discover these by checking recent outgoing
+   * transactions where toType===2 and we're the sender, then summing any
+   * that haven't timed out yet.
+   */
+  async getTotalNimBalance(address: string): Promise<number | null> {
+    try {
+      const nimiq     = await provider();
+      const rpcAddr   = toRpcAddr(address);
+      const cleanAddr = address.replace(/\s/g, '').toUpperCase();
+
+      // Basic balance
+      const basicResult = await nimiq.request({
+        method: 'getAccountByAddress',
+        params: [rpcAddr],
+      }) as any;
+      const basicLuna: number =
+        basicResult?.data?.balance ?? basicResult?.balance ?? 0;
+
+      // Recent transactions — getTransactionsByAddress(address, max, startAt)
+      // startAt=null means from the latest block backwards
+      let htlcAddresses: string[] = [];
+      try {
+        const txResult = await nimiq.request({
+          method: 'getTransactionsByAddress',
+          params: [rpcAddr, 20, null],
+        }) as any;
+
+        const txList: any[] = txResult?.data ?? txResult ?? [];
+        const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
+
+        htlcAddresses = txList
+          .filter((tx: any) =>
+            tx.toType === 2 &&                                         // sent to HTLC
+            tx.from?.replace(/\s/g, '') === cleanAddr &&               // we sent it
+            (tx.timestamp ?? 0) > cutoff                               // within 30 days
+          )
+          .map((tx: any) => tx.to as string);
+
+        console.log('[miniapp-adapter] Found HTLC addresses:', htlcAddresses);
+      } catch (e) {
+        console.warn('[miniapp-adapter] Could not fetch tx history:', e);
+        return basicLuna || null;
+      }
+
+      if (!htlcAddresses.length) return basicLuna || null;
+
+      // Query each HTLC — only count non-expired ones (timeout > now)
+      const now = Date.now();
+      const htlcResults = await Promise.all(
+        htlcAddresses.map(async (htlcAddr: string) => {
+          try {
+            const r = await nimiq.request({
+              method: 'getAccountByAddress',
+              params: [toRpcAddr(htlcAddr)],
+            }) as any;
+            const d = r?.data ?? r;
+            if (d?.type === 'htlc' && typeof d.timeout === 'number' && d.timeout > now) {
+              return typeof d.balance === 'number' ? d.balance : 0;
+            }
+            return 0;
+          } catch { return 0; }
+        })
+      );
+
+      const htlcLuna = htlcResults.reduce((s: number, v: number) => s + v, 0);
+      const total    = basicLuna + htlcLuna;
+      console.log(`[miniapp-adapter] basic=${basicLuna} htlc=${htlcLuna} total=${total} luna`);
+      return total > 0 ? total : null;
+    } catch { return null; }
   },
 };
 
-// APP_NAME kept for parity/future use (native dialogs label the app themselves).
 void APP_NAME;

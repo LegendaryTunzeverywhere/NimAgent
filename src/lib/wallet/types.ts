@@ -44,6 +44,19 @@ export interface WalletAdapter {
   signMessage(message: string, signer?: string): Promise<SignResult>;
   /** Read-only wallet/network state for mini-app readiness checks. */
   getNetworkState(): Promise<NetworkState>;
+  /**
+   * Fetch the NIM balance in Luna for a given address directly from the
+   * Nimiq Pay provider's already-established RPC connection.
+   * Returns null if unavailable.
+   */
+  getNimBalance(address: string): Promise<number | null>;
+  /**
+   * Fetch total NIM balance in Luna including active HTLC contracts where
+   * this address is the sender. Nimiq Pay uses HTLCs for atomic swaps —
+   * NIM is locked in a contract temporarily, making the basic account show 0.
+   * Returns null if unavailable.
+   */
+  getTotalNimBalance(address: string): Promise<number | null>;
   /** Best-effort warm-up so the eventual wallet call resolves quickly. */
   prewarm(): void;
 }

@@ -55,6 +55,25 @@ export async function getNimiqNetworkState(): Promise<NetworkState> {
 }
 
 /**
+ * Fetch NIM balance in Luna directly from the Nimiq Pay provider's RPC.
+ * Returns null if unavailable (e.g. consensus not yet established).
+ */
+export async function getNimBalanceFromProvider(address: string): Promise<number | null> {
+  const adapter = await getWalletAdapter();
+  return adapter.getNimBalance(address);
+}
+
+/**
+ * Fetch total NIM balance including active outgoing HTLC contracts.
+ * Nimiq Pay uses HTLCs for atomic swaps — NIM is locked in a contract
+ * temporarily, making the basic account show 0 until settlement.
+ */
+export async function getTotalNimBalanceFromProvider(address: string): Promise<number | null> {
+  const adapter = await getWalletAdapter();
+  return adapter.getTotalNimBalance(address);
+}
+
+/**
  * Send a NIM payment. Signature matches the legacy helper:
  *   requestPayment(recipient, amountLuna, context, memo?, sender?)
  * `context` and `memo` are combined into the transaction data (as before).

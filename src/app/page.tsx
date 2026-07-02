@@ -158,7 +158,8 @@ export default function Home() {
   }, []);
 
   // Once confirmed inside Nimiq Pay:
-  // - If already connected: just refresh balance (no listAccounts call)
+  // - If already connected: re-run the funded-account picker, update address if
+  //   needed, then refresh balance. This catches stale persisted addresses.
   // - If not connected + payment/referral params: auto-connect
   // - If not connected + no params: wait for user to press Connect
   useEffect(() => {
@@ -167,10 +168,25 @@ export default function Home() {
     const state = useAppStore.getState();
 
     if (state.wallet.connected) {
-      // Already connected from persisted state — just refresh balance.
-      // Do NOT call getUserAddress/listAccounts here — it triggers the
-      // native Nimiq Pay account selection dialog unnecessarily.
-      state.fetchBalance();
+      // Re-run the multi-account funded-address picker silently on every startup.
+      // This ensures we always show the balance for the funded account, even if
+      // a different (empty) account was persisted from a previous session.
+      (async () => {
+        try {
+          const { getUserAddress } = await import('@/lib/wallet');
+          const freshAddress = await getUserAddress();
+          const current = useAppStore.getState();
+          if (freshAddress !== current.wallet.address) {
+            useAppStore.setState((s) => ({
+              wallet: { ...s.wallet, address: freshAddress },
+            }));
+          }
+          useAppStore.getState().fetchBalance();
+        } catch {
+          // Best-effort — fall back to fetching with existing address
+          state.fetchBalance();
+        }
+      })();
       return;
     }
 

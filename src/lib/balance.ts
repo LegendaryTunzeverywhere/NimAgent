@@ -5,7 +5,7 @@ import { getClientPlatformHeaders } from './client-platform';
 type BalanceResponse = {
   nim: { balance: number; balanceUSD: number; price: number };
   totalUSD: number;
-  meta?: { source: 'bff' | 'rpc-fallback' };
+  meta?: { source: 'provider' | 'bff' | 'rpc-fallback' };
 };
 
 // 1 NIM = 100,000 Luna
@@ -59,7 +59,6 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   const cleanAddress = toCleanAddress(address);
   const headers      = await getClientPlatformHeaders();
 
-  // Primary: our RPC proxy (handles address format + endpoint fallback)
   const rpcRes = await fetch('/api/nimiq-rpc', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headers },
@@ -72,23 +71,23 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   });
 
   if (rpcRes.ok) {
-    const rpcData = await rpcRes.json();
+    const d = await rpcRes.json();
     const luna =
-      asNumber(rpcData?.result?.data?.balance) ??
-      asNumber(rpcData?.result?.balance) ??
-      asNumber(rpcData?.result?.account?.balance);
+      asNumber(d?.result?.data?.balance) ??
+      asNumber(d?.result?.balance) ??
+      asNumber(d?.result?.account?.balance);
     if (luna != null) return luna / NIM_LUNA;
   }
 
-  // Fallback: nimiq.watch REST (mainnet only)
+  // nimiq.watch REST fallback (mainnet only)
   if (getActiveNetwork() === 'mainnet') {
     const watchRes = await fetch(
       `https://api.nimiq.watch/account/${cleanAddress}`,
       { cache: 'no-store' },
     );
     if (watchRes.ok) {
-      const watchData = await watchRes.json();
-      const luna = asNumber(watchData?.balance);
+      const d = await watchRes.json();
+      const luna = asNumber(d?.balance);
       if (luna != null) return luna / NIM_LUNA;
     }
   }
@@ -97,27 +96,40 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
 }
 
 /**
- * Fetch balance with fallback:
- *   1. BFF (Railway backend) — fastest, most reliable
- *   2. Direct RPC via our nimiq-rpc proxy
- *   3. nimiq.watch REST API
+ * Fetch balance with three-tier fallback:
  *
- * No consensus-wait blocking — the BFF queries the blockchain server-side
- * where sync delays don't apply. The RPC fallback is best-effort.
+ * 1. Nimiq Pay provider RPC — the same source Nimiq Pay uses itself,
+ *    already connected and synced. Returns Luna → divide by 100,000.
+ * 2. BFF → Railway backend → nimiq.watch (server-side)
+ * 3. Direct RPC proxy → nimiq.watch REST
  */
 export async function getBalancesWithFallback(address: string): Promise<BalanceResponse> {
-  // Primary: BFF → Railway → nimiq.watch (server-side, no sync delay)
+  const price = await fetchNimUsdPrice().catch(() => 0);
+
+  // Tier 1: Ask the Nimiq Pay provider directly — always in sync,
+  // and includes HTLC contract balances that the basic account omits.
+  // (Nimiq Pay uses HTLCs for atomic swaps; basic account shows 0 during lock.)
+  try {
+    const { getTotalNimBalanceFromProvider } = await import('@/lib/wallet');
+    const luna = await getTotalNimBalanceFromProvider(address);
+    if (luna != null) {
+      const nim = luna / NIM_LUNA;
+      return {
+        nim: { balance: nim, balanceUSD: nim * price, price },
+        totalUSD: nim * price,
+        meta: { source: 'provider' },
+      };
+    }
+  } catch { /* fall through */ }
+
+  // Tier 2: BFF → Railway
   try {
     const data = await getBalances(address);
     return { ...data, meta: { source: 'bff' } };
-  } catch { /* BFF unavailable — try direct RPC */ }
+  } catch { /* fall through */ }
 
-  // Fallback: direct RPC
-  const [balance, price] = await Promise.all([
-    fetchNimBalanceFromRpc(address),
-    fetchNimUsdPrice().catch(() => 0),
-  ]);
-
+  // Tier 3: Direct RPC
+  const balance    = await fetchNimBalanceFromRpc(address);
   const balanceUSD = balance * price;
   return {
     nim: { balance, balanceUSD, price },
