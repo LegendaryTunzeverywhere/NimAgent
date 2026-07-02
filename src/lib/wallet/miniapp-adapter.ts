@@ -128,14 +128,35 @@ export const miniAppAdapter: WalletAdapter = {
     console.log('[miniapp-adapter] signMessage called, message length:', message.length);
     const nimiq = await provider();
     const result = unwrap<SignatureResult>(await nimiq.sign(message));
-    // Log key details so we can diagnose server-side verification failures
-    console.log('[miniapp-adapter] sign result:', {
-      publicKeyLength: result.publicKey?.length,
-      signatureLength: result.signature?.length,
-      publicKeyPrefix: result.publicKey?.substring(0, 16),
-      signaturePrefix: result.signature?.substring(0, 16),
+
+    // Normalise hex strings: some SDK/wallet versions return base64 or
+    // mixed-case hex. @nimiq/core's Signature.fromHex / PublicKey.fromHex
+    // require lowercase hex without any prefix.
+    const normaliseHex = (value: string): string => {
+      if (!value) return value;
+      // Strip 0x prefix if present
+      const stripped = value.startsWith('0x') ? value.slice(2) : value;
+      // If it looks like base64 (not all hex chars), decode it first
+      if (!/^[0-9a-fA-F]+$/.test(stripped)) {
+        try {
+          const bytes = Uint8Array.from(atob(stripped), c => c.charCodeAt(0));
+          return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch { return stripped; }
+      }
+      return stripped.toLowerCase();
+    };
+
+    const publicKey = normaliseHex(result.publicKey);
+    const signature = normaliseHex(result.signature);
+
+    console.log('[miniapp-adapter] sign result (normalised):', {
+      publicKeyLength: publicKey?.length,   // expect 64
+      signatureLength: signature?.length,   // expect 128
+      publicKeyPrefix: publicKey?.substring(0, 16),
+      signaturePrefix: signature?.substring(0, 16),
     });
-    return { publicKey: result.publicKey, signature: result.signature };
+
+    return { publicKey, signature };
   },
 
   async getNetworkState(): Promise<NetworkState> {

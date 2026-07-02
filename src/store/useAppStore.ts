@@ -162,42 +162,19 @@ export const useAppStore = create<AppState>()(
         const { wallet } = get();
         if (!wallet.address) return;
 
-        set((state) => ({
-          wallet: { ...state.wallet, loading: true },
-        }));
+        set((state) => ({ wallet: { ...state.wallet, loading: true } }));
 
         try {
           const { formatBalanceForUi, getBalancesWithFallback } = await import('@/lib/balance');
-          console.log('[fetchBalance] fetching for address:', wallet.address);
           const balances = await getBalancesWithFallback(wallet.address);
-          console.log('[fetchBalance] raw response:', JSON.stringify(balances));
           const balance: Balance = formatBalanceForUi(balances);
-          console.log('[fetchBalance] formatted:', JSON.stringify(balance));
 
           set((state) => ({
-            wallet: {
-              ...state.wallet,
-              balance,
-              loading: false,
-              error: null,
-            },
+            wallet: { ...state.wallet, balance, loading: false, error: null },
           }));
-        } catch (error) {
-          const { NimiqSyncingError } = await import('@/lib/balance');
-          if (error instanceof NimiqSyncingError) {
-            // Nimiq Pay hasn't synced yet — show loading and retry in 5s
-            set((state) => ({
-              wallet: { ...state.wallet, loading: false, error: null },
-            }));
-            setTimeout(() => get().fetchBalance(), 5000);
-            return;
-          }
+        } catch {
           set((state) => ({
-            wallet: {
-              ...state.wallet,
-              loading: false,
-              error: 'Failed to fetch balance',
-            },
+            wallet: { ...state.wallet, loading: false, error: 'Failed to fetch balance' },
           }));
         }
       },
