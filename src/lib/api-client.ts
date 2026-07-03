@@ -118,17 +118,12 @@ function setCachedSession(walletAddress: string, expiresAt: string) {
   saveSessionCache();
 }
 
-async function ensureWalletSession(walletAddress: string): Promise<void> {
-  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
-  if (getCachedSession(cleanAddress)) return;
-  try {
-    await loginWithWallet(cleanAddress);
-  } catch (err: any) {
-    // Login failure must not block API calls — the session cookie path may
-    // still work, and most endpoints don't strictly require a verified wallet
-    // session. Log for diagnostics but proceed.
-    console.warn('[api-client] Wallet session login failed (non-fatal):', err?.message);
-  }
+async function ensureWalletSession(_walletAddress: string): Promise<void> {
+  // Wallet signature auth is disabled — the BFF x-api-key is the primary
+  // security gate. Signature verification is broken at the SDK level and
+  // causes repeated sign prompts that make the app unusable.
+  // This will be re-enabled once the signature format issue is resolved.
+  return;
 }
 
 /**

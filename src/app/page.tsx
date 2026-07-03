@@ -137,19 +137,13 @@ function LoadingSkeleton() {
 export default function Home() {
   const { activeTab, wallet, setActiveTab, fetchBalance, connectWallet } = useAppStore();
   const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
-  const searchParams_raw = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search)
-    : null;
-  const hasPaymentParams = (searchParams_raw?.has('to') || searchParams_raw?.has('ref')) ?? false;
-
-  // Show maintenance page immediately if flag is set — no need to check anything else
-  if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
-    return (
-      <ThemeProvider>
-        <MaintenancePage />
-      </ThemeProvider>
-    );
-  }
+  const [consensusEstablished, setConsensusEstablished] = useState(true);
+  // Compute once — safe on SSR (window may not exist), stable across renders
+  const [hasPaymentParams] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const p = new URLSearchParams(window.location.search);
+    return p.has('to') || p.has('ref');
+  });
 
   // Redirect chat → home if wallet disconnects
   useEffect(() => {
@@ -167,30 +161,45 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Poll Nimiq Pay consensus — used to show syncing toast on all tabs
+  useEffect(() => {
+    if (!wallet.connected) return;
+    const check = async () => {
+      try {
+        const { getNimiqNetworkState } = await import('@/lib/wallet');
+        const state = await getNimiqNetworkState();
+        setConsensusEstablished(state.consensusEstablished);
+      } catch { setConsensusEstablished(true); }
+    };
+    check();
+    const id = setInterval(check, 10_000);
+    return () => clearInterval(id);
+  }, [wallet.connected]);
+
   // Once confirmed inside Nimiq Pay — ONE place that handles all startup logic.
-  // Rules:
-  //   1. Never call getUserAddress/listAccounts more than once per startup
-  //   2. If already connected: just refresh balance (no wallet prompt)
-  //   3. If not connected + payment params: auto-connect (one call)
-  //   4. If not connected + no params: do nothing, wait for user to press Connect
   useEffect(() => {
     if (miniAppStatus !== 'inside') return;
 
     const state = useAppStore.getState();
 
     if (state.wallet.connected) {
-      // Already connected — just refresh balance, no wallet prompt needed
       state.fetchBalance();
       return;
     }
 
-    // Not connected — only auto-connect when there are specific link params
-    // that require immediate wallet access. Never auto-connect on plain load.
     if (hasPaymentParams) {
       connectWallet();
     }
-    // Otherwise wait for user to tap Connect
   }, [miniAppStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show maintenance page — checked AFTER all hooks
+  if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
+    return (
+      <ThemeProvider>
+        <MaintenancePage />
+      </ThemeProvider>
+    );
+  }
 
   if (miniAppStatus === 'checking') return <LoadingSkeleton />;
   if (miniAppStatus === 'outside') {
@@ -228,6 +237,19 @@ export default function Home() {
         </div>
 
         <BottomNav />
+
+        {/* Global syncing toast — floats above all tabs, disappears when synced */}
+        {wallet.connected && !consensusEstablished && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm pointer-events-none animate-fade-up">
+            <div className="rounded-2xl border border-amber-300 dark:border-gold/30 bg-amber-50 dark:bg-[#1c1200] shadow-[0_8px_32px_rgba(245,166,35,0.18)] px-4 py-3 flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-amber-900 dark:text-gold leading-tight">Nimiq Pay syncing…</p>
+                <p className="text-[11px] text-amber-700 dark:text-gold/65 leading-tight mt-0.5 truncate">Payments paused — waiting for network sync</p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </ThemeProvider>
   );

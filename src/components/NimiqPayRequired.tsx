@@ -60,7 +60,7 @@ export default function NimiqPayRequired() {
             </p>
             {[
               { n: '1', text: <>Install or open the <strong className="text-gray-900 dark:text-white">Nimiq Pay</strong> app.</> },
-              { n: '2', text: <>Tap the <strong className="text-gray-900 dark:text-white">browser / globe icon</strong> inside Nimiq Pay.</> },
+              { n: '2', text: <>Tap the <strong className="text-gray-900 dark:text-white">buttom right corner</strong> inside Nimiq Pay.</> },
               { n: '3', text: hasParams
                 ? <>Paste the link you just copied into the address bar.</>
                 : <>Navigate to <strong className="text-amber-700 dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below.</> },

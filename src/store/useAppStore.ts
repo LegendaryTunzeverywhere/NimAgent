@@ -82,17 +82,13 @@ export const useAppStore = create<AppState>()(
             walletSessionError: null,
           }));
 
-          // Pre-warm the signature cache with one sign prompt BEFORE any API
-          // calls need it — this prevents multiple concurrent sign prompts
-          // from fetchBalance and loadOrCreateSession racing each other.
-          try {
-            const { getSignature, loginWithWallet } = await import('@/lib/api-client');
-            await getSignature(address);
-            await loginWithWallet(address);
-          } catch {
-            // Signature pre-warm is best-effort; API calls fall back to
-            // signing individually if this fails.
-          }
+          // Signature pre-warm disabled — verification is broken at the SDK level
+          // and causes repeated sign prompts. Re-enable once fixed.
+          // try {
+          //   const { getSignature, loginWithWallet } = await import('@/lib/api-client');
+          //   await getSignature(address);
+          //   await loginWithWallet(address);
+          // } catch { /* best-effort */ }
 
           // Now run balance + session serially so they share the cached sig
           await get().fetchBalance();

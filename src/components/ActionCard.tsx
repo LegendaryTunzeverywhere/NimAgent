@@ -436,6 +436,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0" />
                     <div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
@@ -454,6 +455,7 @@ export default function ActionCard({ action }: ActionCardProps) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 opacity-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0 grayscale" />
                     <div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>

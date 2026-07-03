@@ -164,7 +164,7 @@ export default function SettingsModal({
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-white/[0.03]">
                 <p className="text-xs text-gray-500 dark:text-white/55">Version</p>
-                <p className="text-xs font-mono text-gray-700 dark:text-white/70">1.0.0</p>
+                <p className="text-xs font-mono text-gray-700 dark:text-white/70">1.1.0</p>
               </div>
             </div>
           </div>
