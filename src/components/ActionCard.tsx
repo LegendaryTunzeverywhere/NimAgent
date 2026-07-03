@@ -981,9 +981,15 @@ export default function ActionCard({ action }: ActionCardProps) {
       else if (error.message?.includes('popup') || error.message?.includes('only inside the Nimiq Pay app')) {
         errorMessage = '🚫 Nimiq Pay Required\n\nOpen NimAgent inside the Nimiq Pay app and try again.';
       }
-      // Handle wallet/network sync state
+      // Handle wallet/network sync state — do NOT lock the card, just let user retry
       else if (error.message?.includes('syncing with the Nimiq network')) {
-        errorMessage = '⏳ Wallet Syncing\n\nNimiq Pay is still syncing with the Nimiq network. Wait a moment, refresh your balance, and try again.';
+        errorMessage = '⏳ Wallet Syncing\n\nNimiq Pay is still establishing consensus with the Nimiq network. Wait a moment and tap Send again — no funds were deducted.';
+        // Don't lock the card — this is a transient state, not a payment failure
+        setFailed(false);
+        setAmountLocked(action.locked ?? false);
+        if (messageIndex >= 0) {
+          await updateActionState(messageIndex, { failed: false });
+        }
       }
       // Handle locked order from backend
       else if (error.message?.includes('locked') || error.message?.includes('already failed')) {
@@ -1240,9 +1246,12 @@ export default function ActionCard({ action }: ActionCardProps) {
       )}
       
       {failed && (
-        <p className="text-xs text-error text-center">
-          Transaction failed. Card is now locked. Please start a new request.
-        </p>
+        <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-center">
+          <p className="text-xs font-semibold text-error">Transaction Failed</p>
+          <p className="text-[11px] text-error/80 mt-0.5">
+            This request is locked. Ask the AI to start a new payment request.
+          </p>
+        </div>
       )}
     </div>
   );

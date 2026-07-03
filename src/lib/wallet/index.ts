@@ -74,9 +74,9 @@ export async function getTotalNimBalanceFromProvider(address: string): Promise<n
 }
 
 /**
- * Send a NIM payment. Signature matches the legacy helper:
- *   requestPayment(recipient, amountLuna, context, memo?, sender?)
- * `context` and `memo` are combined into the transaction data (as before).
+ * Send a NIM payment. Waits for consensus before sending — retries up to
+ * 3 times with a 3s gap if Nimiq Pay is still syncing, so QR payment
+ * requests don't fail immediately on first open.
  */
 export async function requestPayment(
   recipientAddress: string,
@@ -87,7 +87,14 @@ export async function requestPayment(
 ): Promise<string> {
   const adapter = await getWalletAdapter();
   const data = memo ? `${context}:${memo}` : context;
-  const networkState = await adapter.getNetworkState();
+
+  // Wait for consensus — up to 3 attempts × 3s before giving up
+  let networkState = await adapter.getNetworkState();
+  for (let attempt = 0; !networkState.consensusEstablished && attempt < 3; attempt++) {
+    await new Promise(r => setTimeout(r, 3000));
+    networkState = await adapter.getNetworkState();
+  }
+
   if (!networkState.consensusEstablished) {
     throw new Error('Nimiq Pay is still syncing with the Nimiq network. Please wait a moment and try again.');
   }

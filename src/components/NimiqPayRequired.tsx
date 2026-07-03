@@ -1,84 +1,99 @@
 'use client';
 
+import { useState } from 'react';
 import { openExternalUrl } from '@/lib/external-links';
 
 const NIMIQ_PAY_DOWNLOAD_URL = 'https://www.nimiq.com/nimiq-pay/';
-const NIMIQ_PAY_DEEP_LINK = 'nimiqpay://miniapp?url=https://nimagent.online';
-const X_URL = 'https://x.com/nimiqagent';
-
-/**
- * Try to open NimAgent directly inside Nimiq Pay via the deep link.
- * If the app isn't installed the deep link silently fails, so after a short
- * delay we redirect to the download page as a fallback.
- */
-function openInNimiqPay() {
-  if (typeof window === 'undefined') return;
-
-  // Attempt the deep link. On mobile, if Nimiq Pay is installed this opens
-  // the app directly into NimAgent. If not installed, nothing happens.
-  window.location.assign(NIMIQ_PAY_DEEP_LINK);
-
-  // After 1.5 s, if we're still here (app wasn't installed), send to download.
-  setTimeout(() => {
-    openExternalUrl(NIMIQ_PAY_DOWNLOAD_URL);
-  }, 1500);
-}
+const NIMAGENT_URL           = 'https://nimagent.online';
+const X_URL                  = 'https://x.com/nimiqagent';
 
 export default function NimiqPayRequired() {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(NIMAGENT_URL);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = NIMAGENT_URL;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
         <div className="w-full rounded-[2rem] border border-amber-200/80 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+
           <div className="inline-flex rounded-full border border-amber-300 dark:border-gold/30 bg-amber-100 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-800 dark:text-gold">
-            Nimiq Pay Only
+            Nimiq Pay Required
           </div>
 
           <h1 className="mt-4 text-2xl font-black tracking-tight text-gray-900 dark:text-white">
-            Open NimAgent inside Nimiq Pay
+            Open NimAgent in Nimiq Pay
           </h1>
           <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-white/65">
-            NimAgent runs as a Nimiq Pay mini app. Tap the button below — if you already have Nimiq Pay it will open directly into NimAgent. Otherwise you'll be taken to the download page.
+            NimAgent runs inside Nimiq Pay&apos;s built-in browser.
+            Follow the steps below to get started.
           </p>
 
-          <div className="mt-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">How To Access</p>
-            <ol className="mt-3 space-y-2 text-sm text-gray-700 dark:text-white/70">
-              <li>1. Install Nimiq Pay if you haven't already.</li>
-              <li>2. Tap <span className="font-semibold text-amber-700 dark:text-gold">Open in Nimiq Pay</span> below — NimAgent launches automatically.</li>
-              <li>3. Connect your wallet in-app to view balances and complete transactions.</li>
-            </ol>
+          {/* Steps */}
+          <div className="mt-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">
+              How To Access
+            </p>
+            {[
+              { n: '1', text: <>Install or open the <strong className="text-gray-900 dark:text-white">Nimiq Pay</strong> app.</> },
+              { n: '2', text: <>Tap the <strong className="text-gray-900 dark:text-white">browser / globe icon</strong> inside Nimiq Pay.</> },
+              { n: '3', text: <>Navigate to <strong className="text-amber-700 dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below and paste it.</> },
+            ].map(({ n, text }) => (
+              <div key={n} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
+                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* URL display */}
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 px-3 py-2.5">
+            <p className="flex-1 text-xs font-mono text-gray-700 dark:text-white/70 truncate">{NIMAGENT_URL}</p>
+            <button
+              type="button"
+              onClick={copyLink}
+              className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                copied
+                  ? 'bg-green-500/15 text-green-600 dark:text-green-400'
+                  : 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold hover:bg-amber-200 dark:hover:bg-gold/25'
+              }`}
+            >
+              {copied ? '✓ Copied' : 'Copy'}
+            </button>
           </div>
 
           <div className="mt-5 space-y-3">
-            {/* Primary: deep link → opens NimAgent directly, falls back to download */}
-            <button
-              type="button"
-              onClick={openInNimiqPay}
-              className="btn-gold w-full rounded-2xl py-3 text-sm font-bold"
-            >
-              Open in Nimiq Pay
-            </button>
-
-            {/* Secondary: go straight to download page */}
             <button
               type="button"
               onClick={() => openExternalUrl(NIMIQ_PAY_DOWNLOAD_URL)}
-              className="w-full rounded-2xl border border-amber-300 dark:border-gold/30 bg-white dark:bg-white/[0.02] py-3 text-sm font-semibold text-amber-700 dark:text-gold hover:bg-amber-50 dark:hover:bg-gold/10 transition-colors"
+              className="btn-gold w-full rounded-2xl py-3 text-sm font-bold"
             >
-              Download Nimiq Pay
+              Get Nimiq Pay
             </button>
-
             <button
               type="button"
               onClick={() => openExternalUrl(X_URL)}
               className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] py-3 text-sm font-semibold text-gray-900 dark:text-white"
             >
-              Contact Support On X
+              Follow @nimiqagent on X
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-gray-500 dark:text-white/45">
-            Browser access is disabled intentionally so every wallet action uses the same supported Nimiq Pay mini-app environment.
+          <p className="mt-4 text-xs text-gray-500 dark:text-white/40 text-center">
+            NimAgent will be available as a registered Nimiq Pay mini app soon.
           </p>
         </div>
       </div>
