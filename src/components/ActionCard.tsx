@@ -759,16 +759,6 @@ export default function ActionCard({ action }: ActionCardProps) {
         // the browser doesn't block it. Order validation already ran on mount.
         const serviceAddress = process.env.NEXT_PUBLIC_SERVICE_ADDRESS || action.recipient || 'NQ18 TAQ8 CL7P K505 LE2M C78A 1YQC 1CH1 6Y4G';
         
-        console.log('[ActionCard] Processing order:', {
-          type: action.type,
-          serviceAddress,
-          amountLuna,
-          actionAmountLuna: action.amountLuna,
-          nimAmount,
-          fiatAmount: action.fiatAmount,
-          currency: action.currency,
-        });
-        
         const hash = await requestPayment(
           serviceAddress,
           amountLuna,

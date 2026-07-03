@@ -17,7 +17,6 @@ function isErrorResponse(value: unknown): value is ErrorResponse {
 
 function unwrap<T>(value: T | ErrorResponse): T {
   if (isErrorResponse(value)) {
-    console.error('[miniapp-adapter] Error response:', value);
     throw new Error(value.error.message || 'Wallet request was rejected.');
   }
   return value;
@@ -59,7 +58,6 @@ export const miniAppAdapter: WalletAdapter = {
         })
       );
       totals.sort((a, b) => b.balance - a.balance);
-      console.log('[miniapp-adapter] Account totals:', totals);
       return totals[0].addr;
     } catch {
       return accounts[0];
@@ -85,10 +83,8 @@ export const miniAppAdapter: WalletAdapter = {
             ...(req.validityStartHeight != null ? { validityStartHeight: req.validityStartHeight } : {}),
           }));
     } catch (err) {
-      console.error('[miniapp-adapter] Transaction failed:', err);
       throw err;
     }
-    console.log('[miniapp-adapter] Transaction sent, hash:', txHash);
     return txHash;
   },
 
@@ -110,10 +106,6 @@ export const miniAppAdapter: WalletAdapter = {
 
     const publicKey = normaliseHex(result.publicKey);
     const signature = normaliseHex(result.signature);
-    console.log('[miniapp-adapter] sign result:', {
-      publicKeyLength: publicKey?.length,
-      signatureLength: signature?.length,
-    });
     return { publicKey, signature };
   },
 
@@ -183,10 +175,7 @@ export const miniAppAdapter: WalletAdapter = {
             (tx.timestamp ?? 0) > cutoff                               // within 30 days
           )
           .map((tx: any) => tx.to as string);
-
-        console.log('[miniapp-adapter] Found HTLC addresses:', htlcAddresses);
       } catch (e) {
-        console.warn('[miniapp-adapter] Could not fetch tx history:', e);
         return basicLuna || null;
       }
 
@@ -212,7 +201,6 @@ export const miniAppAdapter: WalletAdapter = {
 
       const htlcLuna = htlcResults.reduce((s: number, v: number) => s + v, 0);
       const total    = basicLuna + htlcLuna;
-      console.log(`[miniapp-adapter] basic=${basicLuna} htlc=${htlcLuna} total=${total} luna`);
       return total > 0 ? total : null;
     } catch { return null; }
   },

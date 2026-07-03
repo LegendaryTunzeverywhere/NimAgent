@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     
     // Validate JSON-RPC structure
     if (!body.jsonrpc || !body.method || body.id === undefined) {
-      console.error('[RPC Proxy] Invalid request structure:', body);
+      console.error('[RPC Proxy] Invalid request structure');
       return NextResponse.json(
         { error: 'Invalid JSON-RPC request' },
         { status: 400 }
@@ -118,14 +118,6 @@ export async function POST(request: NextRequest) {
     
     for (let i = 0; i < endpoints.length; i++) {
       const rpcUrl = endpoints[i];
-      
-      console.log('[RPC Proxy] Attempting endpoint', i + 1, 'of', endpoints.length, ':', {
-        method: body.method,
-        network,
-        rpcUrl,
-        paramsType: Array.isArray(body.params) ? 'array' : typeof body.params,
-        paramsLength: Array.isArray(body.params) ? body.params.length : 'n/a'
-      });
 
       try {
         // Normalise address params before forwarding — Nimiq RPC requires
@@ -152,7 +144,7 @@ export async function POST(request: NextRequest) {
 
         // Check if response is ok
         if (!response.ok) {
-          console.error('[RPC Proxy] HTTP error from', rpcUrl, ':', response.status, response.statusText);
+          console.error('[RPC Proxy] HTTP error from upstream endpoint:', response.status, response.statusText);
           lastError = new Error(`RPC endpoint returned ${response.status}: ${response.statusText}`);
           continue; // Try next endpoint
         }
@@ -165,17 +157,14 @@ export async function POST(request: NextRequest) {
         try {
           data = JSON.parse(responseText);
         } catch (parseError) {
-          console.error('[RPC Proxy] JSON parse error from', rpcUrl, ':', parseError);
-          console.error('[RPC Proxy] Response text:', responseText.slice(0, 500));
+          console.error('[RPC Proxy] JSON parse error from upstream endpoint');
           lastError = new Error('Failed to parse RPC response as JSON');
           continue; // Try next endpoint
         }
 
         // Success! Log and return
         if (data.error) {
-          console.error('[RPC Proxy] RPC error from', rpcUrl, ':', data.error);
-        } else {
-          console.log('[RPC Proxy] Success from', rpcUrl);
+          console.error('[RPC Proxy] RPC error from upstream endpoint');
         }
 
         return NextResponse.json(data, {
@@ -186,10 +175,10 @@ export async function POST(request: NextRequest) {
         });
       } catch (fetchError: any) {
         if (fetchError.name === 'AbortError') {
-          console.error('[RPC Proxy] Timeout from', rpcUrl);
+          console.error('[RPC Proxy] Timeout from upstream endpoint');
           lastError = new Error('RPC request timeout');
         } else {
-          console.error('[RPC Proxy] Fetch error from', rpcUrl, ':', fetchError.message);
+          console.error('[RPC Proxy] Fetch error from upstream endpoint:', fetchError.message);
           lastError = fetchError;
         }
         
@@ -213,7 +202,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('[RPC Proxy] Error:', error.message);
-    console.error('[RPC Proxy] Stack:', error.stack);
     return NextResponse.json(
       { 
         jsonrpc: '2.0',

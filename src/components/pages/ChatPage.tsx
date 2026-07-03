@@ -5,8 +5,6 @@ import { useAppStore } from '@/store/useAppStore';
 import ActionCard from '@/components/ActionCard';
 import Icon, { type IconName } from '@/components/Icon';
 import Modal from '@/components/Modal';
-import WalletSessionBanner from '@/components/WalletSessionBanner';
-import { isWalletSessionRequiredError } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -36,7 +34,7 @@ export default function ChatPage() {
   const {
     wallet, messages, addMessage, clearMessages,
     sendMessageToAI, startNewSession, loadOrCreateSession, currentSessionId,
-    aiLoading, aiStatus, markWalletSessionExpired, clearWalletSessionExpired,
+    aiLoading, aiStatus,
   } = useAppStore();
 
   const [input,           setInput]           = useState('');
@@ -234,12 +232,7 @@ export default function ChatPage() {
     try {
       const { getChatSessions } = await import('@/lib/api-client');
       setSessions(await getChatSessions(wallet.address, { requireWalletSession: false }));
-      clearWalletSessionExpired();
-    } catch (error) {
-      if (isWalletSessionRequiredError(error)) {
-        markWalletSessionExpired();
-      }
-    }
+    } catch (error) {}
     finally { setLoadingSessions(false); }
   };
 
@@ -249,17 +242,12 @@ export default function ChatPage() {
     try {
       const { getChatHistory } = await import('@/lib/api-client');
       const msgs = await getChatHistory(id, wallet.address, { requireWalletSession: false });
-      clearWalletSessionExpired();
       useAppStore.setState({
         currentSessionId: id,
         messages: msgs.map((m: any) => ({ role: m.role, content: m.content, action: m.action, timestamp: new Date(m.created_at).getTime() })),
       });
       setShowSessions(false);
-    } catch (error) {
-      if (isWalletSessionRequiredError(error)) {
-        markWalletSessionExpired();
-      }
-    }
+    } catch (error) {}
   };
 
   const confirmDelete = async () => {
@@ -346,10 +334,6 @@ export default function ChatPage() {
       </div>
 
       {/* ── Sessions panel ──────────────────────────────────────────────────── */}
-      <div className="px-4 pt-3">
-        <WalletSessionBanner />
-      </div>
-
       {showSessions && (
         <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 bg-white dark:bg-[#16182a] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden animate-modal-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">

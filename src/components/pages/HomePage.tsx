@@ -1,11 +1,11 @@
-﻿﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Logo from '@/components/Logo';
 import Icon, { type IconName } from '@/components/Icon';
 import type { Transaction } from '@/types';
-import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals, getWalletRequestHeaders, isWalletSessionRequiredError } from '@/lib/api-client';
+import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral, getLeaderboard, getReferrals, getWalletRequestHeaders } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 
@@ -81,8 +81,6 @@ export default function HomePage() {
     sendMessageToAI,
     fetchBalance,
     addMessage,
-    markWalletSessionExpired,
-    clearWalletSessionExpired,
   } = useAppStore();
   const [nimPrice, setNimPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
@@ -144,13 +142,6 @@ export default function HomePage() {
         fetch(`/api/orders?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: walletHeaders }),
         fetch(`/api/transactions?wallet=${encodeURIComponent(normalizedAddress)}`, { headers: walletHeaders }),
       ]);
-
-      if ([ordersRes.status, transactionsRes.status].some((status) => status === 401 || status === 403)) {
-        markWalletSessionExpired();
-        return;
-      }
-
-      clearWalletSessionExpired();
 
       let allOrders: any[] = [];
       let allTransactions: any[] = [];
@@ -282,7 +273,7 @@ export default function HomePage() {
     } catch (error) {
       // Silent failure
     }
-  }, [wallet.address, nimPrice, markWalletSessionExpired, clearWalletSessionExpired]);
+  }, [wallet.address, nimPrice]);
 
   useEffect(() => {
     // Fetch NIM price via BFF proxy, then get 24h change directly from CoinGecko
@@ -351,11 +342,7 @@ export default function HomePage() {
       // Fetch referral link, live reward totals, and status
       try {
         await refreshReferralData({ requireWalletSession: false });
-        clearWalletSessionExpired();
       } catch (error) {
-        if (isWalletSessionRequiredError(error)) {
-          markWalletSessionExpired();
-        }
         // Silent failure
       }
     };
@@ -367,8 +354,6 @@ export default function HomePage() {
     wallet.connected,
     wallet.address,
     refreshReferralData,
-    clearWalletSessionExpired,
-    markWalletSessionExpired,
   ]);
 
   useEffect(() => {

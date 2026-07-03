@@ -29,11 +29,7 @@ function delay(ms: number) {
  * Not 100% authoritative — use `isInsideNimiqPay()` to confirm the provider.
  */
 export function hasNimiqPayHostHint(): boolean {
-  const hasHint = typeof window !== 'undefined' && !!window.nimiqPay;
-  if (typeof window !== 'undefined') {
-    console.log('[detect] hasNimiqPayHostHint():', hasHint, 'window.nimiqPay:', window.nimiqPay);
-  }
-  return hasHint;
+  return typeof window !== 'undefined' && !!window.nimiqPay;
 }
 
 /**
@@ -41,23 +37,17 @@ export function hasNimiqPayHostHint(): boolean {
  * Detection runs once; subsequent calls return the cached result.
  */
 export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | null> {
-  console.log('[detect] getNimiqProvider called, timeout:', timeout);
   if (typeof window === 'undefined') return null;
   if (cachedProvider) {
-    console.log('[detect] Using cached provider');
     return cachedProvider;
   }
 
   try {
-    console.log('[detect] Importing @nimiq/mini-app-sdk...');
     const { init } = await import('@nimiq/mini-app-sdk');
-    console.log('[detect] Calling init()...');
     const provider = await init({ timeout });
-    console.log('[detect] Got provider:', provider);
     cachedProvider = provider;
     return provider;
   } catch (err) {
-    console.error('[detect] init() failed:', err);
     // init() rejects/times out when not running inside Nimiq Pay.
     return null;
   }
@@ -73,7 +63,6 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * Without the hint we use shorter probes to avoid stalling a normal browser.
  */
 export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
-  console.log('[detect] isInsideNimiqPay called');
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (!detection) {
     detection = (async () => {
@@ -88,12 +77,10 @@ export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
         if (attempt.wait) await delay(attempt.wait);
         const provider = await getNimiqProvider(attempt.timeout);
         if (provider) {
-          console.log('[detect] isInsideNimiqPay result: true');
           return true;
         }
       }
 
-      console.log('[detect] isInsideNimiqPay result: false');
       return false;
     })();
   }

@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { retrieveGiftCardCode, getWalletRequestHeaders } from '@/lib/api-client';
-import WalletSessionBanner from '@/components/WalletSessionBanner';
 import { openExternalUrl } from '@/lib/external-links';
 import Icon, { type IconName } from '@/components/Icon';
 
@@ -75,7 +74,7 @@ const TRANSACTION_COLORS: Record<string, string> = {
 };
 
 export default function HistoryPage() {
-  const { wallet, markWalletSessionExpired, clearWalletSessionExpired } = useAppStore();
+  const { wallet } = useAppStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('All');
@@ -136,13 +135,6 @@ export default function HistoryPage() {
         fetch(`/api/orders?${params.toString()}`, { headers: walletHeaders })
       ]);
 
-      if ([transactionsRes.status, ordersRes.status].some((status) => status === 401 || status === 403)) {
-        markWalletSessionExpired();
-        return;
-      }
-
-      clearWalletSessionExpired();
-      
       let allTransactions: Transaction[] = [];
       
       // Add regular transactions (send/receive)
@@ -243,8 +235,6 @@ export default function HistoryPage() {
     isInitialLoad,
     startDate,
     endDate,
-    clearWalletSessionExpired,
-    markWalletSessionExpired,
   ]);
 
   useEffect(() => {
@@ -366,8 +356,6 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4 pb-8">
-      <WalletSessionBanner />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">

@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppState, Transaction, Message, Balance, ActionCard } from '@/types';
-import { isWalletSessionRequiredError } from '@/lib/api-client';
+import type { AppState, Balance, ActionCard } from '@/types';
 
 // FIX 3 FRONTEND: Generate UUID v4 format for sessionIds (backend validation requirement)
 function generateSessionId(): string {
@@ -36,8 +35,6 @@ export const useAppStore = create<AppState>()(
       network: 'mainnet',
       aiLoading: false,
       aiStatus: null,
-      walletSessionExpired: false,
-      walletSessionError: null,
 
       setActiveTab: (tab) => {
         set({ activeTab: tab });
@@ -48,16 +45,6 @@ export const useAppStore = create<AppState>()(
       setNetwork: (network) => set({ network }),
 
       setAiStatus: (status) => set({ aiStatus: status }),
-
-      markWalletSessionExpired: (message) => set({
-        walletSessionExpired: true,
-        walletSessionError: message || 'Reconnect your wallet to refresh protected data.',
-      }),
-
-      clearWalletSessionExpired: () => set({
-        walletSessionExpired: false,
-        walletSessionError: null,
-      }),
 
       connectWallet: async () => {
         // Guard against concurrent connect calls
@@ -78,19 +65,9 @@ export const useAppStore = create<AppState>()(
               connected: true,
               loading: false,
             },
-            walletSessionExpired: false,
-            walletSessionError: null,
           }));
 
-          // Signature pre-warm disabled — verification is broken at the SDK level
-          // and causes repeated sign prompts. Re-enable once fixed.
-          // try {
-          //   const { getSignature, loginWithWallet } = await import('@/lib/api-client');
-          //   await getSignature(address);
-          //   await loginWithWallet(address);
-          // } catch { /* best-effort */ }
-
-          // Now run balance + session serially so they share the cached sig
+          // Now run balance + session restore after connecting the wallet.
           await get().fetchBalance();
           get().loadOrCreateSession();
         } catch (error: any) {
@@ -116,15 +93,6 @@ export const useAppStore = create<AppState>()(
       },
 
       disconnectWallet: () => {
-        // Clear signature cache from localStorage
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.removeItem('nimagent-signature-cache');
-            localStorage.removeItem('nimagent-wallet-session');
-          } catch (e) {
-            // Silent failure
-          }
-        }
         set({
           wallet: {
             address: null,
@@ -134,24 +102,7 @@ export const useAppStore = create<AppState>()(
             error: null,
           },
           currentSessionId: null,
-          walletSessionExpired: false,
-          walletSessionError: null,
         });
-      },
-
-      refreshWalletSession: async () => {
-        const { wallet, clearWalletSessionExpired, markWalletSessionExpired } = get();
-        if (!wallet.address) return false;
-
-        try {
-          const { loginWithWallet } = await import('@/lib/api-client');
-          await loginWithWallet(wallet.address);
-          clearWalletSessionExpired();
-          return true;
-        } catch (error: any) {
-          markWalletSessionExpired(error?.message || 'Reconnect your wallet to refresh protected data.');
-          return false;
-        }
       },
 
       fetchBalance: async () => {
@@ -176,7 +127,7 @@ export const useAppStore = create<AppState>()(
       },
 
       loadOrCreateSession: async () => {
-        const { wallet, currentSessionId, messages, markWalletSessionExpired, clearWalletSessionExpired } = get();
+        const { wallet, currentSessionId, messages } = get();
         if (!wallet.address) return;
 
         // If localStorage has a session with recent messages (< 30 min), trust it —
@@ -203,7 +154,6 @@ export const useAppStore = create<AppState>()(
               const sessionMessages = await getChatHistory(currentSessionId, wallet.address, {
                 requireWalletSession: false,
               });
-              clearWalletSessionExpired();
               if (sessionMessages.length > 0) {
                 set({
                   messages: sessionMessages.map(m => ({
@@ -216,9 +166,6 @@ export const useAppStore = create<AppState>()(
                 return;
               }
             } catch (err) {
-              if (isWalletSessionRequiredError(err)) {
-                markWalletSessionExpired();
-              }
               // Silent failure
             }
           }
@@ -227,16 +174,12 @@ export const useAppStore = create<AppState>()(
           const sessions = await getChatSessions(wallet.address, {
             requireWalletSession: false,
           });
-          clearWalletSessionExpired();
-          
           if (sessions.length > 0) {
             // Load the most recent session
             const latestSession = sessions[0];
             const sessionMessages = await getChatHistory(latestSession.sessionId, wallet.address, {
               requireWalletSession: false,
             });
-            clearWalletSessionExpired();
-            
             set({
               currentSessionId: latestSession.sessionId,
               messages: sessionMessages.map(m => ({
@@ -252,9 +195,6 @@ export const useAppStore = create<AppState>()(
             set({ currentSessionId: newSessionId, messages: [] });
           }
         } catch (error) {
-          if (isWalletSessionRequiredError(error)) {
-            markWalletSessionExpired();
-          }
           // Keep existing session if load fails
           if (!currentSessionId) {
             const newSessionId = generateSessionId();
@@ -289,7 +229,7 @@ export const useAppStore = create<AppState>()(
               action: message.action,
             });
           } catch (error: any) {
-            console.warn('[addMessage] DB persist failed (non-fatal):', error?.message);
+            console.warn('[addMessage] DB persist failed (non-fatal).');
           }
         }
       },
@@ -306,7 +246,7 @@ export const useAppStore = create<AppState>()(
           ),
         }));
         
-        // Persist updated action to DB via upsert (same content = update, not insert)
+        // Persist updated action to the matching stored message row
         const message = messages[messageIndex];
         if (wallet.address && currentSessionId && message?.action) {
           try {
@@ -320,7 +260,7 @@ export const useAppStore = create<AppState>()(
               action: updatedAction,
             });
           } catch (error) {
-            console.warn('[updateActionState] DB persist failed (non-fatal):', error);
+            console.warn('[updateActionState] DB persist failed (non-fatal).');
           }
         }
       },

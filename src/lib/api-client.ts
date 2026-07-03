@@ -18,112 +18,8 @@ import { getClientPlatformHeaders } from '@/lib/client-platform';
 
 
 
-// Cache signature challenges
-interface CachedSignature {
-  nonce: string;
-  signature: string;
-  publicKey: string;
-  expiresAt: string;
-}
-
-interface CachedWalletSession {
-  walletAddress: string;
-  expiresAt: string;
-}
-
 export interface WalletRequestOptions {
   requireWalletSession?: boolean;
-}
-
-export class WalletSessionRequiredError extends Error {
-  status: number;
-
-  constructor(message = 'Reconnect your wallet to refresh protected data.', status = 401) {
-    super(message);
-    this.name = 'WalletSessionRequiredError';
-    this.status = status;
-  }
-}
-
-export function isWalletSessionRequiredError(error: unknown): error is WalletSessionRequiredError {
-  return error instanceof WalletSessionRequiredError;
-}
-
-const SIGNATURE_CACHE_KEY = 'nimagent-signature-cache';
-const SESSION_CACHE_KEY = 'nimagent-wallet-session';
-
-// Load signature cache from localStorage
-const signatureCache: Record<string, CachedSignature> = (() => {
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem(SIGNATURE_CACHE_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  }
-  return {};
-})();
-
-const sessionCache: Record<string, CachedWalletSession> = (() => {
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem(SESSION_CACHE_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  }
-  return {};
-})();
-
-// Helper to save signature cache to localStorage
-function saveSignatureCache() {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(SIGNATURE_CACHE_KEY, JSON.stringify(signatureCache));
-  }
-}
-
-function clearCachedSignature(walletAddress: string) {
-  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
-  if (!signatureCache[cleanAddress]) return;
-  delete signatureCache[cleanAddress];
-  saveSignatureCache();
-}
-
-function saveSessionCache() {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessionCache));
-  }
-}
-
-function getCachedSession(walletAddress: string): CachedWalletSession | null {
-  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
-  const cached = sessionCache[cleanAddress];
-  if (!cached) return null;
-  if (new Date(cached.expiresAt) <= new Date()) {
-    delete sessionCache[cleanAddress];
-    saveSessionCache();
-    return null;
-  }
-  return cached;
-}
-
-function setCachedSession(walletAddress: string, expiresAt: string) {
-  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
-  sessionCache[cleanAddress] = {
-    walletAddress: cleanAddress,
-    expiresAt,
-  };
-  saveSessionCache();
-}
-
-async function ensureWalletSession(_walletAddress: string): Promise<void> {
-  // Wallet signature auth is disabled — the BFF x-api-key is the primary
-  // security gate. Signature verification is broken at the SDK level and
-  // causes repeated sign prompts that make the app unusable.
-  // This will be re-enabled once the signature format issue is resolved.
-  return;
 }
 
 /**
@@ -140,59 +36,6 @@ async function fetchCsrfToken(): Promise<string> {
 
   const data = await res.json();
   return data.csrfToken || '';
-}
-
-/**
- * Fetch a signature challenge for a wallet address
- */
-async function fetchChallenge(walletAddress: string): Promise<{ nonce: string; challenge: string; expiresAt: string }> {
-  const res = await fetch(`${API_URL}/auth/challenge?walletAddress=${encodeURIComponent(walletAddress)}`, {
-    credentials: 'include',
-    headers: await getClientPlatformHeaders(),
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch challenge');
-  }
-  return res.json();
-}
-
-/**
- * Sign a challenge using the wallet
- */
-async function signChallenge(challenge: string): Promise<{ signature: string; publicKey: string }> {
-  const { signMessage } = await import('./wallet');
-  console.log('[signChallenge] signing challenge len:', challenge.length, 'val:', challenge.substring(0, 80));
-  const result = await signMessage(challenge);
-  if (!result.publicKey) {
-    throw new Error('Public key not returned from wallet');
-  }
-  return { signature: result.signature, publicKey: result.publicKey };
-}
-
-/**
- * Get or create a valid signature for a wallet address.
- * Exported so connectWallet can pre-warm the cache before parallel API calls.
- */
-export async function getSignature(walletAddress: string): Promise<{ nonce: string; signature: string; publicKey: string; expiresAt: string }> {
-  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
-  
-  // Check cache for valid signature
-  const cached = signatureCache[cleanAddress];
-  if (cached && new Date(cached.expiresAt) > new Date()) {
-    return cached;
-  }
-  
-  // Fetch new challenge
-  const { nonce, challenge, expiresAt } = await fetchChallenge(cleanAddress);
-  
-  // Sign challenge
-  const { signature, publicKey } = await signChallenge(challenge);
-  
-  // Cache the signature and save to localStorage
-  signatureCache[cleanAddress] = { nonce, signature, publicKey, expiresAt };
-  saveSignatureCache();
-  
-  return { nonce, signature, publicKey, expiresAt };
 }
 
 /**
@@ -221,10 +64,6 @@ async function getHeaders(
     ...(await getClientPlatformHeaders()),
   };
 
-  if (walletAddress && options.requireWalletSession !== false) {
-    await ensureWalletSession(walletAddress);
-  }
-
   // Add CSRF token for state-changing requests
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     const token = await fetchCsrfToken();
@@ -234,11 +73,7 @@ async function getHeaders(
   return headers;
 }
 
-function assertWalletSessionResponse(res: Response, options: WalletRequestOptions = {}) {
-  if (options.requireWalletSession === false && (res.status === 401 || res.status === 403)) {
-    throw new WalletSessionRequiredError(undefined, res.status);
-  }
-}
+function assertWalletSessionResponse(_res: Response, _options: WalletRequestOptions = {}) {}
 
 export async function getWalletRequestHeaders(
   method: string,
@@ -999,65 +834,11 @@ export async function loginWithWallet(walletAddress: string): Promise<{
   if (!isValidNimAddress(walletAddress)) {
     throw new Error('Invalid NIM wallet address format');
   }
-
-  const attemptLogin = async () => {
-    const { nonce, signature, publicKey, expiresAt } = await getSignature(walletAddress);
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(await getClientPlatformHeaders()),
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        walletAddress,
-        signature,
-        publicKey,
-        nonce,
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error || 'Login failed');
-    }
-
-    const result = await res.json();
-    setCachedSession(walletAddress, expiresAt);
-    return result;
-  };
-
-  try {
-    return await attemptLogin();
-  } catch (error: any) {
-    const message = String(error?.message || '');
-    if (!/nonce|signature/i.test(message)) {
-      throw error;
-    }
-
-    clearCachedSignature(walletAddress);
-    return attemptLogin();
-  }
+  return { success: true, walletAddress };
 }
 
 export async function logout(): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Logout failed');
-  }
-
-  Object.keys(sessionCache).forEach((key) => {
-    delete sessionCache[key];
-  });
-  saveSessionCache();
-  Object.keys(signatureCache).forEach((key) => {
-    delete signatureCache[key];
-  });
-  saveSignatureCache();
+  return;
 }
 
 

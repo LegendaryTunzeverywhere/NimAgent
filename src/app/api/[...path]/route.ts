@@ -43,19 +43,6 @@ function createProxyHeaders(request: NextRequest) {
     headers['x-csrf-token'] = csrfToken;
   }
 
-  // Forward signature headers if present
-  const walletAddress = request.headers.get('x-wallet-address');
-  const nonce = request.headers.get('x-nonce');
-  const signature = request.headers.get('x-signature');
-  const publicKey = request.headers.get('x-public-key');
-  
-  if (walletAddress && nonce && signature && publicKey) {
-    headers['x-wallet-address'] = walletAddress;
-    headers['x-nonce'] = nonce;
-    headers['x-signature'] = signature;
-    headers['x-public-key'] = publicKey;
-  }
-
   const clientPlatform = request.headers.get('x-client-platform');
   const walletKind = request.headers.get('x-wallet-kind');
   if (clientPlatform) headers['x-client-platform'] = clientPlatform;
@@ -157,19 +144,14 @@ export async function GET(
     // Path already includes 'api/' from Next.js routing, use it directly
     const url = `${BACKEND_URL}/api/${path}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] GET request to path:', path);
-
     const response = await fetch(url, {
       method: 'GET',
       headers: createProxyHeaders(request),
       credentials: 'include', // Important for cookies
     });
 
-    console.log('[BFF] Response status:', response.status);
-
     // If not OK, log the error without exposing backend details
     if (!response.ok) {
-      const text = await response.text();
       console.error('[BFF] Backend error status:', response.status);
       const errorResponse = NextResponse.json(
         { error: 'Backend request failed', status: response.status },
@@ -218,8 +200,6 @@ export async function POST(
     // Path already includes correct route from Next.js, use it directly
     const url = `${BACKEND_URL}/api/${path}`;
 
-    console.log('[BFF] POST request to path:', path);
-
     const response = await fetch(url, {
       method: 'POST',
       headers: createProxyHeaders(request),
@@ -230,7 +210,7 @@ export async function POST(
     // Log non-2xx responses before parsing
     if (!response.ok) {
       const text = await response.text();
-      console.error('[BFF] Backend POST error:', response.status, text.slice(0, 500));
+      console.error('[BFF] Backend POST error:', response.status);
       // Try to parse as JSON, fallback to text error
       try {
         const errorData = JSON.parse(text);
@@ -288,8 +268,6 @@ export async function DELETE(
     // Path already includes correct route from Next.js, use it directly
     const url = `${BACKEND_URL}/api/${path}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log('[BFF] DELETE request to path:', path);
-
     const response = await fetch(url, {
       method: 'DELETE',
       headers: createProxyHeaders(request),
@@ -334,8 +312,6 @@ export async function PUT(
     const body = await request.json();
     const url = `${BACKEND_URL}/api/${path}`;
 
-    console.log('[BFF] PUT request to path:', path);
-
     const response = await fetch(url, {
       method: 'PUT',
       headers: createProxyHeaders(request),
@@ -345,7 +321,7 @@ export async function PUT(
 
     if (!response.ok) {
       const text = await response.text();
-      console.error('[BFF] Backend PUT error:', response.status, text.slice(0, 500));
+      console.error('[BFF] Backend PUT error:', response.status);
       try {
         const errorData = JSON.parse(text);
         const errorResponse = NextResponse.json(errorData, {
