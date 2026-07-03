@@ -140,7 +140,6 @@ node generate-api-key.js
 2. **Frontend Environment (.env.local)**:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000
-NEXT_PUBLIC_API_SECRET=<paste_generated_key>
 NEXT_PUBLIC_NIMIQ_NETWORK=mainnet
 NEXT_PUBLIC_NIMIQ_HUB_URL=https://hub.nimiq.com
 NEXT_PUBLIC_SERVICE_ADDRESS=NQ07...
@@ -150,7 +149,7 @@ NEXT_PUBLIC_SERVICE_ADDRESS=NQ07...
 ```env
 PORT=3000
 NODE_ENV=development
-API_SECRET=<paste_same_key>  # MUST match frontend!
+API_SECRET=<paste_generated_key>  # server-side only, shared with the Next.js BFF
 
 # Database
 SUPABASE_URL=https://your-project.supabase.co
@@ -243,11 +242,7 @@ This creates:
 - [ ] AI typing indicator
 
 ### Browser Compatibility
-- ✅ Chrome (recommended)
-- ✅ Edge
-- ✅ Safari
 - ✅ Nimiq Wallet Mini App
-- ⚠️ Firefox (no voice input)
 
 ---
 
@@ -343,7 +338,7 @@ npm start
 - Verify `GEMINI_API_KEY` is set in server/.env
 - Check API rate limits
 - Ensure backend is running
-- Check API secret matches between frontend and backend
+- Check `API_SECRET` matches between the Next.js server env and the backend env
 
 ### AI Typing Indicator Not Showing
 - Fixed! The loading state is now managed globally in the store

@@ -27,6 +27,11 @@ const RPC_ENDPOINTS = {
   ],
 };
 
+const ALLOWED_RPC_METHODS = new Set(['getAccountByAddress']);
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 60;
+const rpcRequestLog = new Map<string, number[]>();
+
 /**
  * Ensure a Nimiq address is in the grouped format the RPC node expects.
  * Leaves non-address strings untouched.
@@ -52,8 +57,40 @@ function normaliseParams(params: unknown): unknown {
   return params;
 }
 
+function getClientKey(request: NextRequest): string {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() || 'unknown';
+  }
+  return request.headers.get('x-real-ip') || 'unknown';
+}
+
+function isRateLimited(request: NextRequest): boolean {
+  const now = Date.now();
+  const clientKey = getClientKey(request);
+  const recentRequests = (rpcRequestLog.get(clientKey) || []).filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (recentRequests.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rpcRequestLog.set(clientKey, recentRequests);
+    return true;
+  }
+
+  recentRequests.push(now);
+  rpcRequestLog.set(clientKey, recentRequests);
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (isRateLimited(request)) {
+      return NextResponse.json(
+        { error: 'Too many RPC requests. Please slow down.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     
     // Validate JSON-RPC structure
@@ -62,6 +99,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid JSON-RPC request' },
         { status: 400 }
+      );
+    }
+
+    if (!ALLOWED_RPC_METHODS.has(body.method)) {
+      return NextResponse.json(
+        { error: `RPC method not allowed: ${body.method}` },
+        { status: 403 }
       );
     }
 

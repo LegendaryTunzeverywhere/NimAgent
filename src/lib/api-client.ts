@@ -84,6 +84,13 @@ function saveSignatureCache() {
   }
 }
 
+function clearCachedSignature(walletAddress: string) {
+  const cleanAddress = walletAddress.replace(/\s/g, '').toUpperCase();
+  if (!signatureCache[cleanAddress]) return;
+  delete signatureCache[cleanAddress];
+  saveSignatureCache();
+}
+
 function saveSessionCache() {
   if (typeof window !== 'undefined') {
     localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessionCache));
@@ -998,32 +1005,44 @@ export async function loginWithWallet(walletAddress: string): Promise<{
     throw new Error('Invalid NIM wallet address format');
   }
 
-  const { nonce, signature, publicKey, expiresAt } = await getSignature(walletAddress);
+  const attemptLogin = async () => {
+    const { nonce, signature, publicKey, expiresAt } = await getSignature(walletAddress);
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getClientPlatformHeaders()),
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        walletAddress,
+        signature,
+        publicKey,
+        nonce,
+      }),
+    });
 
-  // Login with signature
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await getClientPlatformHeaders()),
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      walletAddress,
-      signature,
-      publicKey,
-      nonce,
-    }),
-  });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || 'Login failed');
+    }
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || 'Login failed');
+    const result = await res.json();
+    setCachedSession(walletAddress, expiresAt);
+    return result;
+  };
+
+  try {
+    return await attemptLogin();
+  } catch (error: any) {
+    const message = String(error?.message || '');
+    if (!/nonce|signature/i.test(message)) {
+      throw error;
+    }
+
+    clearCachedSignature(walletAddress);
+    return attemptLogin();
   }
-
-  const result = await res.json();
-  setCachedSession(walletAddress, expiresAt);
-  return result;
 }
 
 export async function logout(): Promise<void> {
@@ -1040,6 +1059,10 @@ export async function logout(): Promise<void> {
     delete sessionCache[key];
   });
   saveSessionCache();
+  Object.keys(signatureCache).forEach((key) => {
+    delete signatureCache[key];
+  });
+  saveSignatureCache();
 }
 
 

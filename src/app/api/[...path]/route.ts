@@ -96,12 +96,38 @@ function copyResponseHeaders(backendResponse: Response, nextResponse: NextRespon
   }
 }
 
+function hasTrustedOrigin(request: NextRequest) {
+  const appOrigin = request.nextUrl.origin;
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+
+  if (origin && origin !== appOrigin) {
+    return false;
+  }
+
+  if (referer) {
+    try {
+      return new URL(referer).origin === appOrigin;
+    } catch {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function ensureNimiqPayAccess(request: NextRequest) {
   const clientPlatform = (request.headers.get('x-client-platform') || '').toLowerCase();
   const walletKind = (request.headers.get('x-wallet-kind') || '').toLowerCase();
-  if (clientPlatform !== NIMIQ_PAY_PLATFORM && walletKind !== 'miniapp') {
+  if (clientPlatform !== NIMIQ_PAY_PLATFORM || walletKind !== 'miniapp') {
     return NextResponse.json(
       { error: 'NimAgent is only available inside the Nimiq Pay app.' },
+      { status: 403 }
+    );
+  }
+  if (!hasTrustedOrigin(request)) {
+    return NextResponse.json(
+      { error: 'Blocked untrusted browser origin.' },
       { status: 403 }
     );
   }
