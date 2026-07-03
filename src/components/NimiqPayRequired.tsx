@@ -1,21 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { openExternalUrl } from '@/lib/external-links';
 
 const NIMIQ_PAY_DOWNLOAD_URL = 'https://www.nimiq.com/nimiq-pay/';
-const NIMAGENT_URL           = 'https://nimagent.online';
-const X_URL                  = 'https://x.com/nimiqagent';
+const X_URL = 'https://x.com/nimiqagent';
 
 export default function NimiqPayRequired() {
   const [copied, setCopied] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('https://nimagent.online');
+
+  // Capture the full current URL (including any ?to= or ?ref= params)
+  // so users can copy the exact link and open it in Nimiq Pay's browser
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(NIMAGENT_URL);
+      await navigator.clipboard.writeText(currentUrl);
     } catch {
       const ta = document.createElement('textarea');
-      ta.value = NIMAGENT_URL;
+      ta.value = currentUrl;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
@@ -24,6 +32,8 @@ export default function NimiqPayRequired() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const hasParams = currentUrl.includes('?');
 
   return (
     <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
@@ -38,8 +48,9 @@ export default function NimiqPayRequired() {
             Open NimAgent in Nimiq Pay
           </h1>
           <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-white/65">
-            NimAgent runs inside Nimiq Pay&apos;s built-in browser.
-            Follow the steps below to get started.
+            {hasParams
+              ? 'You have a payment or referral link. Open it inside Nimiq Pay\'s browser to continue.'
+              : 'NimAgent runs inside Nimiq Pay\'s built-in browser. Follow the steps below to get started.'}
           </p>
 
           {/* Steps */}
@@ -50,7 +61,9 @@ export default function NimiqPayRequired() {
             {[
               { n: '1', text: <>Install or open the <strong className="text-gray-900 dark:text-white">Nimiq Pay</strong> app.</> },
               { n: '2', text: <>Tap the <strong className="text-gray-900 dark:text-white">browser / globe icon</strong> inside Nimiq Pay.</> },
-              { n: '3', text: <>Navigate to <strong className="text-amber-700 dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below and paste it.</> },
+              { n: '3', text: hasParams
+                ? <>Paste the link you just copied into the address bar.</>
+                : <>Navigate to <strong className="text-amber-700 dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below.</> },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3">
                 <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
@@ -61,7 +74,7 @@ export default function NimiqPayRequired() {
 
           {/* URL display */}
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 px-3 py-2.5">
-            <p className="flex-1 text-xs font-mono text-gray-700 dark:text-white/70 truncate">{NIMAGENT_URL}</p>
+            <p className="flex-1 text-xs font-mono text-gray-700 dark:text-white/70 truncate">{currentUrl}</p>
             <button
               type="button"
               onClick={copyLink}
