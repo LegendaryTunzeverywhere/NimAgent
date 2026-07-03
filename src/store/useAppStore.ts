@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppState, Balance, ActionCard } from '@/types';
+import type { AppState, Balance, ActionCard, Message } from '@/types';
 
 // FIX 3 FRONTEND: Generate UUID v4 format for sessionIds (backend validation requirement)
 function generateSessionId(): string {
@@ -209,8 +209,13 @@ export const useAppStore = create<AppState>()(
         set({ currentSessionId: newSessionId, messages: [] });
       },
 
-      addMessage: async (message) => {
+      addMessage: async (message, forSessionId?: string) => {
         const { wallet, currentSessionId } = get();
+        // If we specified which session this message is for, check if it's still active
+        if (forSessionId && forSessionId !== currentSessionId) {
+          // Session changed - don't add this message to the new session
+          return;
+        }
         const newMessage = { ...message, timestamp: Date.now() };
         
         set((state) => ({
@@ -271,6 +276,7 @@ export const useAppStore = create<AppState>()(
 
       sendMessageToAI: async (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => {
         const { messages, addMessage } = get();
+        const requestSessionId = get().currentSessionId ?? undefined;
 
         // Client-side guard: trim and cap message length (server also enforces).
         const trimmed = (content || '').trim().slice(0, 2000);
@@ -286,17 +292,21 @@ export const useAppStore = create<AppState>()(
             await addMessage({
               role: 'ai',
               content: 'Please wait a moment before sending another message.',
-            });
+            }, requestSessionId);
             return;
           }
         }
 
-        // Set loading state
-        set({ aiLoading: true, aiStatus: 'Understanding your request' });
+        // Set loading state - only if still in the same session
+        if (get().currentSessionId === requestSessionId) {
+          set({ aiLoading: true, aiStatus: 'Understanding your request' });
+        }
 
         // Get history before adding user message — send more turns and include
         // action metadata so the server can build rich context for the AI.
-        set({ aiStatus: 'Reviewing recent context' });
+        if (get().currentSessionId === requestSessionId) {
+          set({ aiStatus: 'Reviewing recent context' });
+        }
         const history = messages.slice(-20).map(m => ({
           role: m.role,
           text: m.content,
@@ -304,13 +314,20 @@ export const useAppStore = create<AppState>()(
         }));
 
         // Add user message
-        await addMessage({ role: 'user', content: trimmed });
+        await addMessage({ role: 'user', content: trimmed }, requestSessionId);
 
         try {
           // Import and call chat API
           const { chatWithAgent, saveAddress, updateSavedAddress, deleteSavedAddress, findAddressByNickname } = await import('@/lib/api-client');
-          set({ aiStatus: 'Asking NimAgent' });
+          if (get().currentSessionId === requestSessionId) {
+            set({ aiStatus: 'Asking NimAgent' });
+          }
           const response = await chatWithAgent(trimmed, history, walletAddress);
+          
+          // First check: if session changed, stop processing entirely
+          if (get().currentSessionId !== requestSessionId) {
+            return;
+          }
           
           // Handle action execution for non-UI actions (save, update, delete contacts)
           if (response.action && walletAddress) {
@@ -319,7 +336,9 @@ export const useAppStore = create<AppState>()(
             // Save contact
             if (action.type === 'save-contact' && action.nickname && action.recipientAddress) {
               try {
-                set({ aiStatus: 'Saving contact' });
+                if (get().currentSessionId === requestSessionId) {
+                  set({ aiStatus: 'Saving contact' });
+                }
                 // Validate address before saving
                 const cleanAddress = action.recipientAddress.replace(/\s/g, '').toUpperCase();
                 
@@ -330,7 +349,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: `❌ Invalid address format. Nimiq addresses must start with "NQ".\n\nProvided: ${action.recipientAddress}`,
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -339,7 +358,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: `❌ Invalid address length. Nimiq addresses must be exactly 36 characters (without spaces).\n\nProvided address: ${cleanAddress}\nLength: ${cleanAddress.length} characters (expected 36)\n\nPlease provide a complete, valid Nimiq address.`,
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -348,7 +367,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: `❌ Invalid address format. Nimiq addresses must be "NQ" followed by exactly 34 alphanumeric characters.\n\nProvided: ${cleanAddress}`,
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -368,13 +387,13 @@ export const useAppStore = create<AppState>()(
                 await addMessage({
                   role: 'ai',
                   content: `✅ Saved ${action.nickname} to your contacts!`,
-                });
+                }, requestSessionId);
                 return; // Don't add action card
               } catch (err: any) {
                 await addMessage({
                   role: 'ai',
                   content: `Failed to save contact: ${err.message || 'Unknown error'}`,
-                });
+                }, requestSessionId);
                 return;
               }
             }
@@ -382,7 +401,9 @@ export const useAppStore = create<AppState>()(
             // Update contact
             if (action.type === 'update-contact' && (action.oldNickname || action.nickname)) {
               try {
-                set({ aiStatus: 'Updating contact' });
+                if (get().currentSessionId === requestSessionId) {
+                  set({ aiStatus: 'Updating contact' });
+                }
                 // Use oldNickname (new format) or fallback to nickname (old format)
                 // Normalize to lowercase for case-insensitive lookup (backend uses ilike)
                 const lookupNickname = (action.oldNickname || action.nickname || '').trim();
@@ -392,7 +413,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: 'Cannot update contact: no nickname provided.',
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -402,7 +423,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: `I couldn't find a contact named '${lookupNickname}'. Check the spelling or ask me to show your contact list.`,
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -422,13 +443,13 @@ export const useAppStore = create<AppState>()(
                 await addMessage({
                   role: 'ai',
                   content: `✅ Updated ${lookupNickname} in your contacts!`,
-                });
+                }, requestSessionId);
                 return;
               } catch (err: any) {
                 await addMessage({
                   role: 'ai',
                   content: `Failed to update contact: ${err.message || 'Unknown error'}`,
-                });
+                }, requestSessionId);
                 return;
               }
             }
@@ -436,7 +457,9 @@ export const useAppStore = create<AppState>()(
             // Delete contact
             if (action.type === 'delete-contact' && action.nickname) {
               try {
-                set({ aiStatus: 'Removing contact' });
+                if (get().currentSessionId === requestSessionId) {
+                  set({ aiStatus: 'Removing contact' });
+                }
                 // Normalize for case-insensitive lookup
                 const deleteNickname = action.nickname.trim();
                 const found = await findAddressByNickname(walletAddress, deleteNickname);
@@ -444,7 +467,7 @@ export const useAppStore = create<AppState>()(
                   await addMessage({
                     role: 'ai',
                     content: `I couldn't find a contact named '${action.nickname}'. Check the spelling or ask me to show your contact list.`,
-                  });
+                  }, requestSessionId);
                   return;
                 }
                 
@@ -452,19 +475,19 @@ export const useAppStore = create<AppState>()(
                 await addMessage({
                   role: 'ai',
                   content: `✅ Removed ${action.nickname} from your contacts!`,
-                });
+                }, requestSessionId);
                 return;
               } catch (err: any) {
                 await addMessage({
                   role: 'ai',
                   content: `Failed to delete contact: ${err.message || 'Unknown error'}`,
-                });
+                }, requestSessionId);
                 return;
               }
             }
           }
 
-          if (response.action) {
+          if (response.action && get().currentSessionId === requestSessionId) {
             const statusByAction: Record<string, string> = {
               'show-contacts': 'Loading your contacts',
               'list-contacts': 'Loading your contacts',
@@ -480,17 +503,19 @@ export const useAppStore = create<AppState>()(
               'leaderboard': 'Loading leaderboard',
             };
             set({ aiStatus: statusByAction[response.action.type] || 'Preparing response' });
-          } else {
+          } else if (get().currentSessionId === requestSessionId) {
             set({ aiStatus: 'Finalizing response' });
           }
           
           // Add AI response with action (for UI actions like show-contacts, send, etc.)
-          set({ aiStatus: 'Finalizing response' });
+          if (get().currentSessionId === requestSessionId) {
+            set({ aiStatus: 'Finalizing response' });
+          }
           await addMessage({
             role: 'ai',
             content: response.message,
             action: response.action ?? undefined,
-          });
+          }, requestSessionId);
         } catch (error: any) {
           const isRateLimit = typeof error?.message === 'string' && error.message.includes('429');
           await addMessage({
@@ -498,10 +523,12 @@ export const useAppStore = create<AppState>()(
             content: isRateLimit
               ? "You're sending messages a bit fast. Please wait a few seconds and try again."
               : "I'm currently unable to connect to the AI service. This could be due to network issues or server maintenance. Please try again in a moment, or check your connection.",
-          });
+          }, requestSessionId);
         } finally {
-          // Clear loading state
-          set({ aiLoading: false, aiStatus: null });
+          // Clear loading state - only if still in the same session
+          if (get().currentSessionId === requestSessionId) {
+            set({ aiLoading: false, aiStatus: null });
+          }
         }
       },
 

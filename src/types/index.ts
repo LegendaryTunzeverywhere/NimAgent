@@ -124,7 +124,7 @@ export interface AppState {
   fetchBalance: () => Promise<void>;
   loadOrCreateSession: () => Promise<void>;
   startNewSession: () => void;
-  addMessage: (message: Message) => Promise<void>;
+  addMessage: (message: Message, sessionIdOverride?: string) => Promise<void>;
   updateActionState: (messageIndex: number, actionUpdates: Partial<ActionCard>) => Promise<void>;
   clearMessages: () => void;
   sendMessageToAI: (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => Promise<void>;
