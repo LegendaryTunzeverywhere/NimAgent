@@ -167,43 +167,29 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Once confirmed inside Nimiq Pay:
-  // - If already connected: re-run the funded-account picker, update address if
-  //   needed, then refresh balance. This catches stale persisted addresses.
-  // - If not connected + payment/referral params: auto-connect
-  // - If not connected + no params: wait for user to press Connect
+  // Once confirmed inside Nimiq Pay — ONE place that handles all startup logic.
+  // Rules:
+  //   1. Never call getUserAddress/listAccounts more than once per startup
+  //   2. If already connected: just refresh balance (no wallet prompt)
+  //   3. If not connected + payment params: auto-connect (one call)
+  //   4. If not connected + no params: do nothing, wait for user to press Connect
   useEffect(() => {
     if (miniAppStatus !== 'inside') return;
 
     const state = useAppStore.getState();
 
     if (state.wallet.connected) {
-      // Re-run the multi-account funded-address picker silently on every startup.
-      // This ensures we always show the balance for the funded account, even if
-      // a different (empty) account was persisted from a previous session.
-      (async () => {
-        try {
-          const { getUserAddress } = await import('@/lib/wallet');
-          const freshAddress = await getUserAddress();
-          const current = useAppStore.getState();
-          if (freshAddress !== current.wallet.address) {
-            useAppStore.setState((s) => ({
-              wallet: { ...s.wallet, address: freshAddress },
-            }));
-          }
-          useAppStore.getState().fetchBalance();
-        } catch {
-          // Best-effort — fall back to fetching with existing address
-          state.fetchBalance();
-        }
-      })();
+      // Already connected — just refresh balance, no wallet prompt needed
+      state.fetchBalance();
       return;
     }
 
-    // Not connected — auto-connect only if there are link params
+    // Not connected — only auto-connect when there are specific link params
+    // that require immediate wallet access. Never auto-connect on plain load.
     if (hasPaymentParams) {
       connectWallet();
     }
+    // Otherwise wait for user to tap Connect
   }, [miniAppStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (miniAppStatus === 'checking') return <LoadingSkeleton />;

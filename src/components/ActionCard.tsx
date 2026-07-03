@@ -624,6 +624,24 @@ export default function ActionCard({ action }: ActionCardProps) {
       return;
     }
 
+    // Check Nimiq Pay consensus before attempting any payment.
+    // If the wallet is still syncing, block the payment and tell the user.
+    if (action.type === 'send' || action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill') {
+      try {
+        const { getNimiqNetworkState } = await import('@/lib/wallet');
+        const networkState = await getNimiqNetworkState();
+        if (!networkState.consensusEstablished) {
+          addMessage({
+            role: 'ai',
+            content: '⏳ Nimiq Pay is still syncing with the Nimiq network.\n\nPayments are paused until sync is complete. Please wait a moment and try again. If this persists, check your internet connection.',
+          });
+          return;
+        }
+      } catch {
+        // If we can't check consensus, proceed anyway — the wallet will reject if truly not synced
+      }
+    }
+
     const nimAmount = parseFloat(amount);
     if (!nimAmount || nimAmount <= 0) {
       addMessage({

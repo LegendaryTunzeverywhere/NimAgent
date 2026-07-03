@@ -88,6 +88,8 @@ export default function HomePage() {
   const [priceChange, setPriceChange] = useState<number | null>(null);
   const [sentToday, setSentToday] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  // Consensus / sync state — payments are blocked until Nimiq Pay is synced
+  const [consensusEstablished, setConsensusEstablished] = useState<boolean>(true);
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState<string>('');
   const [referralCount, setReferralCount] = useState<number>(0);
@@ -331,6 +333,27 @@ export default function HomePage() {
     }
   }, [wallet.connected, wallet.address, fetchBalance]);
 
+  // Poll Nimiq Pay consensus status every 10s while connected.
+  // Payments are blocked when consensus is not established.
+  useEffect(() => {
+    if (!wallet.connected) return;
+
+    const checkConsensus = async () => {
+      try {
+        const { getNimiqNetworkState } = await import('@/lib/wallet');
+        const state = await getNimiqNetworkState();
+        setConsensusEstablished(state.consensusEstablished);
+      } catch {
+        // If we can't check, assume synced to avoid blocking UX unnecessarily
+        setConsensusEstablished(true);
+      }
+    };
+
+    checkConsensus();
+    const interval = setInterval(checkConsensus, 10_000);
+    return () => clearInterval(interval);
+  }, [wallet.connected]);
+
   useEffect(() => {
     // Handle referral tracking and fetch referral info
     const fetchReferralInfo = async () => {
@@ -506,6 +529,19 @@ export default function HomePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
+
+      {/* Syncing banner — shown when Nimiq Pay hasn't established consensus yet */}
+      {wallet.connected && !consensusEstablished && (
+        <div className="animate-fade-up rounded-2xl border border-amber-300 dark:border-gold/30 bg-amber-50 dark:bg-gold/10 px-4 py-3 flex items-start gap-3">
+          <div className="w-5 h-5 border-2 border-amber-400 dark:border-gold/60 border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-900 dark:text-gold">Nimiq Pay is syncing</p>
+            <p className="text-xs text-amber-800/80 dark:text-gold/75 mt-0.5 leading-relaxed">
+              Payments are paused until the wallet syncs with the Nimiq network. This usually takes a few seconds. Check your internet connection if it persists.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
