@@ -183,9 +183,19 @@ export const useAppStore = create<AppState>()(
         const { wallet, currentSessionId, messages, markWalletSessionExpired, clearWalletSessionExpired } = get();
         if (!wallet.address) return;
 
-        // If we have both a sessionId and messages in local storage, don't reload
-        if (currentSessionId && messages.length > 0) {
-          return;
+        // If localStorage has a session with recent messages (< 30 min), trust it —
+        // avoids unnecessary DB round-trips on quick reconnects.
+        // If messages are older or stale, reload from DB to get latest state.
+        const recentThreshold = 30 * 60 * 1000; // 30 minutes
+        const latestMsgTime = messages.length > 0
+          ? Math.max(...messages.map(m => m.timestamp || 0))
+          : 0;
+        const hasRecentLocalMessages = currentSessionId &&
+          messages.length > 0 &&
+          Date.now() - latestMsgTime < recentThreshold;
+
+        if (hasRecentLocalMessages) {
+          return; // Fast path — localStorage is fresh
         }
 
         try {
@@ -271,7 +281,7 @@ export const useAppStore = create<AppState>()(
           messages: [...state.messages, newMessage],
         }));
 
-        // Save to database if wallet is connected
+        // Persist to DB — fire-and-forget but log failures so they're visible
         if (wallet.address && currentSessionId) {
           try {
             const { saveChatMessage } = await import('@/lib/api-client');
@@ -283,7 +293,7 @@ export const useAppStore = create<AppState>()(
               action: message.action,
             });
           } catch (error: any) {
-            // Silent failure
+            console.warn('[addMessage] DB persist failed (non-fatal):', error?.message);
           }
         }
       },
@@ -291,7 +301,7 @@ export const useAppStore = create<AppState>()(
       updateActionState: async (messageIndex: number, actionUpdates: Partial<ActionCard>) => {
         const { wallet, currentSessionId, messages } = get();
         
-        // Update the message in local state
+        // Update local state first
         set((state) => ({
           messages: state.messages.map((msg, idx) => 
             idx === messageIndex && msg.action 
@@ -300,25 +310,21 @@ export const useAppStore = create<AppState>()(
           ),
         }));
         
-        // If we have the updated message with an action, save it to database
+        // Persist updated action to DB via upsert (same content = update, not insert)
         const message = messages[messageIndex];
         if (wallet.address && currentSessionId && message?.action) {
           try {
-            const updatedMessage = {
-              ...message,
-              action: { ...message.action, ...actionUpdates }
-            };
-            
+            const updatedAction = { ...message.action, ...actionUpdates };
             const { saveChatMessage } = await import('@/lib/api-client');
             await saveChatMessage({
               walletAddress: wallet.address,
               sessionId: currentSessionId,
-              role: updatedMessage.role,
-              content: updatedMessage.content,
-              action: updatedMessage.action,
+              role: message.role,
+              content: message.content,   // same content → upsert finds the row
+              action: updatedAction,
             });
           } catch (error) {
-            // Silent failure
+            console.warn('[updateActionState] DB persist failed (non-fatal):', error);
           }
         }
       },
