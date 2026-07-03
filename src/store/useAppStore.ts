@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppState, Balance, ActionCard, Message } from '@/types';
 
+let isSendingMessage = false;
+
 // FIX 3 FRONTEND: Generate UUID v4 format for sessionIds (backend validation requirement)
 function generateSessionId(): string {
   // Use crypto.randomUUID() if available (modern browsers)
@@ -127,53 +129,17 @@ export const useAppStore = create<AppState>()(
       },
 
       loadOrCreateSession: async () => {
-        const { wallet, currentSessionId, messages } = get();
+        const { wallet } = get();
         if (!wallet.address) return;
-
-        // If localStorage has a session with recent messages (< 30 min), trust it —
-        // avoids unnecessary DB round-trips on quick reconnects.
-        // If messages are older or stale, reload from DB to get latest state.
-        const recentThreshold = 30 * 60 * 1000; // 30 minutes
-        const latestMsgTime = messages.length > 0
-          ? Math.max(...messages.map(m => m.timestamp || 0))
-          : 0;
-        const hasRecentLocalMessages = currentSessionId &&
-          messages.length > 0 &&
-          Date.now() - latestMsgTime < recentThreshold;
-
-        if (hasRecentLocalMessages) {
-          return; // Fast path — localStorage is fresh
-        }
 
         try {
           const { getChatSessions, getChatHistory } = await import('@/lib/api-client');
           
-          // If we have a sessionId but no messages, try to load from that session
-          if (currentSessionId) {
-            try {
-              const sessionMessages = await getChatHistory(currentSessionId, wallet.address, {
-                requireWalletSession: false,
-              });
-              if (sessionMessages.length > 0) {
-                set({
-                  messages: sessionMessages.map(m => ({
-                    role: m.role,
-                    content: m.content,
-                    action: m.action,
-                    timestamp: new Date(m.created_at).getTime(),
-                  })),
-                });
-                return;
-              }
-            } catch (err) {
-              // Silent failure
-            }
-          }
-          
-          // Get all sessions for this wallet
+          // Always get all sessions from backend to ensure sync
           const sessions = await getChatSessions(wallet.address, {
             requireWalletSession: false,
           });
+          
           if (sessions.length > 0) {
             // Load the most recent session
             const latestSession = sessions[0];
@@ -195,11 +161,9 @@ export const useAppStore = create<AppState>()(
             set({ currentSessionId: newSessionId, messages: [] });
           }
         } catch (error) {
-          // Keep existing session if load fails
-          if (!currentSessionId) {
-            const newSessionId = generateSessionId();
-            set({ currentSessionId: newSessionId, messages: [] });
-          }
+          // Create fresh session if load fails
+          const newSessionId = generateSessionId();
+          set({ currentSessionId: newSessionId, messages: [] });
         }
       },
 
@@ -275,27 +239,32 @@ export const useAppStore = create<AppState>()(
       },
 
       sendMessageToAI: async (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => {
-        const { messages, addMessage } = get();
-        const requestSessionId = get().currentSessionId ?? undefined;
+        // Guard: prevent multiple concurrent calls
+        if (isSendingMessage) return;
+        isSendingMessage = true;
 
-        // Client-side guard: trim and cap message length (server also enforces).
-        const trimmed = (content || '').trim().slice(0, 2000);
-        if (!trimmed) return;
+        try {
+          const { messages, addMessage } = get();
+          const requestSessionId = get().currentSessionId ?? undefined;
 
-        // Rate limiting: prevent spam, but allow bypassing for saved contact sends
-        if (!options?.bypassRateLimit) {
-          const now = Date.now();
-          const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : 0;
-          const timeSinceLastMessage = now - (lastMessageTime || 0);
-          
-          if (timeSinceLastMessage < 2000) {
-            await addMessage({
-              role: 'ai',
-              content: 'Please wait a moment before sending another message.',
-            }, requestSessionId);
-            return;
+          // Client-side guard: trim and cap message length (server also enforces).
+          const trimmed = (content || '').trim().slice(0, 2000);
+          if (!trimmed) return;
+
+          // Rate limiting: prevent spam, but allow bypassing for saved contact sends
+          if (!options?.bypassRateLimit) {
+            const now = Date.now();
+            const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : 0;
+            const timeSinceLastMessage = now - (lastMessageTime || 0);
+            
+            if (timeSinceLastMessage < 2000) {
+              await addMessage({
+                role: 'ai',
+                content: 'Please wait a moment before sending another message.',
+              }, requestSessionId);
+              return;
+            }
           }
-        }
 
         // Set loading state - only if still in the same session
         if (get().currentSessionId === requestSessionId) {
@@ -530,7 +499,10 @@ export const useAppStore = create<AppState>()(
             set({ aiLoading: false, aiStatus: null });
           }
         }
-      },
+      } finally {
+        isSendingMessage = false;
+      }
+    },
 
       addTransaction: (transaction) => {
         set((state) => ({

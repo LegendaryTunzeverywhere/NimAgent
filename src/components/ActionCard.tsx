@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
@@ -31,6 +31,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   
   // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
   const [loading, setLoading] = useState(false);
+  const isExecutingRef = useRef(false);
   const [success, setSuccess] = useState(action.completed || false);
   const [failed, setFailed] = useState(action.failed || false);
   const [amount, setAmount] = useState(action.amountLuna ? (action.amountLuna / 100000).toFixed(2) : '');
@@ -601,6 +602,12 @@ export default function ActionCard({ action }: ActionCardProps) {
   }
 
   const executeAction = async () => {
+    // Prevent duplicate concurrent calls
+    if (isExecutingRef.current) {
+      return;
+    }
+    isExecutingRef.current = true;
+    
     // Prevent retry if card is already failed or completed
     if (failed) {
       addMessage({
@@ -1022,6 +1029,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       });
     } finally {
       setLoading(false);
+      isExecutingRef.current = false;
     }
   };
 
