@@ -57,9 +57,9 @@ export default function TickerBar() {
 
   return (
     <div className="relative overflow-hidden w-full bg-gold/[0.07] border-b border-gold/15 py-1.5">
-      {/* Edge fades */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-r from-background-primary to-transparent" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-l from-background-primary to-transparent" />
+      {/* Edge fades — white in light mode, dark background in dark mode */}
+      <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-r from-white dark:from-background-primary to-transparent" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-l from-white dark:from-background-primary to-transparent" />
       <div className="inline-block whitespace-nowrap animate-ticker text-gold text-[11px] font-mono tracking-wider font-semibold">
         {text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{text}
       </div>
