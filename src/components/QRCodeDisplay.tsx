@@ -16,9 +16,14 @@ type QRMode = 'request' | 'nimagent' | 'address';
 
 export default function QRCodeDisplay({ address, amount, message }: QRCodeDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [copied, setCopied]   = useState(false);
+  const [canShare, setCanShare] = useState(false);
+  const [copied, setCopied]     = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [error, setError]     = useState(false);
+  const [error, setError]       = useState(false);
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== 'undefined' && !!navigator.share);
+  }, []);
   // Default to 'request' when an amount is provided, otherwise 'nimagent'
   const [mode, setMode]       = useState<QRMode>(amount ? 'request' : 'nimagent');
 
@@ -57,16 +62,41 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
   }, [qrData]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!canvasRef.current) return;
-    const link = document.createElement('a');
-    link.href = canvasRef.current.toDataURL('image/png');
-    link.download = mode === 'request'
+
+    const filename = mode === 'request'
       ? `nimagent-request-${normalizedAddress.slice(0, 8)}.png`
       : mode === 'nimagent'
       ? `nimagent-pay-${normalizedAddress.slice(0, 8)}.png`
       : `nimiq-${normalizedAddress.slice(0, 8)}.png`;
+
+    // Prefer Web Share API — works inside mobile WebViews (Nimiq Pay mini-app)
+    // where anchor download is silently blocked.
+    if (navigator.share && navigator.canShare) {
+      try {
+        const dataUrl = canvasRef.current.toDataURL('image/png');
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'NimAgent QR Code' });
+          return;
+        }
+      } catch (err: any) {
+        // User cancelled share — don't fall through to download
+        if (err?.name === 'AbortError') return;
+        // Otherwise fall through to anchor download
+      }
+    }
+
+    // Desktop fallback: anchor must be in the DOM for Firefox & some Chromium builds
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const handleCopyQr = async () => {
@@ -179,7 +209,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
       <div className="flex gap-2">
         <button onClick={handleDownload}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-white/75 border border-gray-200 dark:border-white/[0.08] hover:bg-gray-200 dark:hover:bg-white/[0.10] transition-colors">
-          <Icon name="download" size={14} strokeWidth={2} /> Save
+          <Icon name="download" size={14} strokeWidth={2} /> {canShare ? 'Share' : 'Save'}
         </button>
         {(mode === 'request' || mode === 'nimagent') && (
           <button onClick={handleCopyLink}
