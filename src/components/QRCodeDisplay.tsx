@@ -71,32 +71,60 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
       ? `nimagent-pay-${normalizedAddress.slice(0, 8)}.png`
       : `nimiq-${normalizedAddress.slice(0, 8)}.png`;
 
-    // Prefer Web Share API — works inside mobile WebViews (Nimiq Pay mini-app)
-    // where anchor download is silently blocked.
+    // Get the PNG data directly from the canvas — no fetch() needed.
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+
+    // Try Web Share API with files (works on Android/iOS when supported).
+    // Convert data URL → Blob → File without fetch() which is unreliable
+    // for data: URLs inside WebViews.
     if (navigator.share && navigator.canShare) {
       try {
-        const dataUrl = canvasRef.current.toDataURL('image/png');
-        const blob = await (await fetch(dataUrl)).blob();
+        const res = dataUrl.split(',');
+        const byteString = atob(res[1]);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+          bytes[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'image/png' });
         const file = new File([blob], filename, { type: 'image/png' });
+
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: 'NimAgent QR Code' });
           return;
         }
       } catch (err: any) {
-        // User cancelled share — don't fall through to download
-        if (err?.name === 'AbortError') return;
-        // Otherwise fall through to anchor download
+        if (err?.name === 'AbortError') return; // user cancelled — don't fall through
+        // Any other error: fall through to anchor download
       }
     }
 
-    // Desktop fallback: anchor must be in the DOM for Firefox & some Chromium builds
-    const dataUrl = canvasRef.current.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Fallback: try blob URL first (more reliable than data: URLs in WebViews),
+    // then fall back to a plain data: URL anchor as last resort.
+    try {
+      await new Promise<void>((resolve, reject) => {
+        canvasRef.current!.toBlob((blob) => {
+          if (!blob) { reject(new Error('toBlob failed')); return; }
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          // Revoke after a short delay to let the download start
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          resolve();
+        }, 'image/png');
+      });
+    } catch {
+      // Last resort: data URL anchor
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const handleCopyQr = async () => {
