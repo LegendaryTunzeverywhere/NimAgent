@@ -16,7 +16,7 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: 'NimAgent: AI-Powered Nimiq Payments',
-  description: 'Send NIM, split bills, buy gift cards, recharge airtime, pay bills, and swap crypto, all powered by AI.',
+  description: 'Send NIM, split bills, buy gift cards, recharge airtime, pay bills, all powered by AI.',
   applicationName: 'NimAgent',
   keywords: ['Nimiq', 'NIM', 'crypto payments', 'AI payments', 'gift cards', 'airtime', 'bill payments', 'crypto swap'],
   authors: [{ name: 'NimAgent' }],
