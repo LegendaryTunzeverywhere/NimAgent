@@ -51,6 +51,8 @@ export const useAppStore = create<AppState>()(
       connectWallet: async () => {
         // Guard against concurrent connect calls
         if (get().wallet.loading) return;
+        // Already connected — nothing to do.
+        if (get().wallet.connected) return;
 
         set((state) => ({
           wallet: { ...state.wallet, loading: true, error: null },

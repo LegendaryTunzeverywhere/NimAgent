@@ -46,28 +46,15 @@ export const miniAppAdapter: WalletAdapter = {
     const nimiq = await provider();
     const accounts = unwrap(await nimiq.listAccounts());
     if (!accounts.length) throw new Error('No Nimiq account available in Nimiq Pay.');
-    if (accounts.length === 1) return accounts[0];
 
-    // Multiple accounts — pick the one with the highest basic account balance.
-    // We use basic balance only here (fast, single RPC call per account) rather
-    // than the full HTLC-aware balance, to keep connect time short.
-    // The full balance (including HTLCs) is shown after connect via fetchBalance.
-    try {
-      const balances = await Promise.all(
-        accounts.map(async (addr) => {
-          try {
-            const luna = await miniAppAdapter.getNimBalance(addr);
-            return { addr, balance: luna ?? 0 };
-          } catch {
-            return { addr, balance: 0 };
-          }
-        })
-      );
-      balances.sort((a, b) => b.balance - a.balance);
-      return balances[0].addr;
-    } catch {
-      return accounts[0];
-    }
+    // Always return the first account — Nimiq Pay's listAccounts() returns
+    // accounts in priority order, with the active/primary account first.
+    // Do NOT try to pick by balance: when NIM is locked in an HTLC (atomic swap),
+    // the basic account balance is 0, which caused the wrong account to be selected.
+    // The HTLC contract addresses are separate on-chain contracts and never appear
+    // in listAccounts() — so the balance-based picker was comparing actual user
+    // accounts by the wrong metric.
+    return accounts[0];
   },
 
   async requestPayment(req: PaymentRequest): Promise<string> {

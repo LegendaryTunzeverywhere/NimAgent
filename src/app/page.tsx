@@ -183,13 +183,37 @@ export default function Home() {
     const state = useAppStore.getState();
 
     if (state.wallet.connected) {
-      state.fetchBalance();
+      // Re-validate the persisted address against the live provider.
+      // The user may have switched their active account in Nimiq Pay between
+      // sessions, which would cause a stale address to be shown here.
+      import('@/lib/wallet').then(({ getUserAddress }) => {
+        getUserAddress()
+          .then((liveAddress) => {
+            const stored = useAppStore.getState().wallet.address;
+            if (stored !== liveAddress) {
+              // Active account changed — update the address and reload the session.
+              useAppStore.setState((s) => ({
+                wallet: { ...s.wallet, address: liveAddress },
+              }));
+              useAppStore.getState().loadOrCreateSession();
+            }
+            useAppStore.getState().fetchBalance();
+          })
+          .catch(() => {
+            // Provider unavailable — fall back to fetching balance with stored address.
+            useAppStore.getState().fetchBalance();
+          });
+      });
       return;
     }
 
-    if (hasPaymentParams) {
-      connectWallet();
-    }
+    // Auto-connect whenever we're inside Nimiq Pay and not yet connected.
+    // This covers: payment link opens, fresh installs, and post-clear-cache
+    // reloads (where localStorage was wiped and connected is false).
+    // Without this, after "Clear cache & reload" the user had to press the
+    // connect button manually, and the provider sometimes returned accounts in
+    // a different order on that first cold call — showing the wrong wallet.
+    connectWallet();
   }, [miniAppStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show maintenance page — checked AFTER all hooks
