@@ -56,10 +56,22 @@ export const useAppStore = create<AppState>()(
           wallet: { ...state.wallet, loading: true, error: null },
         }));
 
+        // Safety net — if connect takes > 30s, reset loading so the button
+        // never stays permanently stuck on "Connecting..."
+        const loadingTimeout = setTimeout(() => {
+          if (get().wallet.loading && !get().wallet.connected) {
+            set((state) => ({
+              wallet: { ...state.wallet, loading: false, error: 'Connection timed out. Please try again.' },
+            }));
+          }
+        }, 30_000);
+
         try {
           const { getUserAddress } = await import('@/lib/wallet');
           const address = await getUserAddress();
-          
+
+          clearTimeout(loadingTimeout);
+
           set((state) => ({
             wallet: {
               ...state.wallet,
@@ -68,11 +80,14 @@ export const useAppStore = create<AppState>()(
               loading: false,
             },
           }));
+            },
+          }));
 
           // Now run balance + session restore after connecting the wallet.
           await get().fetchBalance();
           get().loadOrCreateSession();
         } catch (error: any) {
+          clearTimeout(loadingTimeout);
           let errorMessage = 'Failed to connect wallet';
           if (error?.message?.includes('only inside the Nimiq Pay app')) {
             errorMessage = 'Open NimAgent inside the Nimiq Pay app to continue.';

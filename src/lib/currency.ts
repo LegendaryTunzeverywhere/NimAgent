@@ -30,9 +30,8 @@ export async function getNimPrice(currency: string = 'USD'): Promise<number> {
     return priceCache[key].price;
   }
   
-  // Fetch from API
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
-  const res = await fetch(`${apiUrl}/api/nim-price?currency=${key}`);
+  // Use relative path — works in both dev and prod, no env var needed
+  const res = await fetch(`/api/nim-price?currency=${key}`);
   
   if (!res.ok) {
     throw new Error('Failed to fetch NIM price');

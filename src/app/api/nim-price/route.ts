@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('[NIM-PRICE] Backend response:', JSON.stringify(data));
           return NextResponse.json(
             { ...data, source: 'backend' },
             {
@@ -51,8 +50,8 @@ export async function GET(request: NextRequest) {
             }
           );
         }
-      } catch (backendError) {
-        console.warn('[NIM-PRICE] Backend unavailable, trying fallbacks');
+      } catch {
+        // Backend unavailable — fall through to public price APIs
       }
     }
 
@@ -83,8 +82,8 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-    } catch (coingeckoError) {
-      console.warn('[NIM-PRICE] CoinGecko failed, trying CoinMarketCap');
+    } catch {
+      // CoinGecko unavailable
     }
 
     // Tier 3: CoinMarketCap API (industry standard)
@@ -124,8 +123,8 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-    } catch (cmcError) {
-      console.warn('[NIM-PRICE] CoinMarketCap failed, trying Coinranking');
+    } catch {
+      // CoinMarketCap unavailable
     }
 
     // Tier 4: Coinranking API
@@ -156,11 +155,6 @@ export async function GET(request: NextRequest) {
 
           // Convert to requested currency if needed
           const finalPrice = priceUSD;
-          if (currency.toLowerCase() !== 'usd') {
-            // If not USD, we'd need to convert, but return USD for now
-            // In production, add currency conversion API
-            console.warn('[NIM-PRICE] Coinranking only supports USD, returning USD price');
-          }
 
           return NextResponse.json(
             { 
@@ -177,13 +171,11 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-    } catch (coinrankingError) {
-      console.warn('[NIM-PRICE] Coinranking failed, all APIs exhausted');
+    } catch {
+      // Coinranking unavailable
     }
 
-    // Tier 5: Last resort - return error but with reasonable estimate
-    // This ensures UI never completely breaks
-    console.error('[NIM-PRICE] All price APIs failed');
+    // All price APIs exhausted — return a safe fallback estimate
     return NextResponse.json(
       {
         price: 0.0012, // Conservative estimate
@@ -199,24 +191,10 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[NIM-PRICE] Unexpected error:', errorMessage);
-    
-    // Always return valid data to prevent UI breaks
+  } catch {
     return NextResponse.json(
-      {
-        price: 0.0012,
-        change24h: 0,
-        currency: 'usd',
-        source: 'error-fallback',
-      },
-      {
-        status: 200,
-        headers: {
-          'Cache-Control': 'public, s-maxage=30',
-        },
-      }
+      { price: 0.0012, change24h: 0, currency: 'usd', source: 'error-fallback' },
+      { status: 200, headers: { 'Cache-Control': 'public, s-maxage=30' } }
     );
   }
 }

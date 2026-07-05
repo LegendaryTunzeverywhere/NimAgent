@@ -48,17 +48,23 @@ export const miniAppAdapter: WalletAdapter = {
     if (!accounts.length) throw new Error('No Nimiq account available in Nimiq Pay.');
     if (accounts.length === 1) return accounts[0];
 
-    // Multiple accounts — pick the one with the highest total balance
-    // (including HTLCs) so we connect to the funded wallet.
+    // Multiple accounts — pick the one with the highest basic account balance.
+    // We use basic balance only here (fast, single RPC call per account) rather
+    // than the full HTLC-aware balance, to keep connect time short.
+    // The full balance (including HTLCs) is shown after connect via fetchBalance.
     try {
-      const totals = await Promise.all(
+      const balances = await Promise.all(
         accounts.map(async (addr) => {
-          const luna = await miniAppAdapter.getTotalNimBalance(addr);
-          return { addr, balance: luna ?? 0 };
+          try {
+            const luna = await miniAppAdapter.getNimBalance(addr);
+            return { addr, balance: luna ?? 0 };
+          } catch {
+            return { addr, balance: 0 };
+          }
         })
       );
-      totals.sort((a, b) => b.balance - a.balance);
-      return totals[0].addr;
+      balances.sort((a, b) => b.balance - a.balance);
+      return balances[0].addr;
     } catch {
       return accounts[0];
     }

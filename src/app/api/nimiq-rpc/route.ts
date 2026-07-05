@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
           console.error('[RPC Proxy] Timeout from upstream endpoint');
           lastError = new Error('RPC request timeout');
         } else {
-          console.error('[RPC Proxy] Fetch error from upstream endpoint:', fetchError.message);
+          console.error('[RPC Proxy] Fetch error from upstream endpoint');
           lastError = fetchError;
         }
         
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     }
     
     // All endpoints failed
-    console.error('[RPC Proxy] All endpoints failed. Last error:', lastError?.message);
+    console.error('[RPC Proxy] All endpoints failed.');
     return NextResponse.json(
       { 
         jsonrpc: '2.0',
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       { status: 503 }
     );
   } catch (error: any) {
-    console.error('[RPC Proxy] Error:', error.message);
+    console.error('[RPC Proxy] Unexpected error');
     return NextResponse.json(
       { 
         jsonrpc: '2.0',

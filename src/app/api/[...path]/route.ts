@@ -169,7 +169,7 @@ export async function GET(
     copyResponseHeaders(response, nextResponse);
     return nextResponse;
   } catch (error: any) {
-    console.error('[BFF] GET error:', error.message);
+    console.error('[BFF] GET error');
     return NextResponse.json(
       { error: 'Failed to fetch from backend' },
       { status: 502 }
@@ -237,7 +237,7 @@ export async function POST(
     copyResponseHeaders(response, nextResponse);
     return nextResponse;
   } catch (error: any) {
-    console.error('[BFF] POST error:', error.message);
+    console.error('[BFF] POST error');
     return NextResponse.json(
       { error: 'Failed to post to backend' },
       { status: 502 }
@@ -282,7 +282,7 @@ export async function DELETE(
     copyResponseHeaders(response, nextResponse);
     return nextResponse;
   } catch (error: any) {
-    console.error('[BFF] DELETE error:', error.message);
+    console.error('[BFF] DELETE error');
     return NextResponse.json(
       { error: 'Failed to delete from backend' },
       { status: 502 }
@@ -347,7 +347,7 @@ export async function PUT(
     copyResponseHeaders(response, nextResponse);
     return nextResponse;
   } catch (error: any) {
-    console.error('[BFF] PUT error:', error.message);
+    console.error('[BFF] PUT error');
     return NextResponse.json(
       { error: 'Failed to put to backend' },
       { status: 502 }
