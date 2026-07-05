@@ -80,8 +80,6 @@ export const useAppStore = create<AppState>()(
               loading: false,
             },
           }));
-            },
-          }));
 
           // Now run balance + session restore after connecting the wallet.
           await get().fetchBalance();
