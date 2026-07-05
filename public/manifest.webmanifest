@@ -1,7 +1,7 @@
 {
   "name": "NimAgent — AI-Powered Nimiq Payments",
   "short_name": "NimAgent",
-  "description": "Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto all powered by AI.",
+  "description": "Send NIM, buy gift cards, recharge airtime/data, and pay bills, all powered by AI.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0C17",
