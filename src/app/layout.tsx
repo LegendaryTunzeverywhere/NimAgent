@@ -16,26 +16,48 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: 'NimAgent: AI-Powered Nimiq Payments',
-  description: 'Send NIM, split bills, buy gift cards, recharge airtime, pay bills, all powered by AI.',
+  description: 'Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto — all powered by AI inside Nimiq Pay.',
   applicationName: 'NimAgent',
   keywords: ['Nimiq', 'NIM', 'crypto payments', 'AI payments', 'gift cards', 'airtime', 'bill payments', 'crypto swap'],
   authors: [{ name: 'NimAgent' }],
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-1024.png', sizes: '1024x1024', type: 'image/png' },
+    ],
     shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: '/icon-1024.png',
   },
   manifest: '/manifest.json',
   openGraph: {
-    title: 'NimAgent: AI-Powered Nimiq Payments',
-    description: 'Send NIM, buy gift cards, recharge airtime, pay bills, and swap crypto, all powered by AI.',
+    title: 'NimAgent — AI Crypto Payments',
+    description: 'Send NIM • Gift Cards • Airtime • Bills • Swap Assets',
     siteName: 'NimAgent',
     type: 'website',
+    url: 'https://nimagent.online',
+    images: [
+      {
+        url: 'https://nimagent.online/og-image.webp',
+        width: 1200,
+        height: 630,
+        alt: 'NimAgent — AI-powered crypto payments for the real world',
+        type: 'image/webp',
+      },
+      {
+        url: 'https://nimagent.online/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NimAgent — AI-powered crypto payments for the real world',
+        type: 'image/png',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NimAgent: AI-Powered Nimiq Payments',
-    description: 'Your AI-powered Nimiq payment Agent.',
+    site: '@nimiqagent',
+    title: 'NimAgent — AI Crypto Payments',
+    description: 'Send NIM • Gift Cards • Airtime • Bills • Swap Assets',
+    images: ['https://nimagent.online/og-image.webp'],
   },
 };
 
