@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Mono } from 'next/font/google';
 import './globals.css';
 import CsrfPrefetcher from '@/components/csrf-prefetcher';
+import AuthProvider from '@/components/AuthProvider';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -15,6 +16,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://nimagent.online'),
   title: 'NimAgent: AI-Powered Nimiq Payments',
   description: 'Send NIM, buy gift cards, top up airtime, pay bills, and swap crypto — all powered by AI inside Nimiq Pay.',
   applicationName: 'NimAgent',
@@ -37,14 +39,7 @@ export const metadata: Metadata = {
     url: 'https://nimagent.online',
     images: [
       {
-        url: 'https://nimagent.online/og-image.webp',
-        width: 1200,
-        height: 630,
-        alt: 'NimAgent — AI-powered crypto payments for the real world',
-        type: 'image/webp',
-      },
-      {
-        url: 'https://nimagent.online/og-image.png',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'NimAgent — AI-powered crypto payments for the real world',
@@ -57,7 +52,7 @@ export const metadata: Metadata = {
     site: '@nimiqagent',
     title: 'NimAgent — AI Crypto Payments',
     description: 'Send NIM • Gift Cards • Airtime • Bills • Swap Assets',
-    images: ['https://nimagent.online/og-image.webp'],
+    images: ['/og-image.png'],
   },
 };
 
@@ -106,6 +101,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen overflow-x-hidden">
         <CsrfPrefetcher />
+        <AuthProvider />
         {/* Ambient background — flat base + subtle grid, fixed behind everything */}
         <div className="bg-mesh" aria-hidden="true" />
         <div className="bg-grid" aria-hidden="true" />
