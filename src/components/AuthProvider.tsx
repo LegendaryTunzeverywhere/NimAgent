@@ -23,9 +23,12 @@ export default function AuthProvider() {
       return;
     }
 
+    // TypeScript type guard - at this point wallet.address is definitely non-null
+    const walletAddress = wallet.address;
+
     // Track if we've already attempted authentication for this wallet
     // to avoid repeated signature prompts on every render
-    const authKey = `nimagent_auth_attempt_${wallet.address}`;
+    const authKey = `nimagent_auth_attempt_${walletAddress}`;
     const lastAttempt = sessionStorage.getItem(authKey);
     const now = Date.now();
 
@@ -40,14 +43,14 @@ export default function AuthProvider() {
     checkAuthStatus()
       .then((status) => {
         // If already authenticated with the correct wallet, don't re-prompt
-        if (status.authenticated && status.wallet === wallet.address) {
+        if (status.authenticated && status.wallet === walletAddress) {
           console.log('[Auth] Already authenticated with valid session');
           sessionStorage.setItem(authKey, now.toString());
           return;
         }
 
         // No valid session - trigger authentication
-        return signInWithWallet(wallet.address)
+        return signInWithWallet(walletAddress)
           .then(() => {
             console.log('[Auth] Wallet authenticated successfully');
             sessionStorage.setItem(authKey, now.toString());
