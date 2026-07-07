@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { signInWithWallet } from '@/lib/auth';
+import { signInWithWallet, checkAuthStatus } from '@/lib/auth';
 
 /**
  * AuthProvider - Establishes wallet authentication session
@@ -36,15 +36,30 @@ export default function AuthProvider() {
       return;
     }
 
-    // Attempt authentication
-    signInWithWallet(wallet.address)
-      .then(() => {
-        console.log('[Auth] Wallet authenticated successfully');
-        sessionStorage.setItem(authKey, now.toString());
+    // Check if we already have a valid session before prompting for signature
+    checkAuthStatus()
+      .then((status) => {
+        // If already authenticated with the correct wallet, don't re-prompt
+        if (status.authenticated && status.wallet === wallet.address) {
+          console.log('[Auth] Already authenticated with valid session');
+          sessionStorage.setItem(authKey, now.toString());
+          return;
+        }
+
+        // No valid session - trigger authentication
+        return signInWithWallet(wallet.address)
+          .then(() => {
+            console.log('[Auth] Wallet authenticated successfully');
+            sessionStorage.setItem(authKey, now.toString());
+          })
+          .catch((error) => {
+            console.error('[Auth] Authentication failed:', error);
+            // Don't retry immediately - the next page navigation or reconnect will trigger another attempt
+          });
       })
       .catch((error) => {
-        console.error('[Auth] Authentication failed:', error);
-        // Don't retry immediately - the next page navigation or reconnect will trigger another attempt
+        console.error('[Auth] Session check failed:', error);
+        // If session check fails, don't attempt sign-in (might be network issue)
       });
   }, [wallet.connected, wallet.address]);
 
