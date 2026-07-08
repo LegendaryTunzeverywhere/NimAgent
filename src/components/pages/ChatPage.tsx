@@ -84,6 +84,12 @@ export default function ChatPage() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!window.isSecureContext) {
+      // In Nimiq Pay, even if not flagged as secure context, SpeechRecognition might work
+      if (insideNimiqPay && SR) {
+        // Try it anyway - Nimiq Pay WebView might support it
+        setVoiceUnavailableReason(null);
+        return;
+      }
       setVoiceUnavailableReason(
         insideNimiqPay
           ? 'Voice input is not available in this Nimiq Pay session. Type your message instead.'
