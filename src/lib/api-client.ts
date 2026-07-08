@@ -192,6 +192,9 @@ export async function validateOrder(data: {
 /**
  * Create and fulfill an order. The backend verifies the on-chain payment
  * to the service wallet before releasing any goods.
+ * 
+ * May return immediately with pending=true if payment is still being confirmed.
+ * In that case, use pollOrderStatus() to check completion.
  */
 export async function createOrder(data: {
   type: string;
@@ -216,6 +219,127 @@ export async function createOrder(data: {
   }
 
   return body;
+}
+
+/**
+ * Get order status (for polling during async payment verification)
+ */
+export async function getOrderStatus(orderId: string): Promise<{
+  orderId: string;
+  status: string;
+  type: string;
+  createdAt: string;
+  pending?: boolean;
+  success?: boolean;
+  message?: string;
+  result?: any;
+  error?: string;
+  refundNeeded?: boolean;
+  completedAt?: string;
+}> {
+  const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch order status');
+  }
+
+  return res.json();
+}
+
+/**
+ * Poll order status until completion or timeout.
+ * Used when createOrder returns pending=true (async payment verification).
+ * 
+ * @param orderId - Order ID to poll
+ * @param options - Polling options
+ * @returns Final order status
+ */
+export async function pollOrderStatus(
+  orderId: string,
+  options: {
+    maxAttempts?: number;    // Default: 30 attempts
+    intervalMs?: number;      // Default: 4000ms (4 seconds)
+    onStatusChange?: (status: string, message: string) => void;
+  } = {}
+): Promise<{
+  orderId: string;
+  status: string;
+  success: boolean;
+  result?: any;
+  error?: string;
+  refundNeeded?: boolean;
+  timedOut?: boolean;
+}> {
+  const maxAttempts = options.maxAttempts || 30;  // 30 * 4s = 2 minutes
+  const intervalMs = options.intervalMs || 4000;   // 4 seconds between polls
+  const onStatusChange = options.onStatusChange;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const status = await getOrderStatus(orderId);
+
+      // Notify caller of status changes
+      if (onStatusChange) {
+        onStatusChange(status.status, status.message || '');
+      }
+
+      // Order completed successfully
+      if (status.status === 'completed') {
+        return {
+          orderId: status.orderId,
+          status: status.status,
+          success: true,
+          result: status.result,
+        };
+      }
+
+      // Order failed - needs refund
+      if (status.status === 'failed_needs_refund' || status.status === 'failed') {
+        return {
+          orderId: status.orderId,
+          status: status.status,
+          success: false,
+          error: status.error || 'Order fulfillment failed',
+          refundNeeded: status.refundNeeded !== false,
+        };
+      }
+
+      // Still pending - wait and retry
+      if (status.status === 'pending_verification' || status.status === 'pending') {
+        if (i < maxAttempts - 1) {
+          await new Promise(resolve => setTimeout(resolve, intervalMs));
+          continue;
+        }
+      }
+
+      // Unknown status or final attempt - return what we have
+      if (i === maxAttempts - 1) {
+        return {
+          orderId: status.orderId,
+          status: status.status,
+          success: false,
+          error: 'Order status check timed out',
+          timedOut: true,
+        };
+      }
+    } catch (err) {
+      console.error(`[Poll Order Status] Attempt ${i + 1}/${maxAttempts} failed:`, err);
+      
+      // On final attempt, throw the error
+      if (i === maxAttempts - 1) {
+        throw err;
+      }
+      
+      // Otherwise, wait and retry
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  // Should never reach here, but TypeScript needs it
+  throw new Error('Polling completed without resolution');
 }
 
 /**

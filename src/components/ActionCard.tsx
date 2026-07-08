@@ -5,7 +5,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
-import { recordTransaction, createOrder, validateOrder, getLeaderboard } from '@/lib/api-client';
+        // Import pollOrderStatus at the top
+        import { recordTransaction, createOrder, validateOrder, pollOrderStatus, getLeaderboard } from '@/lib/api-client';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
@@ -782,55 +783,58 @@ export default function ActionCard({ action }: ActionCardProps) {
         });
 
         // Fulfill order (backend verifies the on-chain payment first)
-        // FIX 2 FRONTEND: Handle confirmation requirement - retry if payment not yet confirmed
+        // Backend now handles async payment verification automatically
         let result;
-        let retryCount = 0;
-        const maxRetries = 4; // Up to 4 retries (0 initial + 3 retries = ~2 minutes max)
         
-        while (retryCount <= maxRetries) {
-          try {
-            result = await createOrder({
-              type: action.type,
-              txHash: hash,
-              amountLuna,
-              details: { ...action, recipientEmail: email || undefined },
-              walletAddress: wallet.address,
-              quoteId: quoteId || undefined,
+        try {
+          result = await createOrder({
+            type: action.type,
+            txHash: hash,
+            amountLuna,
+            details: { ...action, recipientEmail: email || undefined },
+            walletAddress: wallet.address,
+            quoteId: quoteId || undefined,
+          });
+          
+          // Check if order is pending async verification
+          if (result.pending && result.orderId) {
+            // Update user that payment is being confirmed
+            addMessage({
+              role: 'ai',
+              content: '⏳ Confirming your payment on the blockchain... This usually takes 10-30 seconds. Please wait.',
             });
             
-            // Success! Break out of retry loop
-            break;
-          } catch (err: any) {
-            // Check if error is due to insufficient confirmations
-            const isConfirmationError = err.message?.includes('not yet confirmed') || 
-                                       err.message?.includes('confirmation');
+            // Poll for order completion
+            const finalStatus = await pollOrderStatus(result.orderId, {
+              maxAttempts: 30,  // 30 * 4s = 2 minutes max
+              intervalMs: 4000,  // Poll every 4 seconds
+              onStatusChange: (status, message) => {
+                // Log status changes for debugging
+                console.log(`[Order ${result.orderId}] Status: ${status} - ${message}`);
+                
+                // Optional: Update UI with intermediate states
+                if (status === 'pending') {
+                  // Payment confirmed, now fulfilling order
+                  addMessage({
+                    role: 'ai',
+                    content: '✓ Payment confirmed! Processing your order...',
+                  });
+                }
+              },
+            });
             
-            if (isConfirmationError && retryCount < maxRetries) {
-              retryCount++;
-              const waitTime = 20000; // Wait 20 seconds between retries
-              
-              // No logs
-              
-              // Update user with waiting message
-              if (retryCount === 1) {
-                addMessage({
-                  role: 'ai',
-                  content: '⏳ Waiting for blockchain confirmation... This usually takes 30-60 seconds. Please wait.',
-                });
-              }
-              
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, waitTime));
+            // Update result with final status
+            if (finalStatus.success) {
+              result = {
+                success: true,
+                ...finalStatus.result,
+              };
             } else {
-              // Not a confirmation error, or max retries reached - rethrow
-              throw err;
+              throw new Error(finalStatus.error || 'Order fulfillment failed');
             }
           }
-        }
-        
-        // If we exhausted retries without success
-        if (!result) {
-          throw new Error('Payment confirmation timeout. Your payment is on-chain but order processing failed. Our team will investigate.');
+        } catch (err: any) {
+          throw err;
         }
 
         if (result.success) {
