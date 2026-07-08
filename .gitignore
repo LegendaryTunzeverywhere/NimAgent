@@ -66,3 +66,8 @@ Thumbs.db
 /server/.env
 /server/.env.local
 /server/node_modules/
+
+
+/server/public/reconciliation-portal.html
+/server/public/referrals.html
+/serverpublicrefund-portal.html
