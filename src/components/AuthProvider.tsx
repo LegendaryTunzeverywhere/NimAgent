@@ -114,6 +114,26 @@ export default function AuthProvider() {
     // TypeScript type guard - at this point wallet.address is definitely non-null
     const walletAddress = wallet.address;
 
+    // Check if this is a first-time visit in Nimiq Pay
+    const isFirstVisit = typeof window !== 'undefined' && 
+      window.nimiqPay && 
+      !sessionStorage.getItem('nimagent_visited');
+
+    if (isFirstVisit) {
+      // First time in Nimiq Pay - let user see the app first!
+      console.log('[Auth] First visit - delaying authentication for better UX');
+      sessionStorage.setItem('nimagent_visited', 'true');
+      
+      // Delay authentication by 2 seconds so user sees the app first
+      const delayTimeout = setTimeout(() => {
+        setHasTriggeredAuth(true);
+        attemptAuthentication(walletAddress, false);
+      }, 2000);
+
+      return () => clearTimeout(delayTimeout);
+    }
+
+    // Returning user or not in Nimiq Pay - authenticate immediately (but check session first)
     setHasTriggeredAuth(true);
     attemptAuthentication(walletAddress, false);
   }, [wallet.connected, wallet.address, hasTriggeredAuth]);
@@ -161,10 +181,10 @@ export default function AuthProvider() {
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-                Confirm the sign-in request in your wallet
+                Complete sign-in to unlock all features
               </p>
               <p className="text-[10px] text-amber-700 dark:text-gold/70 mt-0.5">
-                Check Nimiq Pay for the signature prompt
+                Check Nimiq Pay for a secure signature request
               </p>
             </div>
           </>
@@ -173,7 +193,7 @@ export default function AuthProvider() {
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-                Checking authentication status...
+                Setting up your secure session...
               </p>
             </div>
           </>
