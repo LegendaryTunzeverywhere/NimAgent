@@ -6,6 +6,7 @@
  */
 
 import { signMessage as walletSignMessage } from '@/lib/wallet';
+import { getClientPlatformHeaders } from '@/lib/client-platform';
 
 interface AuthSession {
   authenticated: boolean;
@@ -36,6 +37,7 @@ async function requestChallenge(walletAddress: string): Promise<AuthChallenge> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(await getClientPlatformHeaders()),
     },
     body: JSON.stringify({ wallet: walletAddress }),
     credentials: 'include',
@@ -61,6 +63,7 @@ async function verifyChallenge(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(await getClientPlatformHeaders()),
     },
     body: JSON.stringify({
       wallet: walletAddress,
@@ -135,6 +138,7 @@ export async function signInWithWallet(walletAddress: string): Promise<AuthSessi
 export async function checkAuthStatus(): Promise<AuthSession> {
   try {
     const response = await fetch('/api/auth/session', {
+      headers: await getClientPlatformHeaders(),
       credentials: 'include',
     });
 
@@ -158,6 +162,7 @@ export async function signOut(): Promise<void> {
   try {
     await fetch('/api/auth/logout', {
       method: 'POST',
+      headers: await getClientPlatformHeaders(),
       credentials: 'include',
     });
     
