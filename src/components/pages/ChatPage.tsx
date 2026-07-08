@@ -216,8 +216,15 @@ export default function ChatPage() {
       }
       lastErrorRef.current = errorType;
       
+      const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
+      
       if (errorType === 'not-allowed' || errorType === 'permission-denied') {
-        addMessage({ role: 'ai', content: 'Microphone access denied. Please allow microphone permission in your device settings and try again.' });
+        addMessage({ 
+          role: 'ai', 
+          content: insideNimiqPay
+            ? "Voice input isn't currently available inside the Nimiq Pay app — please type your message instead."
+            : 'Microphone access denied. Allow it in your browser settings and try again.'
+        });
       } else if (errorType === 'network') {
         addMessage({ role: 'ai', content: 'Voice recognition needs a network connection.' });
       } else if (errorType === 'no-speech') {
@@ -255,7 +262,13 @@ export default function ChatPage() {
       // Only show error if it's not a duplicate
       if (lastErrorRef.current !== 'start-error') {
         lastErrorRef.current = 'start-error';
-        addMessage({ role: 'ai', content: 'Could not start voice input. Please check microphone permissions in your device settings.' });
+        const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
+        addMessage({ 
+          role: 'ai', 
+          content: insideNimiqPay
+            ? "Voice input isn't currently available inside the Nimiq Pay app — please type your message instead."
+            : 'Could not start voice input. Please check microphone permissions in your device settings.'
+        });
       }
     }
   }, [isListening, addMessage, startRecognition]);

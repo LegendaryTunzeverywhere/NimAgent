@@ -107,12 +107,23 @@ export default function AuthProvider() {
       return;
     }
 
+    // TypeScript type guard - at this point wallet.address is definitely non-null
+    const walletAddress = wallet.address;
+
+    // Check if we've EVER authenticated in this browser session (survives component remounts)
+    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+    const hasAuthenticatedInSession = sessionStorage.getItem(sessionAuthKey);
+
+    if (hasAuthenticatedInSession) {
+      // We already authenticated in this browser session, don't do it again
+      // This prevents re-auth when returning to the app
+      setHasTriggeredAuth(true);
+      return;
+    }
+
     // Prevent repeated authentication attempts when wallet state updates
     // Only trigger authentication once per wallet connection session
     if (hasTriggeredAuth) return;
-
-    // TypeScript type guard - at this point wallet.address is definitely non-null
-    const walletAddress = wallet.address;
 
     // Check if this is a first-time visit in Nimiq Pay
     const isFirstVisit = typeof window !== 'undefined' && 
@@ -127,6 +138,7 @@ export default function AuthProvider() {
       // Delay authentication by 2 seconds so user sees the app first
       const delayTimeout = setTimeout(() => {
         setHasTriggeredAuth(true);
+        sessionStorage.setItem(sessionAuthKey, 'true');
         attemptAuthentication(walletAddress, false);
       }, 2000);
 
@@ -135,6 +147,7 @@ export default function AuthProvider() {
 
     // Returning user or not in Nimiq Pay - authenticate immediately (but check session first)
     setHasTriggeredAuth(true);
+    sessionStorage.setItem(sessionAuthKey, 'true');
     attemptAuthentication(walletAddress, false);
   }, [wallet.connected, wallet.address, hasTriggeredAuth]);
 
