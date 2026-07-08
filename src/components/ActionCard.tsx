@@ -784,7 +784,7 @@ export default function ActionCard({ action }: ActionCardProps) {
 
         // Fulfill order (backend verifies the on-chain payment first)
         // Backend now handles async payment verification automatically
-        let result;
+        let result: any;
         
         try {
           result = await createOrder({
