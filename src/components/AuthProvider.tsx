@@ -20,6 +20,7 @@ export default function AuthProvider() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const attemptAuthentication = (walletAddress: string, bypassThrottle = false) => {
     const authKey = `nimagent_auth_attempt_${walletAddress}`;
@@ -58,7 +59,12 @@ export default function AuthProvider() {
         return signInWithWallet(walletAddress)
           .then(() => {
             console.log('[Auth] Wallet authenticated successfully');
+            
+            // Mark as authenticated in this session to prevent re-auth on app return
+            const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+            sessionStorage.setItem(sessionAuthKey, 'true');
             sessionStorage.setItem(authKey, now.toString());
+            
             clearTimeout(feedbackTimeout);
             setShowFeedback(false);
             setAuthStatus('idle');
@@ -69,6 +75,10 @@ export default function AuthProvider() {
             console.error('[Auth] Authentication failed:', error);
             clearTimeout(feedbackTimeout);
             setAuthStatus('error');
+            
+            // Clear the session authentication flag so user can retry
+            const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+            sessionStorage.removeItem(sessionAuthKey);
             
             // User-friendly error messages
             let friendlyError = 'Sign-in failed. Please try again.';
@@ -99,7 +109,24 @@ export default function AuthProvider() {
       });
   };
 
+  // Delay initialization to prevent auth firing before UI renders
   useEffect(() => {
+    const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
+    
+    if (insideNimiqPay) {
+      // In Nimiq Pay, always delay to let UI render first
+      const initDelay = setTimeout(() => setIsReady(true), 1500);
+      return () => clearTimeout(initDelay);
+    } else {
+      // Outside Nimiq Pay, ready immediately
+      setIsReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Don't authenticate until component is ready
+    if (!isReady) return;
+
     // Only authenticate if wallet is connected and we have an address
     if (!wallet.connected || !wallet.address) {
       // Reset the flag when wallet disconnects so it can trigger again on next connect
@@ -135,30 +162,35 @@ export default function AuthProvider() {
       console.log('[Auth] First visit - delaying authentication for better UX');
       sessionStorage.setItem('nimagent_visited', 'true');
       
-      // Delay authentication by 2 seconds so user sees the app first
+      // Additional 1 second delay for first visit (total 2.5s from mount)
       const delayTimeout = setTimeout(() => {
         setHasTriggeredAuth(true);
-        sessionStorage.setItem(sessionAuthKey, 'true');
         attemptAuthentication(walletAddress, false);
-      }, 2000);
+      }, 1000);
 
       return () => clearTimeout(delayTimeout);
     }
 
     // Returning user or not in Nimiq Pay - authenticate immediately (but check session first)
     setHasTriggeredAuth(true);
-    sessionStorage.setItem(sessionAuthKey, 'true');
     attemptAuthentication(walletAddress, false);
-  }, [wallet.connected, wallet.address, hasTriggeredAuth]);
+  }, [wallet.connected, wallet.address, hasTriggeredAuth, isReady]);
 
   // Manual retry handler
   const handleRetry = () => {
     if (!wallet.address) return;
+    
+    // Clear the session authenticated flag to allow fresh retry
+    const sessionAuthKey = `nimagent_session_authenticated_${wallet.address}`;
+    sessionStorage.removeItem(sessionAuthKey);
+    
     setShowFeedback(false);
     setErrorMessage('');
     setAuthStatus('idle');
-    setHasTriggeredAuth(true); // Keep the flag set to prevent double triggers
-    attemptAuthentication(wallet.address, true); // Bypass throttle for manual retry
+    setHasTriggeredAuth(false); // Reset flag so useEffect can trigger again
+    
+    // Don't call attemptAuthentication directly - let useEffect handle it
+    // This ensures proper flow through the authentication logic
   };
 
   // Don't render anything if status is idle
