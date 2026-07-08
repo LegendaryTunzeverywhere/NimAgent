@@ -137,6 +137,7 @@ function LoadingSkeleton() {
 export default function Home() {
   const { activeTab, wallet, setActiveTab, fetchBalance, connectWallet } = useAppStore();
   const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
+  const [connecting, setConnecting] = useState(false);
   const [consensusEstablished, setConsensusEstablished] = useState(true);
   // Compute once — safe on SSR (window may not exist), stable across renders
   const [hasPaymentParams] = useState(() => {
@@ -213,7 +214,9 @@ export default function Home() {
     // Without this, after "Clear cache & reload" the user had to press the
     // connect button manually, and the provider sometimes returned accounts in
     // a different order on that first cold call — showing the wrong wallet.
-    connectWallet();
+    setConnecting(true);
+    connectWallet()
+      .finally(() => setConnecting(false));
   }, [miniAppStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show maintenance page — checked AFTER all hooks
@@ -249,7 +252,7 @@ export default function Home() {
         <div className="flex-1 relative">
           {activeTab === 'home' && (
             <div className="h-full overflow-y-auto pb-28 pt-[104px]">
-              <HomePage />
+              <HomePage connecting={connecting} />
             </div>
           )}
           {activeTab === 'chat' && wallet.connected && <ChatPage />}

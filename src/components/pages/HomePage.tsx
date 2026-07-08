@@ -72,7 +72,7 @@ function txIconFor(tx: Transaction): IconName {
   }
 }
 
-export default function HomePage() {
+export default function HomePage({ connecting = false }: { connecting?: boolean }) {
   const {
     wallet,
     connectWallet,
@@ -845,12 +845,12 @@ export default function HomePage() {
             <button
               className="btn-gold w-full rounded-2xl py-3.5 text-sm font-bold flex items-center justify-center gap-2"
               onClick={handleConnect}
-              disabled={wallet.loading}
+              disabled={wallet.loading || connecting}
             >
-              {wallet.loading ? (
+              {wallet.loading || connecting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-background-primary/40 border-t-background-primary rounded-full animate-spin" />
-                  Connecting...
+                  {connecting ? 'Connecting to your wallet...' : 'Connecting...'}
                 </>
               ) : (
                 <>
@@ -860,7 +860,9 @@ export default function HomePage() {
               )}
             </button>
             <p className="mt-3 text-xs text-gray-500 dark:text-white/45">
-              Connect once to open AI chat, view balances, and start payments.
+              {connecting 
+                ? 'Please wait while we connect to Nimiq Pay...' 
+                : 'Connect once to open AI chat, view balances, and start payments.'}
             </p>
           </div>
         </div>
