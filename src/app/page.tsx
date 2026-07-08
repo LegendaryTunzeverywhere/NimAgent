@@ -139,6 +139,7 @@ export default function Home() {
   const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
   const [connecting, setConnecting] = useState(false);
   const [consensusEstablished, setConsensusEstablished] = useState(true);
+  const [hasAttemptedAutoConnect, setHasAttemptedAutoConnect] = useState(false);
   // Compute once — safe on SSR (window may not exist), stable across renders
   const [hasPaymentParams] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -208,16 +209,23 @@ export default function Home() {
       return;
     }
 
-    // Auto-connect whenever we're inside Nimiq Pay and not yet connected.
-    // This covers: payment link opens, fresh installs, and post-clear-cache
-    // reloads (where localStorage was wiped and connected is false).
-    // Without this, after "Clear cache & reload" the user had to press the
-    // connect button manually, and the provider sometimes returned accounts in
-    // a different order on that first cold call — showing the wrong wallet.
-    setConnecting(true);
-    connectWallet()
-      .finally(() => setConnecting(false));
-  }, [miniAppStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Auto-connect ONLY once per page load, and only if payment params exist.
+    // This prevents auto-reconnecting when user manually disconnects.
+    // If user disconnects and refreshes, wallet won't auto-connect unless there's a payment link.
+    if (hasAttemptedAutoConnect) return;
+    
+    // Only auto-connect if payment link is present (to=... or ref=... params)
+    // For normal app usage, user must connect manually via button
+    if (hasPaymentParams) {
+      setHasAttemptedAutoConnect(true);
+      setConnecting(true);
+      connectWallet()
+        .finally(() => setConnecting(false));
+    } else {
+      // Mark as attempted so we don't keep checking
+      setHasAttemptedAutoConnect(true);
+    }
+  }, [miniAppStatus, hasAttemptedAutoConnect, hasPaymentParams, connectWallet]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show maintenance page — checked AFTER all hooks
   if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {

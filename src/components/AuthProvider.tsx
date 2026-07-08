@@ -19,6 +19,7 @@ export default function AuthProvider() {
   const [authStatus, setAuthStatus] = useState<'idle' | 'checking' | 'awaiting-signature' | 'error'>('idle');
   const [showFeedback, setShowFeedback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false);
 
   const attemptAuthentication = (walletAddress: string, bypassThrottle = false) => {
     const authKey = `nimagent_auth_attempt_${walletAddress}`;
@@ -80,19 +81,27 @@ export default function AuthProvider() {
   useEffect(() => {
     // Only authenticate if wallet is connected and we have an address
     if (!wallet.connected || !wallet.address) {
+      // Reset the flag when wallet disconnects so it can trigger again on next connect
+      setHasTriggeredAuth(false);
       return;
     }
+
+    // Prevent repeated authentication attempts when wallet state updates
+    // Only trigger authentication once per wallet connection session
+    if (hasTriggeredAuth) return;
 
     // TypeScript type guard - at this point wallet.address is definitely non-null
     const walletAddress = wallet.address;
 
+    setHasTriggeredAuth(true);
     attemptAuthentication(walletAddress, false);
-  }, [wallet.connected, wallet.address]);
+  }, [wallet.connected, wallet.address, hasTriggeredAuth]);
 
   // Manual retry handler
   const handleRetry = () => {
     if (!wallet.address) return;
     setShowFeedback(false);
+    setHasTriggeredAuth(true); // Keep the flag set to prevent double triggers
     attemptAuthentication(wallet.address, true); // Bypass throttle for manual retry
   };
 
