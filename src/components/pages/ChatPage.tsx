@@ -191,6 +191,8 @@ export default function ChatPage() {
   useEffect(() => { sendMessageRef.current = sendMessage; }, [sendMessage]);
 
   // ── Voice ───────────────────────────────────────────────────────────────────
+  const lastErrorRef = useRef<string | null>(null);
+  
   const startRecognition = useCallback(() => {
     if (typeof window === 'undefined') return null;
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -201,14 +203,29 @@ export default function ChatPage() {
       const t = (e.results[0][0].transcript || '').trim();
       if (!t) return;
       setInput(t); setIsListening(false);
+      lastErrorRef.current = null; // Clear error state on success
       setTimeout(() => sendMessageRef.current(t), 100);
     };
     r.onerror = (e: any) => {
       setIsListening(false);
-      if (e.error === 'not-allowed' || e.error === 'permission-denied') {
-        addMessage({ role: 'ai', content: 'Microphone access denied. Allow it in browser settings and try again.' });
-      } else if (e.error === 'network') {
+      const errorType = e.error;
+      
+      // Prevent duplicate error messages
+      if (lastErrorRef.current === errorType) {
+        return;
+      }
+      lastErrorRef.current = errorType;
+      
+      if (errorType === 'not-allowed' || errorType === 'permission-denied') {
+        addMessage({ role: 'ai', content: 'Microphone access denied. Please allow microphone permission in your device settings and try again.' });
+      } else if (errorType === 'network') {
         addMessage({ role: 'ai', content: 'Voice recognition needs a network connection.' });
+      } else if (errorType === 'no-speech') {
+        // Silent - user didn't speak, don't show error
+        lastErrorRef.current = null;
+      } else {
+        // Other errors
+        console.error('[Voice] Recognition error:', errorType);
       }
     };
     r.onend = () => setIsListening(false);
@@ -227,8 +244,20 @@ export default function ChatPage() {
     try {
       const r = startRecognition();
       if (!r) return;
-      r.start(); setIsListening(true);
-    } catch (e: any) { setIsListening(false); }
+      
+      // Clear previous error state when user tries again
+      lastErrorRef.current = null;
+      
+      r.start(); 
+      setIsListening(true);
+    } catch (e: any) { 
+      setIsListening(false);
+      // Only show error if it's not a duplicate
+      if (lastErrorRef.current !== 'start-error') {
+        lastErrorRef.current = 'start-error';
+        addMessage({ role: 'ai', content: 'Could not start voice input. Please check microphone permissions in your device settings.' });
+      }
+    }
   }, [isListening, addMessage, startRecognition]);
 
   // ── Sessions ────────────────────────────────────────────────────────────────
