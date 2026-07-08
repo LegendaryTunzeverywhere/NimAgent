@@ -5,29 +5,7 @@
  * using the challenge-response authentication system.
  */
 
-// Extend window interface for Nimiq Pay mini-app and Hub API
-declare global {
-  interface Window {
-    nimiqPay?: {
-      signMessage?: (params: SignMessageParams) => Promise<SignedMessage>;
-      // Add other mini-app methods as needed
-    };
-    // Nimiq Hub API is typically exposed via dynamic import or script tag
-    HubApi?: any;
-  }
-}
-
-interface SignMessageParams {
-  message: string;
-  signer: string;
-  appName?: string;
-}
-
-interface SignedMessage {
-  signer: string;
-  signerPublicKey: Uint8Array;
-  signature: Uint8Array;
-}
+import { signMessage as walletSignMessage } from '@/lib/wallet';
 
 interface AuthSession {
   authenticated: boolean;
@@ -44,48 +22,11 @@ interface AuthChallenge {
  * Check if running inside Nimiq Pay mini-app
  */
 export function isNimiqPayMiniApp(): boolean {
-  return typeof window !== 'undefined' && !!window.nimiqPay;
+  return typeof window !== 'undefined' && !!window.navigator?.userAgent?.includes('NimiqPay');
 }
 
-/**
- * Sign a message using either Nimiq Pay mini-app or Hub API
- */
-async function signMessage(message: string, walletAddress: string): Promise<SignedMessage> {
-  // Try Nimiq Pay mini-app first (if available)
-  if (window.nimiqPay?.signMessage) {
-    try {
-      return await window.nimiqPay.signMessage({
-        message,
-        signer: walletAddress,
-        appName: 'NimAgent',
-      });
-    } catch (err) {
-      console.error('Nimiq Pay signMessage failed:', err);
-      throw new Error('Failed to sign message with Nimiq Pay');
-    }
-  }
-
-  // Fallback to Hub API (must be loaded separately)
-  // The Hub API is typically loaded via CDN: <script src="https://hub.nimiq.com/v1/hub.js"></script>
-  // Or via dynamic import in your application
-  if (typeof window !== 'undefined' && window.HubApi) {
-    try {
-      const hubApi = new window.HubApi();
-      return await hubApi.signMessage({
-        appName: 'NimAgent',
-        message,
-        signer: walletAddress,
-      });
-    } catch (err) {
-      console.error('Hub API signMessage failed:', err);
-      throw new Error('Failed to sign message with Nimiq Hub');
-    }
-  }
-
-  throw new Error(
-    'No signing method available. Please ensure you are using Nimiq Pay or have the Hub API loaded.'
-  );
-}
+// Note: The actual signing implementation is in @/lib/wallet/index.ts
+// It uses the miniAppAdapter which returns { publicKey, signature } as lowercase hex strings
 
 /**
  * Request an authentication challenge from the server
@@ -151,24 +92,25 @@ export async function signInWithWallet(walletAddress: string): Promise<AuthSessi
     
     console.log('[Auth] Challenge received, requesting signature...');
 
-    // Step 2: Sign the message with wallet
-    let signedMessage: SignedMessage;
+    // Step 2: Sign the message with the working wallet adapter
+    let signed: { publicKey?: string; signature: string };
     
     try {
-      signedMessage = await signMessage(message, walletAddress);
+      signed = await walletSignMessage(message, walletAddress);
     } catch (err) {
       console.error('[Auth] User cancelled signing or signing failed:', err);
       throw new Error('Authentication cancelled. Please try again.');
     }
 
+    if (!signed.publicKey) {
+      throw new Error('Wallet did not return a public key with the signature.');
+    }
+
     console.log('[Auth] Message signed, verifying with server...');
 
-    // Step 3: Convert Uint8Array to hex strings for JSON transmission
-    const signerPublicKey = Buffer.from(signedMessage.signerPublicKey).toString('hex');
-    const signature = Buffer.from(signedMessage.signature).toString('hex');
-
-    // Step 4: Verify signature with server
-    const result = await verifyChallenge(walletAddress, signerPublicKey, signature);
+    // Step 3: miniAppAdapter returns lowercase hex strings already - use directly
+    // No Buffer conversion needed
+    const result = await verifyChallenge(walletAddress, signed.publicKey, signed.signature);
 
     if (result.success) {
       console.log('[Auth] Authentication successful!');
