@@ -103,6 +103,7 @@ export interface WalletState {
   balance: Balance | null;
   loading: boolean;
   error: string | null;
+  authCompleted: number;
 }
 
 export interface AppState {
@@ -112,15 +113,14 @@ export interface AppState {
   activeTab: 'home' | 'chat' | 'history';
   currentSessionId: string | null;
   theme: 'dark' | 'light';
-  network: 'testnet' | 'mainnet';
   aiLoading: boolean;
   aiStatus: string | null;
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
-  setNetwork: (network: 'testnet' | 'mainnet') => void;
   setAiStatus: (status: string | null) => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  notifyAuthComplete: () => void;
   fetchBalance: () => Promise<void>;
   loadOrCreateSession: () => Promise<void>;
   startNewSession: () => void;

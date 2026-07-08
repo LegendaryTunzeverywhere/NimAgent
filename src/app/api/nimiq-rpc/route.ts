@@ -15,17 +15,10 @@ export const runtime = 'nodejs';
  * This proxy normalises any NQ address in the params array to the grouped format.
  */
 
-const RPC_ENDPOINTS = {
-  testnet: [
-    'https://rpc.nimiq-testnet.com',
-    'https://test.nimiq.watch:8443',
-    'https://nimiq-testnet.tromod.com',
-  ],
-  mainnet: [
-    'https://rpc.nimiqwatch.com',
-    'https://rpc.mainnet.nimiq.network',
-  ],
-};
+const RPC_ENDPOINTS = [
+  'https://rpc.nimiqwatch.com',
+  'https://rpc.mainnet.nimiq.network',
+];
 
 const ALLOWED_RPC_METHODS = new Set(['getAccountByAddress']);
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
@@ -109,9 +102,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine which RPC endpoint to use
-    const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS] || RPC_ENDPOINTS.mainnet;
+    // Use mainnet RPC endpoints
+    const endpoints = RPC_ENDPOINTS;
     
     // Try each endpoint until one succeeds
     let lastError: any = null;

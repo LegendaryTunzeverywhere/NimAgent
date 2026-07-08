@@ -7,7 +7,6 @@ export default function TickerBar() {
   const { wallet } = useAppStore();
   const [nimPrice, setNimPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
-  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'mainnet';
 
   useEffect(() => {
     // Fetch NIM price from CoinGecko via BFF proxy
@@ -48,7 +47,6 @@ export default function TickerBar() {
     wallet.connected && wallet.address 
       ? `${wallet.address.slice(0, 4)} ${wallet.address.slice(5, 9)} ${wallet.address.slice(10, 14)} ••• CONNECTED`
       : 'WALLET NOT CONNECTED',
-    `NETWORK ${network.toUpperCase()}`,
     priceText,
     'POWERED BY NIMIQ',
   ];

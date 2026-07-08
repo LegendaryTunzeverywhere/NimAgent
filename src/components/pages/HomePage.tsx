@@ -104,6 +104,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
   const [claimingReferralRewards, setClaimingReferralRewards] = useState(false);
   const [referralClaimNotice, setReferralClaimNotice] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(false);
 
   const refreshReferralData = useCallback(async (options?: { requireWalletSession?: boolean }) => {
     if (!wallet.address) return;
@@ -323,44 +324,57 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
   }, [wallet.connected, wallet.address, fetchBalance]);
 
   useEffect(() => {
-    // Handle referral tracking and fetch referral info
-    const fetchReferralInfo = async () => {
-      if (!wallet.address) return;
+    // Fetch referral info and transactions after wallet connects and auth completes
+    const fetchInitialData = async () => {
+      if (!wallet.connected || !wallet.address) return;
       
-      // Check URL for referral code and track it
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-      
-      if (refCode) {
-        try {
-          await trackReferral(wallet.address, refCode);
-        } catch (error) {
-          // Silent failure
-        }
+      // Wait a bit for authentication to complete if this is the first connection
+      if (wallet.authCompleted === 0) {
+        setIsLoadingInitialData(true);
       }
       
-      // Fetch referral link, live reward totals, and status
+      // Delay slightly if auth just completed to avoid race conditions
+      if (wallet.authCompleted > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Fetch all data in parallel
       try {
-        await refreshReferralData({ requireWalletSession: false });
-      } catch (error) {
-        // Silent failure
+        await Promise.all([
+          fetchRecentTransactions(),
+          (async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            
+            if (refCode) {
+              try {
+                await trackReferral(wallet.address!, refCode);
+              } catch (error) {
+                // Silent failure
+              }
+            }
+            
+            // Fetch referral link, live reward totals, and status
+            try {
+              await refreshReferralData({ requireWalletSession: false });
+            } catch (error) {
+              // Silent failure
+            }
+          })(),
+        ]);
+      } finally {
+        setIsLoadingInitialData(false);
       }
     };
     
-    if (wallet.connected && wallet.address) {
-      fetchReferralInfo();
-    }
+    fetchInitialData();
   }, [
     wallet.connected,
     wallet.address,
+    wallet.authCompleted,
+    fetchRecentTransactions,
     refreshReferralData,
   ]);
-
-  useEffect(() => {
-    if (wallet.connected && wallet.address) {
-      fetchRecentTransactions();
-    }
-  }, [wallet.connected, wallet.address, fetchRecentTransactions]);
 
   const handleConnect = async () => {
     if (wallet.loading) return;
@@ -487,7 +501,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
     'Leaderboard': '#2B6BD6',
   };
 
-  const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK || 'mainnet';
+
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-6">
@@ -592,7 +606,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {/* Stats Cards */}
       {wallet.connected && (
         <>
-          <div className="grid grid-cols-3 gap-3 animate-fade-up-delay-1 -mt-2">
+          <div className="grid grid-cols-2 gap-3 animate-fade-up-delay-1 -mt-2">
             <div className="card-premium rounded-2xl p-5 text-center">
               <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
@@ -611,13 +625,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
               </p>
             </div>
-            <div className="card-premium rounded-2xl p-5 text-center">
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Network</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white capitalize">{network}</p>
-              <p className="text-xs text-success mt-1 flex items-center justify-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-live" /> Live
-              </p>
-            </div>
+
           </div>
           
           {/* Markup Notice */}
@@ -766,11 +774,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-                              const baseUrl = network === 'mainnet' 
-                                ? 'https://nimiq.watch/#' 
-                                : 'https://test.nimiq.watch/#';
-                              openExternalUrl(`${baseUrl}${tx.hash}`);
+                              openExternalUrl(`https://nimiq.watch/#${tx.hash}`);
                             }}
                             className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
@@ -783,6 +787,12 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 </div>
                 );
               })}
+            </div>
+          ) : isLoadingInitialData ? (
+            <div className="card-premium rounded-2xl p-8 text-center">
+              <div className="w-8 h-8 mx-auto mb-3 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm font-semibold text-gray-700 dark:text-white/75">Loading your activity...</p>
+              <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Fetching transaction history</p>
             </div>
           ) : (
             <div className="card-premium rounded-2xl p-8 text-center">

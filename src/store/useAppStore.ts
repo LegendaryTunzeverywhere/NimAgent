@@ -28,13 +28,13 @@ export const useAppStore = create<AppState>()(
         balance: null,
         loading: false,
         error: null,
+        authCompleted: 0,
       },
       transactions: [],
       messages: [],
       activeTab: 'home',
       currentSessionId: null,
       theme: 'dark',
-      network: 'mainnet',
       aiLoading: false,
       aiStatus: null,
 
@@ -43,8 +43,6 @@ export const useAppStore = create<AppState>()(
       },
       
       setTheme: (theme) => set({ theme }),
-      
-      setNetwork: (network) => set({ network }),
 
       setAiStatus: (status) => set({ aiStatus: status }),
 
@@ -117,9 +115,21 @@ export const useAppStore = create<AppState>()(
             balance: null,
             loading: false,
             error: null,
+            authCompleted: 0,
           },
           currentSessionId: null,
         });
+      },
+
+      // Notify that authentication has completed - triggers data refresh
+      notifyAuthComplete: () => {
+        // Increment a counter to trigger useEffect dependencies
+        set((state) => ({
+          wallet: {
+            ...state.wallet,
+            authCompleted: (state.wallet.authCompleted || 0) + 1,
+          },
+        }));
       },
 
       fetchBalance: async () => {
@@ -537,7 +547,6 @@ export const useAppStore = create<AppState>()(
         currentSessionId: state.currentSessionId,
         activeTab: state.activeTab, // Persist active tab
         theme: state.theme, // Persist theme preference
-        network: state.network, // Persist network preference
       }),
     }
   )

@@ -107,13 +107,14 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       }
 
       // Try back camera first, fall back to any camera.
+      // IMPORTANT: Only request video (no audio) to avoid microphone permission dialogs
       let mediaStream: MediaStream | null = null;
       const constraintSets = [
-        { video: { facingMode: 'environment' } },
-        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: { facingMode: 'user' } },
-        { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: true }
+        { video: { facingMode: 'environment' }, audio: false },
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+        { video: { facingMode: 'user' }, audio: false },
+        { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+        { video: true, audio: false }
       ];
 
       for (let i = 0; i < constraintSets.length; i++) {

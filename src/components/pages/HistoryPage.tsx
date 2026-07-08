@@ -333,11 +333,7 @@ export default function HistoryPage() {
   };
 
   const openExplorer = (txHash: string) => {
-    const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-    const baseUrl = network === 'mainnet' 
-      ? 'https://nimiq.watch/#' 
-      : 'https://test.nimiq.watch/#';
-    openExternalUrl(`${baseUrl}${txHash}`);
+    openExternalUrl(`https://nimiq.watch/#${txHash}`);
   };
 
   // Calculate stats

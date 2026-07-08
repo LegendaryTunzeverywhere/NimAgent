@@ -11,10 +11,6 @@ type BalanceResponse = {
 // 1 NIM = 100,000 Luna
 const NIM_LUNA = 100_000;
 
-function getActiveNetwork(): 'mainnet' | 'testnet' {
-  return process.env.NEXT_PUBLIC_NIMIQ_NETWORK === 'mainnet' ? 'mainnet' : 'testnet';
-}
-
 function asNumber(value: unknown): number | null {
   const parsed = typeof value === 'string' ? Number(value) : value;
   return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null;
@@ -80,16 +76,14 @@ async function fetchNimBalanceFromRpc(address: string): Promise<number> {
   }
 
   // nimiq.watch REST fallback (mainnet only)
-  if (getActiveNetwork() === 'mainnet') {
-    const watchRes = await fetch(
-      `https://api.nimiq.watch/account/${cleanAddress}`,
-      { cache: 'no-store' },
-    );
-    if (watchRes.ok) {
-      const d = await watchRes.json();
-      const luna = asNumber(d?.balance);
-      if (luna != null) return luna / NIM_LUNA;
-    }
+  const watchRes = await fetch(
+    `https://api.nimiq.watch/account/${cleanAddress}`,
+    { cache: 'no-store' },
+  );
+  if (watchRes.ok) {
+    const d = await watchRes.json();
+    const luna = asNumber(d?.balance);
+    if (luna != null) return luna / NIM_LUNA;
   }
 
   throw new Error('Failed to fetch NIM balance from public RPC');

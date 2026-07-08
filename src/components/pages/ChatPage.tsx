@@ -414,7 +414,7 @@ export default function ChatPage() {
                   const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
                   if (txMatch) {
                     const hash = txMatch[1];
-                    const base = (process.env.NEXT_PUBLIC_NIMIQ_NETWORK === 'mainnet') ? 'https://nimiq.watch/#' : 'https://test.nimiq.watch/#';
+                    const base = 'https://nimiq.watch/#';
                     return (
                       <div key={idx} className="mt-2 space-y-2">
                         <div

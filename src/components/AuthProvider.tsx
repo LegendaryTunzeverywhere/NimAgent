@@ -35,8 +35,8 @@ export default function AuthProvider() {
     setAuthStatus('checking');
     setErrorMessage('');
 
-    // Delay showing feedback by 400ms so it doesn't flash for fast auth
-    const feedbackTimeout = setTimeout(() => setShowFeedback(true), 400);
+    // Delay showing feedback by 200ms (reduced from 400ms for faster user feedback)
+    const feedbackTimeout = setTimeout(() => setShowFeedback(true), 200);
 
     // Check if we already have a valid session before prompting for signature
     checkAuthStatus()
@@ -48,6 +48,8 @@ export default function AuthProvider() {
           clearTimeout(feedbackTimeout);
           setShowFeedback(false);
           setAuthStatus('idle');
+          // Notify the app store that authentication completed
+          useAppStore.getState().notifyAuthComplete();
           return;
         }
 
@@ -60,13 +62,32 @@ export default function AuthProvider() {
             clearTimeout(feedbackTimeout);
             setShowFeedback(false);
             setAuthStatus('idle');
+            // Notify the app store that authentication completed
+            useAppStore.getState().notifyAuthComplete();
           })
           .catch((error) => {
             console.error('[Auth] Authentication failed:', error);
             clearTimeout(feedbackTimeout);
             setAuthStatus('error');
-            setErrorMessage(error.message || 'Sign-in failed. Please try again.');
-            // Keep showFeedback true for error state
+            
+            // User-friendly error messages
+            let friendlyError = 'Sign-in failed. Please try again.';
+            if (error.message?.includes('cancelled') || error.message?.includes('reject')) {
+              friendlyError = 'Authentication cancelled. Tap to try again.';
+            } else if (error.message?.includes('timeout')) {
+              friendlyError = 'Sign-in timed out. Tap to retry.';
+            } else if (error.message) {
+              friendlyError = error.message;
+            }
+            
+            setErrorMessage(friendlyError);
+            setShowFeedback(true);
+            
+            // Auto-dismiss error after 8 seconds (gives user time to read)
+            setTimeout(() => {
+              setShowFeedback(false);
+              setAuthStatus('idle');
+            }, 8000);
           });
       })
       .catch((error) => {
@@ -101,6 +122,8 @@ export default function AuthProvider() {
   const handleRetry = () => {
     if (!wallet.address) return;
     setShowFeedback(false);
+    setErrorMessage('');
+    setAuthStatus('idle');
     setHasTriggeredAuth(true); // Keep the flag set to prevent double triggers
     attemptAuthentication(wallet.address, true); // Bypass throttle for manual retry
   };
@@ -136,16 +159,23 @@ export default function AuthProvider() {
         ) : authStatus === 'awaiting-signature' ? (
           <>
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-            <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-              Confirm the sign-in request in your wallet...
-            </p>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
+                Confirm the sign-in request in your wallet
+              </p>
+              <p className="text-[10px] text-amber-700 dark:text-gold/70 mt-0.5">
+                Check Nimiq Pay for the signature prompt
+              </p>
+            </div>
           </>
         ) : (
           <>
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-            <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-              Checking authentication...
-            </p>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
+                Checking authentication status...
+              </p>
+            </div>
           </>
         )}
       </div>

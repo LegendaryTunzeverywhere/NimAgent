@@ -58,7 +58,7 @@ const securityHeaders = [
       // - Nimiq RPC nodes (balance lookups)
       // - Nimiq Watch REST API (balance fallback)
       // - Nimiq Pay mini-app SDK WebSocket
-      "connect-src 'self' https://nimagent.online https://api.coingecko.com https://api.exchangerate-api.com https://rpc.nimiqwatch.com https://rpc.nimiq-testnet.com https://api.nimiq.watch wss://*.nimiq.com https://*.nimiq.com",
+      "connect-src 'self' https://nimagent.online https://api.coingecko.com https://api.exchangerate-api.com https://rpc.nimiqwatch.com https://api.nimiq.watch wss://*.nimiq.com https://*.nimiq.com",
 
       // Camera stream for QR scanner
       "media-src 'self'",

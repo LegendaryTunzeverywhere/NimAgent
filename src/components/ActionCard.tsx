@@ -724,10 +724,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           });
         }
         
-        const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-        const explorerUrl = network === 'mainnet' 
-          ? `https://nimiq.watch/#${hash}`
-          : `https://test.nimiq.watch/#${hash}`;
+        const explorerUrl = `https://nimiq.watch/#${hash}`;
         
         addMessage({
           role: 'ai',
@@ -853,10 +850,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             });
           }
           
-          const network = process.env.NEXT_PUBLIC_NIMIQ_NETWORK;
-          const explorerUrl = network === 'mainnet' 
-            ? `https://nimiq.watch/#${hash}`
-            : `https://test.nimiq.watch/#${hash}`;
+          const explorerUrl = `https://nimiq.watch/#${hash}`;
 
           if (action.type === 'gift-card' && result.code) {
             let msg = `Here's your ${action.product} gift card! 🎁\n\n🎟️ Code: ${result.code}`;
