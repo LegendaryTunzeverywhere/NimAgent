@@ -859,49 +859,9 @@ export default function ActionCard({ action }: ActionCardProps) {
           
           // Successfully reached backend - remove from queue
           removePendingSync(syncId);
-          
-          // Check if order is pending async verification
-          if (result.pending && result.orderId) {
-            // Update user that payment is being confirmed
-            addMessage({
-              role: 'ai',
-              content: '⏳ Confirming your payment on the blockchain... This usually takes 10-30 seconds. Please wait.',
-            });
-            
-            // Poll for order completion
-            const finalStatus = await pollOrderStatus(result.orderId, {
-              maxAttempts: 30,  // 30 * 4s = 2 minutes max
-              intervalMs: 4000,  // Poll every 4 seconds
-              onStatusChange: (status, message) => {
-                // Log status changes for debugging
-                console.log(`[Order ${result.orderId}] Status: ${status} - ${message}`);
-                
-                // Optional: Update UI with intermediate states
-                if (status === 'pending') {
-                  // Payment confirmed, now fulfilling order
-                  addMessage({
-                    role: 'ai',
-                    content: '✓ Payment confirmed! Processing your order...',
-                  });
-                }
-              },
-            });
-            
-            // Update result with final status
-            if (finalStatus.success) {
-              result = {
-                success: true,
-                ...finalStatus.result,
-              };
-            } else {
-              throw new Error(finalStatus.error || 'Order fulfillment failed');
-            }
-          }
         } catch (err: any) {
-          // createOrder() itself failed to even reach the backend (as opposed
-          // to the backend explicitly returning a failure/locked result,
-          // which is handled further down where result.success is checked) —
-          // the payment already left the wallet. Don't show "Payment Failed".
+          // createOrder() failed to reach the backend at all — the ONLY case
+          // this specific catch should handle. The order was never recorded.
           console.error('[Sync] createOrder failed to record, will retry later:', err);
           setSuccess(true); // we know the on-chain send succeeded
           setTxHash(hash);
@@ -912,6 +872,52 @@ export default function ActionCard({ action }: ActionCardProps) {
           });
           setLoading(false);
           return; // do not fall through to the generic catch/failed state below
+        }
+
+        // Everything below is now OUTSIDE that catch, so a pollOrderStatus
+        // failure falls through to the existing, more accurate handling
+        // (the outer catch block further down / result.locked/refundNeeded
+        // logic) instead of being swallowed by the "couldn't reach servers"
+        // message above.
+        if (result.pending && result.orderId) {
+          // Update user that payment is being confirmed
+          addMessage({
+            role: 'ai',
+            content: '⏳ Confirming your payment on the blockchain... This usually takes 10-30 seconds. Please wait.',
+          });
+          
+          // Poll for order completion
+          const finalStatus = await pollOrderStatus(result.orderId, {
+            maxAttempts: 30,  // 30 * 4s = 2 minutes max
+            intervalMs: 4000,  // Poll every 4 seconds
+            onStatusChange: (status, message) => {
+              // Log status changes for debugging
+              console.log(`[Order ${result.orderId}] Status: ${status} - ${message}`);
+              
+              // Optional: Update UI with intermediate states
+              if (status === 'pending') {
+                // Payment confirmed, now fulfilling order
+                addMessage({
+                  role: 'ai',
+                  content: '✓ Payment confirmed! Processing your order...',
+                });
+              }
+            },
+          });
+          
+          // Update result with final status
+          if (finalStatus.success) {
+            result = {
+              success: true,
+              ...finalStatus.result,
+            };
+          } else {
+            throw new Error(finalStatus.error || 'Order fulfillment failed');
+            // this now propagates to the ORIGINAL outer catch further down in
+            // executeAction (the one that already existed before this fix,
+            // handling result.locked/refundNeeded and generic order failures
+            // with proper refund messaging) — do not add a new catch here.
+          }
         }
 
         if (result.success) {
