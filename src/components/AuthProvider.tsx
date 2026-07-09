@@ -132,7 +132,8 @@ export default function AuthProvider() {
     // Don't authenticate until component is ready
     if (!isReady) return;
 
-    // Only authenticate if wallet is connected and we have an address
+    // Only authenticate if wallet is connected AND we have an address
+    // Both must be present to avoid racing conditions during wallet connection
     if (!wallet.connected || !wallet.address) {
       // Reset the flag when wallet disconnects so it can trigger again on next connect
       setHasTriggeredAuth(false);
@@ -155,8 +156,9 @@ export default function AuthProvider() {
     }
 
     // Prevent repeated authentication attempts when wallet state updates
-    // Only trigger authentication once per wallet connection session
-    if (hasTriggeredAuth) return;
+    // This is critical - wallet.connected might update before wallet.address,
+    // causing this effect to run multiple times during a single connection
+    if (hasTriggeredAuth || authInFlightRef.current) return;
 
     // For page refresh/reload: silently check if session is still valid
     // This prevents signature prompts when user just refreshed the page
@@ -168,23 +170,27 @@ export default function AuthProvider() {
       // If session is valid, mark as authenticated. If not, user can authenticate
       // when they actually try to use a feature that needs auth.
       console.log('[Auth] Page refresh detected - checking existing session silently');
+      authInFlightRef.current = true; // Set BEFORE async operation
+      setHasTriggeredAuth(true);
+      
       checkAuthStatus()
         .then((status) => {
           if (status.authenticated && status.wallet === walletAddress) {
             console.log('[Auth] Valid session found on refresh - no auth needed');
             sessionStorage.setItem(sessionAuthKey, 'true');
-            setHasTriggeredAuth(true);
             useAppStore.getState().notifyAuthComplete();
           } else {
             // No valid session - but don't prompt automatically on refresh
             // User can authenticate when they try to use a protected feature
             console.log('[Auth] No valid session on refresh - will authenticate on demand');
-            setHasTriggeredAuth(true); // Mark as attempted so we don't keep checking
           }
         })
         .catch(() => {
           // Session check failed - treat same as no session
-          setHasTriggeredAuth(true);
+          console.log('[Auth] Session check failed on refresh');
+        })
+        .finally(() => {
+          authInFlightRef.current = false;
         });
       return;
     }
@@ -199,12 +205,12 @@ export default function AuthProvider() {
       console.log('[Auth] First visit - delaying authentication for better UX');
       sessionStorage.setItem('nimagent_visited', 'true');
       
+      // Set guards BEFORE timeout
+      authInFlightRef.current = true;
+      setHasTriggeredAuth(true);
+      
       // Additional 2 seconds delay for first visit (total 4s from mount)
       const delayTimeout = setTimeout(() => {
-        // Synchronous guard to prevent double-trigger
-        if (authInFlightRef.current) return;
-        authInFlightRef.current = true;
-        setHasTriggeredAuth(true);
         attemptAuthentication(walletAddress, false);
       }, 2000);
 
@@ -212,8 +218,7 @@ export default function AuthProvider() {
     }
 
     // Returning user or not in Nimiq Pay - authenticate after delay (but check session first)
-    // Synchronous guard to prevent double-trigger
-    if (authInFlightRef.current) return;
+    // Set guards BEFORE any async operations
     authInFlightRef.current = true;
     setHasTriggeredAuth(true);
     
