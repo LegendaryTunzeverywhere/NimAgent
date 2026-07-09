@@ -163,6 +163,21 @@ export default function ChatPage() {
     }
   }, [hasInitialized, wallet.connected, wallet.address, loadOrCreateSession, clearMessages, addMessage]);
 
+  // ── Handle app resume ───────────────────────────────────────────────────────
+  // When returning from background, ensure chat state is fresh
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && wallet.connected && hasInitialized) {
+        console.log('[Chat] App resumed - refreshing chat state');
+        // Scroll to bottom to show latest messages
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [wallet.connected, hasInitialized]);
+
   // ── Scroll + desktop autofocus ──────────────────────────────────────────────
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });

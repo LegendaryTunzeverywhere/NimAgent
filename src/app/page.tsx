@@ -179,6 +179,27 @@ export default function Home() {
     return () => clearInterval(id);
   }, [wallet.connected]);
 
+  // Handle app resume (when returning from background)
+  // Mobile apps often suspend JavaScript execution when minimized
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && wallet.connected) {
+        console.log('[App] Resumed from background - refreshing state');
+        // Fetch fresh balance
+        fetchBalance();
+        // Ensure consensus state is current
+        import('@/lib/wallet').then(({ getNimiqNetworkState }) => {
+          getNimiqNetworkState()
+            .then(state => setConsensusEstablished(state.consensusEstablished))
+            .catch(() => setConsensusEstablished(true));
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [wallet.connected, fetchBalance]);
+
   // Once confirmed inside Nimiq Pay — ONE place that handles all startup logic.
   useEffect(() => {
     if (miniAppStatus !== 'inside') return;
