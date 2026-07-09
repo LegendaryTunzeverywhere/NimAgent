@@ -701,12 +701,12 @@ export default function ChatPage() {
                   (window as any).__triggerManualAuth();
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold/90 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors shadow-sm"
             >
               <Icon name="lock" size={11} strokeWidth={2} />
               Sign In to Unlock
             </button>
-            <p className="text-[11px] text-amber-600 dark:text-gold/70">
+            <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
               24h session
             </p>
           </div>

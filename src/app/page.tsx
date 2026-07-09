@@ -10,6 +10,7 @@ import BottomNav from '@/components/BottomNav';
 import HomePage from '@/components/pages/HomePage';
 import ChatPage from '@/components/pages/ChatPage';
 import HistoryPage from '@/components/pages/HistoryPage';
+import SignInPage from '@/components/pages/SignInPage';
 import NimiqPayRequired from '@/components/NimiqPayRequired';
 import MaintenancePage from '@/components/MaintenancePage';
 import { isInsideNimiqPay } from '@/lib/wallet/detect';
@@ -269,16 +270,23 @@ export default function Home() {
         </div>
 
         <div className="flex-1 relative">
-          {activeTab === 'home' && (
-            <div className="h-full overflow-y-auto pb-28 pt-[104px]">
-              <HomePage connecting={connecting} />
-            </div>
-          )}
-          {activeTab === 'chat' && wallet.connected && <ChatPage />}
-          {activeTab === 'history' && (
-            <div className="h-full overflow-y-auto pb-36 pt-[104px]">
-              <HistoryPage />
-            </div>
+          {/* Show SignInPage if wallet is connected but not authenticated */}
+          {wallet.connected && wallet.authCompleted === 0 ? (
+            <SignInPage />
+          ) : (
+            <>
+              {activeTab === 'home' && (
+                <div className="h-full overflow-y-auto pb-28 pt-[104px]">
+                  <HomePage connecting={connecting} />
+                </div>
+              )}
+              {activeTab === 'chat' && wallet.connected && <ChatPage />}
+              {activeTab === 'history' && (
+                <div className="h-full overflow-y-auto pb-36 pt-[104px]">
+                  <HistoryPage />
+                </div>
+              )}
+            </>
           )}
         </div>
 

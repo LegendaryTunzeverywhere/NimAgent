@@ -508,48 +508,6 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
       {/* Syncing toast — removed from HomePage, now lives in page.tsx for all-tab coverage */}
 
-      {/* Sign In Card - shown when wallet connected but not authenticated */}
-      {wallet.connected && wallet.authCompleted === 0 && (
-        <div className="animate-fade-up bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-gold/15 dark:to-gold/5 border-2 border-amber-300 dark:border-gold/30 rounded-3xl p-6 relative overflow-hidden shadow-lg">
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-600 dark:bg-gold flex items-center justify-center shadow-md">
-                <Icon name="lock" size={22} strokeWidth={2.2} className="text-white dark:text-background-primary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Sign In Required</h3>
-                <p className="text-xs text-amber-700 dark:text-gold/80">Unlock all NimAgent features</p>
-              </div>
-            </div>
-            
-            <p className="text-sm text-gray-700 dark:text-white/80 mb-5 leading-relaxed">
-              Sign a secure message to unlock payments, gift cards, airtime, bills, and chat history. Your session lasts 24 hours.
-            </p>
-            
-            <button
-              onClick={() => {
-                if (typeof window !== 'undefined' && (window as any).__triggerManualAuth) {
-                  (window as any).__triggerManualAuth();
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 text-sm font-bold rounded-2xl bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold/90 active:scale-[0.98] transition-all shadow-md"
-            >
-              <Icon name="unlock" size={18} strokeWidth={2.2} />
-              Sign In Now
-            </button>
-            
-            <div className="mt-4 flex items-center gap-2 text-xs text-amber-700 dark:text-gold/70">
-              <Icon name="info" size={12} strokeWidth={2} />
-              <span>No personal data required • Secure cryptographic signature</span>
-            </div>
-          </div>
-          
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/20 dark:bg-gold/10 rounded-full blur-3xl -z-0" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-300/20 dark:bg-gold/10 rounded-full blur-2xl -z-0" />
-        </div>
-      )}
-
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
       <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
