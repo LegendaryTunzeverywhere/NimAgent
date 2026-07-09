@@ -50,29 +50,37 @@ next-env.d.ts
 # OS
 Thumbs.db
 
-# Hidden folders (all .folderName/)
-.*
-# But keep .gitignore and .gitkeep
-!.gitignore
-!.gitkeep
 
-# n_server folder
-/n_server/
+.next
+.kiro
+.vscode
 
-# Optional build outputs
-/kiro/
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-#server removed
-/server/
+# Dependencies
+node_modules/
+nimsplit/server/node_modules/
 
-/generate-wallet.js
-/server/.env
-/server/.env.local
-/server/node_modules/
+# IDE
+.vscode/
 
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
-/server/public/reconciliation-portal.html
-/server/public/referrals.html
-/server/public/refund-portal.html
-/REMOVE_SERVER_FOLDER.md
-/SERVER_DOCUMENTATION.md
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Optional build outputs (if you add any later)
+/dist/
+/build/
+
+/n_server
