@@ -120,7 +120,7 @@ export default function AuthProvider() {
     
     if (insideNimiqPay) {
       // In Nimiq Pay, always delay to let UI render first
-      const initDelay = setTimeout(() => setIsReady(true), 1500);
+      const initDelay = setTimeout(() => setIsReady(true), 2000);
       return () => clearTimeout(initDelay);
     } else {
       // Outside Nimiq Pay, ready immediately
@@ -149,7 +149,7 @@ export default function AuthProvider() {
 
     if (hasAuthenticatedInSession) {
       // We already authenticated in this browser session, don't do it again
-      // This prevents re-auth when returning to the app
+      // This prevents re-auth when returning to the app or on page refresh
       setHasTriggeredAuth(true);
       return;
     }
@@ -157,6 +157,37 @@ export default function AuthProvider() {
     // Prevent repeated authentication attempts when wallet state updates
     // Only trigger authentication once per wallet connection session
     if (hasTriggeredAuth) return;
+
+    // For page refresh/reload: silently check if session is still valid
+    // This prevents signature prompts when user just refreshed the page
+    const hasRefreshed = typeof window !== 'undefined' && 
+      performance.navigation.type === 1; // 1 = TYPE_RELOAD
+    
+    if (hasRefreshed) {
+      // On page refresh, just check session status without showing UI
+      // If session is valid, mark as authenticated. If not, user can authenticate
+      // when they actually try to use a feature that needs auth.
+      console.log('[Auth] Page refresh detected - checking existing session silently');
+      checkAuthStatus()
+        .then((status) => {
+          if (status.authenticated && status.wallet === walletAddress) {
+            console.log('[Auth] Valid session found on refresh - no auth needed');
+            sessionStorage.setItem(sessionAuthKey, 'true');
+            setHasTriggeredAuth(true);
+            useAppStore.getState().notifyAuthComplete();
+          } else {
+            // No valid session - but don't prompt automatically on refresh
+            // User can authenticate when they try to use a protected feature
+            console.log('[Auth] No valid session on refresh - will authenticate on demand');
+            setHasTriggeredAuth(true); // Mark as attempted so we don't keep checking
+          }
+        })
+        .catch(() => {
+          // Session check failed - treat same as no session
+          setHasTriggeredAuth(true);
+        });
+      return;
+    }
 
     // Check if this is a first-time visit in Nimiq Pay
     const isFirstVisit = typeof window !== 'undefined' && 
@@ -168,24 +199,28 @@ export default function AuthProvider() {
       console.log('[Auth] First visit - delaying authentication for better UX');
       sessionStorage.setItem('nimagent_visited', 'true');
       
-      // Additional 1 second delay for first visit (total 2.5s from mount)
+      // Additional 2 seconds delay for first visit (total 4s from mount)
       const delayTimeout = setTimeout(() => {
         // Synchronous guard to prevent double-trigger
         if (authInFlightRef.current) return;
         authInFlightRef.current = true;
         setHasTriggeredAuth(true);
         attemptAuthentication(walletAddress, false);
-      }, 1000);
+      }, 2000);
 
       return () => clearTimeout(delayTimeout);
     }
 
-    // Returning user or not in Nimiq Pay - authenticate immediately (but check session first)
+    // Returning user or not in Nimiq Pay - authenticate after delay (but check session first)
     // Synchronous guard to prevent double-trigger
     if (authInFlightRef.current) return;
     authInFlightRef.current = true;
     setHasTriggeredAuth(true);
-    attemptAuthentication(walletAddress, false);
+    
+    // Still add a small delay for returning users to let page render
+    setTimeout(() => {
+      attemptAuthentication(walletAddress, false);
+    }, 500);
   }, [wallet.connected, wallet.address, hasTriggeredAuth, isReady]);
 
   // Manual retry handler
