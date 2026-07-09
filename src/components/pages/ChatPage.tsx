@@ -694,10 +694,22 @@ export default function ChatPage() {
           </p>
         )}
         {wallet.connected && wallet.authCompleted === 0 && !isListening && !aiLoading && (
-          <p className="text-[11px] text-amber-600 dark:text-gold text-center mt-1.5 flex items-center justify-center gap-1">
-            <Icon name="lock" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
-            Sign in to unlock NimAgent chat
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-1.5">
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined' && (window as any).__triggerManualAuth) {
+                  (window as any).__triggerManualAuth();
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold/90 transition-colors shadow-sm"
+            >
+              <Icon name="lock" size={11} strokeWidth={2} />
+              Sign In to Unlock
+            </button>
+            <p className="text-[11px] text-amber-600 dark:text-gold/70">
+              24h session
+            </p>
+          </div>
         )}
         {!wallet.connected && !isListening && !aiLoading && (
           <p className="text-[11px] text-gray-500 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">

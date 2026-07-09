@@ -5,89 +5,122 @@ import { useAppStore } from '@/store/useAppStore';
 import { signInWithWallet, checkAuthStatus } from '@/lib/auth';
 
 /**
- * AuthProvider - Establishes wallet authentication session
+ * AuthProvider - Manual wallet authentication with 24h sessions
  * 
- * Triggers the sign-in handshake once when a wallet connects.
- * The session cookie (nimagent_session) persists for 24 hours,
- * enabling all wallet-scoped API calls (orders, cashback, referrals, etc.)
+ * Users must manually click "Sign In" to authenticate their wallet.
+ * The session cookie (nimagent_session) persists for 24 hours.
  * 
- * Must be mounted at the root level (layout.tsx) to ensure authentication
- * happens before any pages try to make wallet-scoped API calls.
+ * On app reopen, silently checks for valid session without prompting.
+ * All wallet-scoped API calls verify authentication server-side.
  */
 export default function AuthProvider() {
   const wallet = useAppStore(state => state.wallet);
   const [authStatus, setAuthStatus] = useState<'idle' | 'checking' | 'awaiting-signature' | 'error'>('idle');
   const [showFeedback, setShowFeedback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false);
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const authInFlightRef = useRef(false);
 
-  const attemptAuthentication = (walletAddress: string, bypassThrottle = false) => {
-    const authKey = `nimagent_auth_attempt_${walletAddress}`;
-    const lastAttempt = sessionStorage.getItem(authKey);
-    const now = Date.now();
+  // Delay initialization to ensure UI renders first
+  useEffect(() => {
+    const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
+    
+    if (insideNimiqPay) {
+      const initDelay = setTimeout(() => setIsReady(true), 1000);
+      return () => clearTimeout(initDelay);
+    } else {
+      setIsReady(true);
+    }
+  }, []);
 
-    // If we attempted auth in the last 5 minutes, don't try again
-    // (unless this is a manual retry which bypasses the throttle)
-    if (!bypassThrottle && lastAttempt && now - parseInt(lastAttempt) < 5 * 60 * 1000) {
+  // Silent session check on mount (no automatic signature prompts)
+  useEffect(() => {
+    if (!isReady || !wallet.connected || !wallet.address || hasCheckedSession) {
       return;
     }
 
-    setAuthStatus('checking');
-    setErrorMessage('');
+    const walletAddress = wallet.address;
+    setHasCheckedSession(true);
 
-    // Delay showing feedback by 200ms (reduced from 400ms for faster user feedback)
-    const feedbackTimeout = setTimeout(() => setShowFeedback(true), 200);
+    // Check sessionStorage FIRST (instant, no network)
+    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+    const hasSessionFlag = sessionStorage.getItem(sessionAuthKey);
 
-    // Check if we already have a valid session before prompting for signature
+    if (hasSessionFlag === 'true') {
+      console.log('[Auth] Session flag found - user is authenticated');
+      useAppStore.getState().notifyAuthComplete();
+      return;
+    }
+
+    // No session flag - check server silently for valid 24h session
+    console.log('[Auth] Checking server for valid 24h session...');
+    
     checkAuthStatus()
       .then((status) => {
-        // If already authenticated with the correct wallet, don't re-prompt
         if (status.authenticated && status.wallet === walletAddress) {
-          console.log('[Auth] Already authenticated with valid session');
-          sessionStorage.setItem(authKey, now.toString());
-          clearTimeout(feedbackTimeout);
+          console.log('[Auth] Valid 24h session found - user is authenticated');
+          sessionStorage.setItem(sessionAuthKey, 'true');
+          useAppStore.getState().notifyAuthComplete();
+        } else {
+          console.log('[Auth] No valid session - user must sign in manually');
+        }
+      })
+      .catch((err) => {
+        console.error('[Auth] Session check failed:', err);
+      });
+  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]);
+
+  // Reset check flag when wallet disconnects
+  useEffect(() => {
+    if (!wallet.connected) {
+      setHasCheckedSession(false);
+    }
+  }, [wallet.connected]);
+
+  // Manual sign-in function (called from UI button)
+  const handleSignIn = () => {
+    if (!wallet.address) return;
+
+    const walletAddress = wallet.address;
+    
+    setAuthStatus('checking');
+    setErrorMessage('');
+    setShowFeedback(true);
+
+    // Check if already authenticated
+    checkAuthStatus()
+      .then((status) => {
+        if (status.authenticated && status.wallet === walletAddress) {
+          console.log('[Auth] Already authenticated');
+          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+          sessionStorage.setItem(sessionAuthKey, 'true');
           setShowFeedback(false);
           setAuthStatus('idle');
-          authInFlightRef.current = false; // Reset ref on completion
-          // Notify the app store that authentication completed
           useAppStore.getState().notifyAuthComplete();
           return;
         }
 
-        // No valid session - trigger authentication
+        // Not authenticated - trigger signature
         setAuthStatus('awaiting-signature');
         return signInWithWallet(walletAddress)
           .then(() => {
-            console.log('[Auth] Wallet authenticated successfully');
+            console.log('[Auth] Successfully signed in');
             
-            // Mark as authenticated in this session to prevent re-auth on app return
             const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
             sessionStorage.setItem(sessionAuthKey, 'true');
-            sessionStorage.setItem(authKey, now.toString());
             
-            clearTimeout(feedbackTimeout);
             setShowFeedback(false);
             setAuthStatus('idle');
-            authInFlightRef.current = false; // Reset ref on completion
-            // Notify the app store that authentication completed
             useAppStore.getState().notifyAuthComplete();
           })
           .catch((error) => {
-            console.error('[Auth] Authentication failed:', error);
-            clearTimeout(feedbackTimeout);
+            console.error('[Auth] Sign-in failed:', error);
             setAuthStatus('error');
-            authInFlightRef.current = false; // Reset ref on failure
-            
-            // Clear the session authentication flag so user can retry
-            const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-            sessionStorage.removeItem(sessionAuthKey);
             
             // User-friendly error messages
             let friendlyError = 'Sign-in failed. Please try again.';
             if (error.message?.includes('cancelled') || error.message?.includes('reject')) {
-              friendlyError = 'Authentication cancelled. Tap to try again.';
+              friendlyError = 'Sign-in cancelled. Tap to try again.';
             } else if (error.message?.includes('timeout')) {
               friendlyError = 'Sign-in timed out. Tap to retry.';
             } else if (error.message) {
@@ -97,7 +130,7 @@ export default function AuthProvider() {
             setErrorMessage(friendlyError);
             setShowFeedback(true);
             
-            // Auto-dismiss error after 8 seconds (gives user time to read)
+            // Auto-dismiss error after 8 seconds
             setTimeout(() => {
               setShowFeedback(false);
               setAuthStatus('idle');
@@ -106,136 +139,29 @@ export default function AuthProvider() {
       })
       .catch((error) => {
         console.error('[Auth] Session check failed:', error);
-        clearTimeout(feedbackTimeout);
         setShowFeedback(false);
         setAuthStatus('idle');
-        authInFlightRef.current = false; // Reset ref on error
-        // If session check fails, don't attempt sign-in (might be network issue)
       });
   };
 
-  // Delay initialization to prevent auth firing before UI renders
+  // Expose sign-in function globally for UI components to call
   useEffect(() => {
-    const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
-    
-    if (insideNimiqPay) {
-      // In Nimiq Pay, longer delay to ensure UI renders first
-      // Increased to 3000ms (3s) to guarantee page loads before any auth
-      const initDelay = setTimeout(() => setIsReady(true), 3000);
-      return () => clearTimeout(initDelay);
-    } else {
-      // Outside Nimiq Pay, ready immediately
-      setIsReady(true);
+    if (typeof window !== 'undefined') {
+      (window as any).__triggerManualAuth = handleSignIn;
     }
-  }, []);
-
-  useEffect(() => {
-    // Don't authenticate until component is ready
-    if (!isReady) return;
-
-    // Only authenticate if wallet is connected AND we have an address
-    // Both must be present to avoid racing conditions during wallet connection
-    if (!wallet.connected || !wallet.address) {
-      // Reset the flag when wallet disconnects so it can trigger again on next connect
-      setHasTriggeredAuth(false);
-      authInFlightRef.current = false; // Reset ref on disconnect
-      return;
-    }
-
-    // TypeScript type guard - at this point wallet.address is definitely non-null
-    const walletAddress = wallet.address;
-
-    // Prevent repeated authentication attempts when wallet state updates
-    if (hasTriggeredAuth || authInFlightRef.current) return;
-
-    // Set guards BEFORE any async operations to prevent race conditions
-    authInFlightRef.current = true;
-    setHasTriggeredAuth(true);
-
-    // Check sessionStorage FIRST (synchronous, instant check)
-    // This prevents unnecessary signature prompts on app reopen/refresh within 24h
-    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-    const hasSessionFlag = sessionStorage.getItem(sessionAuthKey);
-
-    if (hasSessionFlag === 'true') {
-      // User authenticated in this session already - trust it and skip server check
-      // The server session cookie (24h) should still be valid since we only set
-      // this flag after successful authentication
-      console.log('[Auth] Session flag found - skipping auth check (trusting existing 24h session)');
-      useAppStore.getState().notifyAuthComplete();
-      authInFlightRef.current = false;
-      return;
-    }
-
-    // No session flag found - check server for valid 24h session
-    // This happens on:
-    // 1. First app open (new wallet connection)
-    // 2. After clearing browser cache/sessionStorage
-    // 3. After 24h expiry (session flag cleared, cookie expired)
-    console.log('[Auth] No session flag - checking server for valid 24h session...');
-    
-    checkAuthStatus()
-      .then((status) => {
-        if (status.authenticated && status.wallet === walletAddress) {
-          // Valid 24h session exists on server - restore session flag
-          console.log('[Auth] Valid 24h session found on server - no signature needed');
-          sessionStorage.setItem(sessionAuthKey, 'true');
-          useAppStore.getState().notifyAuthComplete();
-          authInFlightRef.current = false;
-        } else {
-          // No valid session or session expired - authenticate now
-          // This happens on:
-          // 1. First-time login (new wallet connection)
-          // 2. After 24h session expiry (even with persisted wallet)
-          // 3. After explicit logout
-          console.log('[Auth] No valid session or session expired - requesting signature');
-          
-          // Clear any stale sessionStorage flag
-          sessionStorage.removeItem(sessionAuthKey);
-          
-          // Small delay to ensure UI is fully rendered before signature prompt
-          setTimeout(() => {
-            attemptAuthentication(walletAddress, false);
-          }, 1000);
-        }
-      })
-      .catch((err) => {
-        // Session check failed (network error) - try to authenticate anyway
-        console.error('[Auth] Session check failed, will attempt authentication:', err);
-        
-        // Clear sessionStorage since we couldn't verify
-        sessionStorage.removeItem(sessionAuthKey);
-        
-        setTimeout(() => {
-          attemptAuthentication(walletAddress, false);
-        }, 1000);
-      });
-  }, [wallet.connected, wallet.address, hasTriggeredAuth, isReady]);
-
-  // Manual retry handler
-  const handleRetry = () => {
-    if (!wallet.address) return;
-    
-    // Clear the session authenticated flag to allow fresh retry
-    const sessionAuthKey = `nimagent_session_authenticated_${wallet.address}`;
-    sessionStorage.removeItem(sessionAuthKey);
-    
-    setShowFeedback(false);
-    setErrorMessage('');
-    setAuthStatus('idle');
-    setHasTriggeredAuth(false); // Reset flag so useEffect can trigger again
-    
-    // Don't call attemptAuthentication directly - let useEffect handle it
-    // This ensures proper flow through the authentication logic
-  };
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__triggerManualAuth;
+      }
+    };
+  }, [wallet.address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Don't render anything if status is idle
   if (authStatus === 'idle' || !showFeedback) {
     return null;
   }
 
-  // Render feedback toast/banner
-  // Positioned higher than syncing toast to avoid overlap
+  // Render feedback toast only during active authentication
   return (
     <div className="fixed bottom-[8rem] left-4 right-4 z-50 animate-fade-up">
       <div 
@@ -244,7 +170,7 @@ export default function AuthProvider() {
             ? 'border-red-300/80 dark:border-error/25 bg-red-50 dark:bg-[#1c0000] cursor-pointer hover:bg-red-100 dark:hover:bg-[#2c0000] transition-colors'
             : 'border-amber-300/80 dark:border-gold/25 bg-amber-50 dark:bg-[#1c1200] pointer-events-none'
         }`}
-        onClick={authStatus === 'error' ? handleRetry : undefined}
+        onClick={authStatus === 'error' ? handleSignIn : undefined}
       >
         {authStatus === 'error' ? (
           <>
@@ -263,7 +189,7 @@ export default function AuthProvider() {
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-                Sign in to unlock NimAgent
+                Waiting for signature...
               </p>
               <p className="text-[10px] text-amber-700 dark:text-gold/70 mt-0.5">
                 Check Nimiq Pay for a secure signature request
@@ -275,7 +201,7 @@ export default function AuthProvider() {
             <div className="w-3.5 h-3.5 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin flex-shrink-0" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
-                Setting up your secure session...
+                Checking authentication...
               </p>
             </div>
           </>
