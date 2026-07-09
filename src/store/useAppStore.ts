@@ -575,3 +575,47 @@ if (typeof window !== 'undefined') {
     if (document.visibilityState === 'visible') poll();
   });
 }
+
+// ---------------------------------------------------------------------------
+// Pending Sync Queue Processor — retries failed backend recording operations
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  const processPendingQueue = async () => {
+    const { getRetryableEntries, updatePendingSyncAttempt, removePendingSync } = await import('@/lib/pending-sync-queue');
+    const { recordTransaction, createOrder } = await import('@/lib/api-client');
+    
+    const entries = getRetryableEntries();
+    
+    for (const entry of entries) {
+      console.log(`[PendingSyncQueue] Retrying ${entry.kind} for tx ${entry.txHash.slice(0, 8)}... (attempt ${entry.attempts + 1})`);
+      
+      try {
+        if (entry.kind === 'send') {
+          await recordTransaction(entry.payload);
+          removePendingSync(entry.id);
+          console.log(`[PendingSyncQueue] Successfully synced send transaction ${entry.txHash.slice(0, 8)}...`);
+        } else if (entry.kind === 'order') {
+          await createOrder(entry.payload);
+          removePendingSync(entry.id);
+          console.log(`[PendingSyncQueue] Successfully synced order ${entry.txHash.slice(0, 8)}...`);
+        }
+      } catch (err) {
+        console.error(`[PendingSyncQueue] Retry failed for ${entry.kind} ${entry.txHash.slice(0, 8)}...:`, err);
+        updatePendingSyncAttempt(entry.id);
+      }
+    }
+  };
+
+  // Process queue on startup (after a short delay to let the app initialize)
+  setTimeout(processPendingQueue, 5000);
+
+  // Process queue every 30 seconds
+  setInterval(processPendingQueue, 30_000);
+
+  // Process queue when the app regains focus
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      processPendingQueue();
+    }
+  });
+}

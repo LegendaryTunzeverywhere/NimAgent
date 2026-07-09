@@ -6,6 +6,7 @@ import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, pollOrderStatus, getLeaderboard } from '@/lib/api-client';
+import { enqueuePendingSync, removePendingSync } from '@/lib/pending-sync-queue';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
@@ -173,6 +174,22 @@ export default function ActionCard({ action }: ActionCardProps) {
       prewarmHub();
     }
 
+    // Balance check for 'send' actions
+    if (action.type === 'send') {
+      const sendAmountLuna = action.amountLuna || Math.round(parseFloat(amount) * 100000);
+      const currentBalanceLuna = Math.round((wallet.balance?.nim.balance ?? 0) * 100000);
+      
+      if (sendAmountLuna > currentBalanceLuna) {
+        const shortfall = ((sendAmountLuna - currentBalanceLuna) / 100000).toFixed(5);
+        setPrevalidationError(
+          `Insufficient balance. You have ${(currentBalanceLuna / 100000).toFixed(5)} NIM, ` +
+          `but this requires ${(sendAmountLuna / 100000).toFixed(5)} NIM (short by ${shortfall} NIM).`
+        );
+      } else {
+        setPrevalidationError(null);
+      }
+    }
+
     if (isOrder) {
       let cancelled = false;
       validateOrder({ type: action.type, details: action, walletAddress: wallet.address || undefined })
@@ -218,7 +235,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         });
       return () => { cancelled = true; };
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wallet.balance?.nim.balance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch contacts for show-contacts action type
   useEffect(() => {
@@ -670,6 +687,16 @@ export default function ActionCard({ action }: ActionCardProps) {
 
     try {
       if (action.type === 'send') {
+        // Defense-in-depth: Check balance again in case it changed between mount and tap
+        if (prevalidationError) {
+          addMessage({
+            role: 'ai',
+            content: `Cannot send this amount: ${prevalidationError}`,
+          });
+          setLoading(false);
+          return;
+        }
+        
         // Validate recipient address
         if (!action.recipient) {
           addMessage({
@@ -702,15 +729,8 @@ export default function ActionCard({ action }: ActionCardProps) {
           wallet.address // Pass wallet address to skip address selection
         );
 
-        await recordTransaction({
-          type: 'send',
-          fromAddress: wallet.address,
-          toAddress: normalizedRecipient,
-          amountLuna,
-          txHash: hash,
-          status: 'completed',
-        });
-
+        // The on-chain send succeeded. This is real and irreversible —
+        // reflect that to the user regardless of what happens next.
         setSuccess(true);
         setTxHash(hash);
         setAmountLocked(true); // Lock after successful transaction
@@ -729,6 +749,37 @@ export default function ActionCard({ action }: ActionCardProps) {
           role: 'ai',
           content: `Payment sent successfully! 🎉\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}`,
         });
+
+        // Recording is now a separate, retryable concern — never let its
+        // failure undo the success message above.
+        const syncId = enqueuePendingSync({
+          kind: 'send',
+          txHash: hash,
+          payload: {
+            type: 'send',
+            fromAddress: wallet.address,
+            toAddress: normalizedRecipient,
+            amountLuna,
+            txHash: hash,
+            status: 'completed',
+          },
+        });
+
+        try {
+          await recordTransaction({
+            type: 'send',
+            fromAddress: wallet.address,
+            toAddress: normalizedRecipient,
+            amountLuna,
+            txHash: hash,
+            status: 'completed',
+          });
+          removePendingSync(syncId);
+        } catch (syncErr) {
+          console.error('[Sync] Failed to record transaction, will retry later:', syncErr);
+          // Do NOT setFailed/setAmountLocked here, do NOT throw — the payment
+          // already succeeded. Leave it in the queue for background retry.
+        }
 
         // Ask if user wants to save this address (after a short delay)
         setTimeout(async () => {
@@ -778,6 +829,20 @@ export default function ActionCard({ action }: ActionCardProps) {
           content: 'Payment sent. Confirming it on the Nimiq network before releasing your order — this can take a few seconds…',
         });
 
+        // Queue the order for retry in case createOrder fails to reach the backend
+        const syncId = enqueuePendingSync({
+          kind: 'order',
+          txHash: hash,
+          payload: {
+            type: action.type,
+            txHash: hash,
+            amountLuna,
+            details: { ...action, recipientEmail: email || undefined },
+            walletAddress: wallet.address,
+            quoteId: quoteId || undefined,
+          },
+        });
+
         // Fulfill order (backend verifies the on-chain payment first)
         // Backend now handles async payment verification automatically
         let result: any;
@@ -791,6 +856,9 @@ export default function ActionCard({ action }: ActionCardProps) {
             walletAddress: wallet.address,
             quoteId: quoteId || undefined,
           });
+          
+          // Successfully reached backend - remove from queue
+          removePendingSync(syncId);
           
           // Check if order is pending async verification
           if (result.pending && result.orderId) {
@@ -830,7 +898,20 @@ export default function ActionCard({ action }: ActionCardProps) {
             }
           }
         } catch (err: any) {
-          throw err;
+          // createOrder() itself failed to even reach the backend (as opposed
+          // to the backend explicitly returning a failure/locked result,
+          // which is handled further down where result.success is checked) —
+          // the payment already left the wallet. Don't show "Payment Failed".
+          console.error('[Sync] createOrder failed to record, will retry later:', err);
+          setSuccess(true); // we know the on-chain send succeeded
+          setTxHash(hash);
+          setAmountLocked(true);
+          addMessage({
+            role: 'ai',
+            content: `Payment sent (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}) but we couldn't reach our servers to process your order just now. We'll keep retrying automatically — check History in a few minutes. If it doesn't appear, contact support with this transaction hash.`,
+          });
+          setLoading(false);
+          return; // do not fall through to the generic catch/failed state below
         }
 
         if (result.success) {

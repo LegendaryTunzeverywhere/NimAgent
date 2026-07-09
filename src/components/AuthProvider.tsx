@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { signInWithWallet, checkAuthStatus } from '@/lib/auth';
 
@@ -21,6 +21,7 @@ export default function AuthProvider() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const authInFlightRef = useRef(false);
 
   const attemptAuthentication = (walletAddress: string, bypassThrottle = false) => {
     const authKey = `nimagent_auth_attempt_${walletAddress}`;
@@ -49,6 +50,7 @@ export default function AuthProvider() {
           clearTimeout(feedbackTimeout);
           setShowFeedback(false);
           setAuthStatus('idle');
+          authInFlightRef.current = false; // Reset ref on completion
           // Notify the app store that authentication completed
           useAppStore.getState().notifyAuthComplete();
           return;
@@ -68,6 +70,7 @@ export default function AuthProvider() {
             clearTimeout(feedbackTimeout);
             setShowFeedback(false);
             setAuthStatus('idle');
+            authInFlightRef.current = false; // Reset ref on completion
             // Notify the app store that authentication completed
             useAppStore.getState().notifyAuthComplete();
           })
@@ -75,6 +78,7 @@ export default function AuthProvider() {
             console.error('[Auth] Authentication failed:', error);
             clearTimeout(feedbackTimeout);
             setAuthStatus('error');
+            authInFlightRef.current = false; // Reset ref on failure
             
             // Clear the session authentication flag so user can retry
             const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
@@ -105,6 +109,7 @@ export default function AuthProvider() {
         clearTimeout(feedbackTimeout);
         setShowFeedback(false);
         setAuthStatus('idle');
+        authInFlightRef.current = false; // Reset ref on error
         // If session check fails, don't attempt sign-in (might be network issue)
       });
   };
@@ -131,6 +136,7 @@ export default function AuthProvider() {
     if (!wallet.connected || !wallet.address) {
       // Reset the flag when wallet disconnects so it can trigger again on next connect
       setHasTriggeredAuth(false);
+      authInFlightRef.current = false; // Reset ref on disconnect
       return;
     }
 
@@ -164,6 +170,9 @@ export default function AuthProvider() {
       
       // Additional 1 second delay for first visit (total 2.5s from mount)
       const delayTimeout = setTimeout(() => {
+        // Synchronous guard to prevent double-trigger
+        if (authInFlightRef.current) return;
+        authInFlightRef.current = true;
         setHasTriggeredAuth(true);
         attemptAuthentication(walletAddress, false);
       }, 1000);
@@ -172,6 +181,9 @@ export default function AuthProvider() {
     }
 
     // Returning user or not in Nimiq Pay - authenticate immediately (but check session first)
+    // Synchronous guard to prevent double-trigger
+    if (authInFlightRef.current) return;
+    authInFlightRef.current = true;
     setHasTriggeredAuth(true);
     attemptAuthentication(walletAddress, false);
   }, [wallet.connected, wallet.address, hasTriggeredAuth, isReady]);

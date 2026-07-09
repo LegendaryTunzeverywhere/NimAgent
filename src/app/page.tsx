@@ -140,6 +140,7 @@ export default function Home() {
   const [connecting, setConnecting] = useState(false);
   const [consensusEstablished, setConsensusEstablished] = useState(true);
   const [hasAttemptedAutoConnect, setHasAttemptedAutoConnect] = useState(false);
+  const hasValidatedAddressRef = useRef(false);
   // Compute once — safe on SSR (window may not exist), stable across renders
   const [hasPaymentParams] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -188,6 +189,9 @@ export default function Home() {
       // Re-validate the persisted address against the live provider.
       // The user may have switched their active account in Nimiq Pay between
       // sessions, which would cause a stale address to be shown here.
+      if (hasValidatedAddressRef.current) return;
+      hasValidatedAddressRef.current = true;
+      
       import('@/lib/wallet').then(({ getUserAddress }) => {
         getUserAddress()
           .then((liveAddress) => {
