@@ -6,29 +6,9 @@ import Icon from '@/components/Icon';
 
 export default function SignInPage() {
   const wallet = useAppStore(state => state.wallet);
-  const [timeLeft, setTimeLeft] = useState(300);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handleSignIn = () => {
     if (!agreedToTerms) {
@@ -56,18 +36,6 @@ export default function SignInPage() {
             <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Secure Sign-In</h1>
             <p className="text-base text-gray-600 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
           </div>
-          {timeLeft > 0 ? (
-            <div className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-950/50 dark:to-amber-900/30 border border-amber-200 dark:border-amber-800/50 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-sm font-bold text-amber-900 dark:text-amber-300 tabular-nums">{formatTime(timeLeft)}</span>
-              <span className="text-xs text-amber-700 dark:text-amber-400">remaining</span>
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50">
-              <Icon name="alert" size={16} strokeWidth={2} className="text-red-600 dark:text-red-400" />
-              <span className="text-sm font-semibold text-red-700 dark:text-red-300">Session expired</span>
-            </div>
-          )}
         </div>
         {/* What You'll Unlock */}
         <div className="animate-fade-up rounded-2xl bg-white dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 p-6 space-y-4" style={{ animationDelay: '100ms' }}>
@@ -103,11 +71,10 @@ export default function SignInPage() {
         </div>
         {/* CTA Button */}
         <div className="animate-fade-up space-y-4" style={{ animationDelay: '300ms' }}>
-          <button onClick={handleSignIn} disabled={!agreedToTerms || timeLeft === 0}
-            className="group relative w-full flex items-center justify-center gap-3 px-6 py-5 text-lg font-bold rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 dark:from-amber-600 dark:via-amber-500 dark:to-amber-600 text-white hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 dark:hover:from-amber-700 dark:hover:via-amber-600 dark:hover:to-amber-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-amber-500 disabled:hover:via-amber-600 disabled:hover:to-amber-500 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-amber-500/30 disabled:shadow-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-out" />
-            <Icon name="unlock" size={24} strokeWidth={2.5} className="relative z-10" />
-            <span className="relative z-10">{timeLeft === 0 ? 'Session Expired' : 'Sign In Securely'}</span>
+          <button onClick={handleSignIn} disabled={!agreedToTerms}
+            className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-bold rounded-2xl bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-700 dark:hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-600 dark:disabled:hover:bg-amber-500 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-amber-500/25">
+            <Icon name="unlock" size={22} strokeWidth={2.5} />
+            <span>Sign In Securely</span>
           </button>
           {wallet.address && (
             <div className="text-center space-y-2 pt-2">
