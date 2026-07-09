@@ -119,9 +119,9 @@ export default function AuthProvider() {
     const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
     
     if (insideNimiqPay) {
-      // In Nimiq Pay, small delay to let UI render first
-      // Reduced to 800ms for faster authentication after wallet connect
-      const initDelay = setTimeout(() => setIsReady(true), 800);
+      // In Nimiq Pay, longer delay to ensure UI renders first
+      // Increased to 3000ms (3s) to guarantee page loads before any auth
+      const initDelay = setTimeout(() => setIsReady(true), 3000);
       return () => clearTimeout(initDelay);
     } else {
       // Outside Nimiq Pay, ready immediately
@@ -152,17 +152,33 @@ export default function AuthProvider() {
     authInFlightRef.current = true;
     setHasTriggeredAuth(true);
 
-    // ALWAYS check server for valid session first
-    // Don't rely on sessionStorage alone - server is source of truth for 24h expiry
-    // This ensures expired sessions trigger re-authentication even if wallet was persisted
-    console.log('[Auth] Checking server for valid 24h session...');
+    // Check sessionStorage FIRST (synchronous, instant check)
+    // This prevents unnecessary signature prompts on app reopen/refresh within 24h
+    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+    const hasSessionFlag = sessionStorage.getItem(sessionAuthKey);
+
+    if (hasSessionFlag === 'true') {
+      // User authenticated in this session already - trust it and skip server check
+      // The server session cookie (24h) should still be valid since we only set
+      // this flag after successful authentication
+      console.log('[Auth] Session flag found - skipping auth check (trusting existing 24h session)');
+      useAppStore.getState().notifyAuthComplete();
+      authInFlightRef.current = false;
+      return;
+    }
+
+    // No session flag found - check server for valid 24h session
+    // This happens on:
+    // 1. First app open (new wallet connection)
+    // 2. After clearing browser cache/sessionStorage
+    // 3. After 24h expiry (session flag cleared, cookie expired)
+    console.log('[Auth] No session flag - checking server for valid 24h session...');
     
     checkAuthStatus()
       .then((status) => {
         if (status.authenticated && status.wallet === walletAddress) {
-          // Valid 24h session exists on server - no need to re-authenticate
-          console.log('[Auth] Valid 24h session found - no signature needed');
-          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+          // Valid 24h session exists on server - restore session flag
+          console.log('[Auth] Valid 24h session found on server - no signature needed');
           sessionStorage.setItem(sessionAuthKey, 'true');
           useAppStore.getState().notifyAuthComplete();
           authInFlightRef.current = false;
@@ -175,7 +191,6 @@ export default function AuthProvider() {
           console.log('[Auth] No valid session or session expired - requesting signature');
           
           // Clear any stale sessionStorage flag
-          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
           sessionStorage.removeItem(sessionAuthKey);
           
           // Small delay to ensure UI is fully rendered before signature prompt
@@ -189,7 +204,6 @@ export default function AuthProvider() {
         console.error('[Auth] Session check failed, will attempt authentication:', err);
         
         // Clear sessionStorage since we couldn't verify
-        const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
         sessionStorage.removeItem(sessionAuthKey);
         
         setTimeout(() => {

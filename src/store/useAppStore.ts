@@ -108,6 +108,14 @@ export const useAppStore = create<AppState>()(
       },
 
       disconnectWallet: () => {
+        const currentAddress = get().wallet.address;
+        
+        // Clear session authentication flag on disconnect
+        if (currentAddress) {
+          const sessionAuthKey = `nimagent_session_authenticated_${currentAddress}`;
+          sessionStorage.removeItem(sessionAuthKey);
+        }
+        
         set({
           wallet: {
             address: null,
