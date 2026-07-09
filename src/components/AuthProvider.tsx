@@ -79,68 +79,48 @@ export default function AuthProvider() {
 
   // Manual sign-in function (called from UI button)
   const handleSignIn = () => {
-    if (!wallet.address) return;
+    if (!wallet.address || authStatus !== 'idle') return;
 
     const walletAddress = wallet.address;
     
-    setAuthStatus('checking');
+    setAuthStatus('awaiting-signature');
     setErrorMessage('');
     setShowFeedback(true);
 
-    // Check if already authenticated
-    checkAuthStatus()
-      .then((status) => {
-        if (status.authenticated && status.wallet === walletAddress) {
-          console.log('[Auth] Already authenticated');
-          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-          sessionStorage.setItem(sessionAuthKey, 'true');
-          setShowFeedback(false);
-          setAuthStatus('idle');
-          useAppStore.getState().notifyAuthComplete();
-          return;
-        }
-
-        // Not authenticated - trigger signature
-        setAuthStatus('awaiting-signature');
-        return signInWithWallet(walletAddress)
-          .then(() => {
-            console.log('[Auth] Successfully signed in');
-            
-            const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-            sessionStorage.setItem(sessionAuthKey, 'true');
-            
-            setShowFeedback(false);
-            setAuthStatus('idle');
-            useAppStore.getState().notifyAuthComplete();
-          })
-          .catch((error) => {
-            console.error('[Auth] Sign-in failed:', error);
-            setAuthStatus('error');
-            
-            // User-friendly error messages
-            let friendlyError = 'Sign-in failed. Please try again.';
-            if (error.message?.includes('cancelled') || error.message?.includes('reject')) {
-              friendlyError = 'Sign-in cancelled. Tap to try again.';
-            } else if (error.message?.includes('timeout')) {
-              friendlyError = 'Sign-in timed out. Tap to retry.';
-            } else if (error.message) {
-              friendlyError = error.message;
-            }
-            
-            setErrorMessage(friendlyError);
-            setShowFeedback(true);
-            
-            // Auto-dismiss error after 8 seconds
-            setTimeout(() => {
-              setShowFeedback(false);
-              setAuthStatus('idle');
-            }, 8000);
-          });
-      })
-      .catch((error) => {
-        console.error('[Auth] Session check failed:', error);
+    // Trigger signature directly - no pre-check to avoid double wallet prompts
+    signInWithWallet(walletAddress)
+      .then(() => {
+        console.log('[Auth] Successfully signed in');
+        
+        const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+        sessionStorage.setItem(sessionAuthKey, 'true');
+        
         setShowFeedback(false);
         setAuthStatus('idle');
+        useAppStore.getState().notifyAuthComplete();
+      })
+      .catch((error) => {
+        console.error('[Auth] Sign-in failed:', error);
+        setAuthStatus('error');
+        
+        // User-friendly error messages
+        let friendlyError = 'Sign-in failed. Please try again.';
+        if (error.message?.includes('cancelled') || error.message?.includes('reject')) {
+          friendlyError = 'Sign-in cancelled. Tap to try again.';
+        } else if (error.message?.includes('timeout')) {
+          friendlyError = 'Sign-in timed out. Tap to retry.';
+        } else if (error.message) {
+          friendlyError = error.message;
+        }
+        
+        setErrorMessage(friendlyError);
+        setShowFeedback(true);
+        
+        // Auto-dismiss error after 8 seconds
+        setTimeout(() => {
+          setShowFeedback(false);
+          setAuthStatus('idle');
+        }, 8000);
       });
   };
 
