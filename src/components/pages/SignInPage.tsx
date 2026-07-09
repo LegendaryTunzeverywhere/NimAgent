@@ -69,58 +69,27 @@ export default function SignInPage() {
             </div>
           )}
         </div>
-        {/* Features Grid */}
-        <div className="grid grid-cols-2 gap-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          {[
-            { icon: 'send', label: 'Instant Payments', color: 'blue' },
-            { icon: 'gift', label: 'Gift Cards', color: 'purple' },
-            { icon: 'phone', label: 'Airtime & Data', color: 'green' },
-            { icon: 'document', label: 'Bill Payments', color: 'orange' },
-          ].map((item, i) => (
-            <div key={i} className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 p-4 hover:border-amber-300 dark:hover:border-amber-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent dark:from-amber-950/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative space-y-2">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${
-                  item.color === 'blue' ? 'from-blue-100 to-blue-50 dark:from-blue-950/50 dark:to-blue-900/30' :
-                  item.color === 'purple' ? 'from-purple-100 to-purple-50 dark:from-purple-950/50 dark:to-purple-900/30' :
-                  item.color === 'green' ? 'from-green-100 to-green-50 dark:from-green-950/50 dark:to-green-900/30' :
-                  'from-orange-100 to-orange-50 dark:from-orange-950/50 dark:to-orange-900/30'
-                } flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon name={item.icon as any} size={18} strokeWidth={2.2} className={
-                    item.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                    item.color === 'purple' ? 'text-purple-600 dark:text-purple-400' :
-                    item.color === 'green' ? 'text-green-600 dark:text-green-400' :
-                    'text-orange-600 dark:text-orange-400'
-                  } />
+        {/* What You'll Unlock */}
+        <div className="animate-fade-up rounded-2xl bg-white dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 p-6 space-y-4" style={{ animationDelay: '100ms' }}>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">What You'll Unlock</h3>
+          <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+            {[
+              { icon: 'chat', text: 'AI-powered payment assistant' },
+              { icon: 'history', text: 'Transaction history & tracking' },
+              { icon: 'send', text: 'Send NIM with ease' },
+              { icon: 'gift-card', text: 'Buy gift cards & pay bills' },
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                  <Icon name={item.icon as any} size={16} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
                 </div>
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{item.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Security Card */}
-        <div className="animate-fade-up rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800/50 p-6 space-y-4" style={{ animationDelay: '200ms' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Icon name="shield" size={20} strokeWidth={2.5} className="text-white" />
-            </div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">Military-Grade Security</h3>
-          </div>
-          <ul className="space-y-2.5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {['Cryptographic proof without exposing private keys', 'Zero personal data collection', '24-hour auto-expiring sessions', 'Server-verified on every operation'].map((text, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>{text}</span>
+                <span>{item.text}</span>
               </li>
             ))}
           </ul>
         </div>
         {/* Terms Checkbox */}
-        <div className="animate-fade-up" style={{ animationDelay: '300ms' }}>
+        <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
           <label className="group flex items-start gap-3.5 p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-600 cursor-pointer transition-all duration-200 bg-white dark:bg-gray-800/30 hover:shadow-md hover:shadow-amber-500/5">
             <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
               className="mt-0.5 w-5 h-5 rounded-md border-2 border-gray-300 dark:border-gray-600 text-amber-600 dark:text-amber-500 focus:ring-2 focus:ring-amber-500/50 dark:focus:ring-amber-400/50 cursor-pointer bg-white dark:bg-gray-700 transition-colors" />
@@ -133,7 +102,7 @@ export default function SignInPage() {
           </label>
         </div>
         {/* CTA Button */}
-        <div className="animate-fade-up space-y-4" style={{ animationDelay: '400ms' }}>
+        <div className="animate-fade-up space-y-4" style={{ animationDelay: '300ms' }}>
           <button onClick={handleSignIn} disabled={!agreedToTerms || timeLeft === 0}
             className="group relative w-full flex items-center justify-center gap-3 px-6 py-5 text-lg font-bold rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 dark:from-amber-600 dark:via-amber-500 dark:to-amber-600 text-white hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 dark:hover:from-amber-700 dark:hover:via-amber-600 dark:hover:to-amber-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-amber-500 disabled:hover:via-amber-600 disabled:hover:to-amber-500 active:scale-[0.98] transition-all duration-200 shadow-xl shadow-amber-500/30 disabled:shadow-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-out" />
@@ -150,7 +119,7 @@ export default function SignInPage() {
       </div>
       {/* Terms Modal */}
       {showTerms && (
-        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowTerms(false)}>
+        <div className="fixed inset-0 z-[9999] bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowTerms(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-5 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
@@ -188,7 +157,7 @@ export default function SignInPage() {
       )}
       {/* Privacy Policy Modal */}
       {showPrivacy && (
-        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPrivacy(false)}>
+        <div className="fixed inset-0 z-[9999] bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPrivacy(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-5 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
