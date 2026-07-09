@@ -119,8 +119,9 @@ export default function AuthProvider() {
     const insideNimiqPay = typeof window !== 'undefined' && !!window.nimiqPay;
     
     if (insideNimiqPay) {
-      // In Nimiq Pay, always delay to let UI render first
-      const initDelay = setTimeout(() => setIsReady(true), 2000);
+      // In Nimiq Pay, small delay to let UI render first
+      // Reduced to 800ms for faster authentication after wallet connect
+      const initDelay = setTimeout(() => setIsReady(true), 800);
       return () => clearTimeout(initDelay);
     } else {
       // Outside Nimiq Pay, ready immediately
@@ -144,88 +145,57 @@ export default function AuthProvider() {
     // TypeScript type guard - at this point wallet.address is definitely non-null
     const walletAddress = wallet.address;
 
-    // Check if we've EVER authenticated in this browser session (survives component remounts)
-    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-    const hasAuthenticatedInSession = sessionStorage.getItem(sessionAuthKey);
-
-    if (hasAuthenticatedInSession) {
-      // We already authenticated in this browser session, don't do it again
-      // This prevents re-auth when returning to the app or on page refresh
-      setHasTriggeredAuth(true);
-      return;
-    }
-
     // Prevent repeated authentication attempts when wallet state updates
-    // This is critical - wallet.connected might update before wallet.address,
-    // causing this effect to run multiple times during a single connection
     if (hasTriggeredAuth || authInFlightRef.current) return;
 
-    // For page refresh/reload: silently check if session is still valid
-    // This prevents signature prompts when user just refreshed the page
-    const hasRefreshed = typeof window !== 'undefined' && 
-      performance.navigation.type === 1; // 1 = TYPE_RELOAD
-    
-    if (hasRefreshed) {
-      // On page refresh, just check session status without showing UI
-      // If session is valid, mark as authenticated. If not, user can authenticate
-      // when they actually try to use a feature that needs auth.
-      console.log('[Auth] Page refresh detected - checking existing session silently');
-      authInFlightRef.current = true; // Set BEFORE async operation
-      setHasTriggeredAuth(true);
-      
-      checkAuthStatus()
-        .then((status) => {
-          if (status.authenticated && status.wallet === walletAddress) {
-            console.log('[Auth] Valid session found on refresh - no auth needed');
-            sessionStorage.setItem(sessionAuthKey, 'true');
-            useAppStore.getState().notifyAuthComplete();
-          } else {
-            // No valid session - but don't prompt automatically on refresh
-            // User can authenticate when they try to use a protected feature
-            console.log('[Auth] No valid session on refresh - will authenticate on demand');
-          }
-        })
-        .catch(() => {
-          // Session check failed - treat same as no session
-          console.log('[Auth] Session check failed on refresh');
-        })
-        .finally(() => {
-          authInFlightRef.current = false;
-        });
-      return;
-    }
-
-    // Check if this is a first-time visit in Nimiq Pay
-    const isFirstVisit = typeof window !== 'undefined' && 
-      window.nimiqPay && 
-      !sessionStorage.getItem('nimagent_visited');
-
-    if (isFirstVisit) {
-      // First time in Nimiq Pay - let user see the app first!
-      console.log('[Auth] First visit - delaying authentication for better UX');
-      sessionStorage.setItem('nimagent_visited', 'true');
-      
-      // Set guards BEFORE timeout
-      authInFlightRef.current = true;
-      setHasTriggeredAuth(true);
-      
-      // Additional 2 seconds delay for first visit (total 4s from mount)
-      const delayTimeout = setTimeout(() => {
-        attemptAuthentication(walletAddress, false);
-      }, 2000);
-
-      return () => clearTimeout(delayTimeout);
-    }
-
-    // Returning user or not in Nimiq Pay - authenticate after delay (but check session first)
-    // Set guards BEFORE any async operations
+    // Set guards BEFORE any async operations to prevent race conditions
     authInFlightRef.current = true;
     setHasTriggeredAuth(true);
+
+    // ALWAYS check server for valid session first
+    // Don't rely on sessionStorage alone - server is source of truth for 24h expiry
+    // This ensures expired sessions trigger re-authentication even if wallet was persisted
+    console.log('[Auth] Checking server for valid 24h session...');
     
-    // Still add a small delay for returning users to let page render
-    setTimeout(() => {
-      attemptAuthentication(walletAddress, false);
-    }, 500);
+    checkAuthStatus()
+      .then((status) => {
+        if (status.authenticated && status.wallet === walletAddress) {
+          // Valid 24h session exists on server - no need to re-authenticate
+          console.log('[Auth] Valid 24h session found - no signature needed');
+          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+          sessionStorage.setItem(sessionAuthKey, 'true');
+          useAppStore.getState().notifyAuthComplete();
+          authInFlightRef.current = false;
+        } else {
+          // No valid session or session expired - authenticate now
+          // This happens on:
+          // 1. First-time login (new wallet connection)
+          // 2. After 24h session expiry (even with persisted wallet)
+          // 3. After explicit logout
+          console.log('[Auth] No valid session or session expired - requesting signature');
+          
+          // Clear any stale sessionStorage flag
+          const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+          sessionStorage.removeItem(sessionAuthKey);
+          
+          // Small delay to ensure UI is fully rendered before signature prompt
+          setTimeout(() => {
+            attemptAuthentication(walletAddress, false);
+          }, 1000);
+        }
+      })
+      .catch((err) => {
+        // Session check failed (network error) - try to authenticate anyway
+        console.error('[Auth] Session check failed, will attempt authentication:', err);
+        
+        // Clear sessionStorage since we couldn't verify
+        const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+        sessionStorage.removeItem(sessionAuthKey);
+        
+        setTimeout(() => {
+          attemptAuthentication(walletAddress, false);
+        }, 1000);
+      });
   }, [wallet.connected, wallet.address, hasTriggeredAuth, isReady]);
 
   // Manual retry handler
