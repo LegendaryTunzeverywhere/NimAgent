@@ -613,18 +613,24 @@ export default function ChatPage() {
         <div className={`flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all ${
           isListening
             ? 'bg-red-50 dark:bg-error/8 border-red-300 dark:border-error/30'
+            : wallet.connected && wallet.authCompleted === 0
+            ? 'bg-amber-50 dark:bg-gold/8 border-amber-300 dark:border-gold/30'
             : 'bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/[0.08] focus-within:border-amber-400 dark:focus-within:border-gold/40 focus-within:bg-white dark:focus-within:bg-white/[0.06]'
         }`}>
           {/* Mic button */}
           <button
             onClick={toggleVoice}
-            disabled={aiLoading || !!voiceUnavailableReason}
+            disabled={aiLoading || !!voiceUnavailableReason || (wallet.connected && wallet.authCompleted === 0)}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
                 : 'text-gray-500 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.06]'
             } disabled:opacity-40`}
-            title={voiceUnavailableReason || (isListening ? 'Stop' : 'Voice input')}
+            title={
+              wallet.connected && wallet.authCompleted === 0
+                ? 'Sign in to use voice input'
+                : voiceUnavailableReason || (isListening ? 'Stop' : 'Voice input')
+            }
           >
             {isListening ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -641,8 +647,14 @@ export default function ChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !isOverLimit && sendMessage()}
-            disabled={aiLoading || isListening}
-            placeholder={isListening ? 'Listening…' : 'Ask me anything…'}
+            disabled={aiLoading || isListening || (wallet.connected && wallet.authCompleted === 0)}
+            placeholder={
+              wallet.connected && wallet.authCompleted === 0
+                ? 'Sign in to unlock chat…'
+                : isListening
+                ? 'Listening…'
+                : 'Ask me anything…'
+            }
             className="flex-1 bg-transparent text-[14px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none disabled:cursor-not-allowed"
           />
 
@@ -656,9 +668,9 @@ export default function ChatPage() {
           {/* Send button */}
           <button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || aiLoading || isOverLimit}
+            disabled={!input.trim() || aiLoading || isOverLimit || (wallet.connected && wallet.authCompleted === 0)}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
-              input.trim() && !isOverLimit
+              input.trim() && !isOverLimit && !(wallet.connected && wallet.authCompleted === 0)
                 ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
                 : 'bg-gray-100 dark:bg-white/[0.05] text-gray-400 dark:text-white/35'
             }`}
@@ -679,6 +691,12 @@ export default function ChatPage() {
         {!isListening && voiceUnavailableReason && !aiLoading && (
           <p className="text-[11px] text-amber-600 dark:text-gold text-center mt-1.5">
             {voiceUnavailableReason}
+          </p>
+        )}
+        {wallet.connected && wallet.authCompleted === 0 && !isListening && !aiLoading && (
+          <p className="text-[11px] text-amber-600 dark:text-gold text-center mt-1.5 flex items-center justify-center gap-1">
+            <Icon name="lock" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
+            Sign in to unlock NimAgent chat
           </p>
         )}
         {!wallet.connected && !isListening && !aiLoading && (
