@@ -62,6 +62,9 @@ Thumbs.db
 # Optional build outputs
 /kiro/
 
+#server removed
+/server/
+
 /generate-wallet.js
 /server/.env
 /server/.env.local
@@ -71,3 +74,5 @@ Thumbs.db
 /server/public/reconciliation-portal.html
 /server/public/referrals.html
 /server/public/refund-portal.html
+/REMOVE_SERVER_FOLDER.md
+/SERVER_DOCUMENTATION.md
