@@ -79,7 +79,16 @@ export default function AuthProvider() {
 
   // Manual sign-in function (called from UI button)
   const handleSignIn = () => {
-    if (!wallet.address || authStatus !== 'idle') return;
+    if (!wallet.address) {
+      console.log('[Auth] Cannot sign in - no wallet address');
+      return;
+    }
+    
+    // Guard against multiple simultaneous sign-in attempts
+    if (authStatus !== 'idle') {
+      console.log('[Auth] Sign-in already in progress - skipping');
+      return;
+    }
 
     const walletAddress = wallet.address;
     

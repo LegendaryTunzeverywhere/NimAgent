@@ -47,10 +47,13 @@ export const useAppStore = create<AppState>()(
       setAiStatus: (status) => set({ aiStatus: status }),
 
       connectWallet: async () => {
-        // Guard against concurrent connect calls
-        if (get().wallet.loading) return;
-        // Already connected — nothing to do.
-        if (get().wallet.connected) return;
+        const state = get();
+        
+        // Guard against concurrent connect calls (synchronous check before any async operations)
+        if (state.wallet.loading || state.wallet.connected) {
+          console.log('[Wallet] Connection already in progress or wallet already connected - skipping');
+          return;
+        }
 
         set((state) => ({
           wallet: { ...state.wallet, loading: true, error: null },

@@ -68,7 +68,7 @@ Thumbs.db
 /server/node_modules/
 
 # server ignored
-/server/
+/server
 
 
 /server/public/reconciliation-portal.html
