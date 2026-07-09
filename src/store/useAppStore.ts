@@ -577,6 +577,7 @@ if (typeof window !== 'undefined') {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Pending Sync Queue Processor — retries failed backend recording operations
 // ---------------------------------------------------------------------------
 if (typeof window !== 'undefined') {
@@ -591,11 +592,27 @@ if (typeof window !== 'undefined') {
       
       try {
         if (entry.kind === 'send') {
-          await recordTransaction(entry.payload);
+          // Type assertion: payload contains the recordTransaction params
+          await recordTransaction(entry.payload as {
+            type: string;
+            fromAddress?: string;
+            toAddress?: string;
+            amountLuna: number;
+            txHash?: string;
+            status?: string;
+          });
           removePendingSync(entry.id);
           console.log(`[PendingSyncQueue] Successfully synced send transaction ${entry.txHash.slice(0, 8)}...`);
         } else if (entry.kind === 'order') {
-          await createOrder(entry.payload);
+          // Type assertion: payload contains the createOrder params
+          await createOrder(entry.payload as {
+            type: string;
+            txHash: string;
+            amountLuna: number;
+            details: any;
+            walletAddress: string;
+            quoteId?: string;
+          });
           removePendingSync(entry.id);
           console.log(`[PendingSyncQueue] Successfully synced order ${entry.txHash.slice(0, 8)}...`);
         }
