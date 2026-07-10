@@ -101,17 +101,6 @@ const config: Config = {
       backdropBlur: {
         xs: '2px',
       },
-      spacing: {
-        // Nimiq 8px grid
-        '1': '8px',
-        '2': '16px',
-        '3': '24px',
-        '4': '32px',
-        '5': '40px',
-        '6': '48px',
-        '7': '56px',
-        '8': '64px',
-      },
       borderRadius: {
         'nimiq-input': '4px',
         'nimiq-card': '10px',
