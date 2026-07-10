@@ -30,10 +30,10 @@ export default function MaintenancePage() {
 
           {/* Status card */}
           <div className="rounded-2xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.02] p-4 mb-6 text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45 mb-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/65 mb-3">
               What&apos;s happening
             </p>
-            <ul className="space-y-2 text-sm text-[#1F2348] dark:text-white/70">
+            <ul className="space-y-2 text-sm text-[#1F2348] dark:text-white/80">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 w-4 h-4 rounded-full bg-[#E9B213]/10 text-[#E9B213] flex items-center justify-center text-[10px] flex-shrink-0">🔧</span>
                 Scheduled maintenance in progress
@@ -58,7 +58,7 @@ export default function MaintenancePage() {
             Check Again
           </button>
 
-          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/45">
+          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/60">
             Follow{' '}
             <a
               href="https://x.com/nimiqagent"

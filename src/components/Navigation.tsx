@@ -23,7 +23,7 @@ export default function Navigation() {
                 Beta
               </span>
             </div>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#1F2348]/60 dark:text-white/60/50 mt-0.5">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#1F2348]/60 dark:text-white/65 mt-0.5">
               AI Payments
             </span>
           </div>
@@ -39,7 +39,7 @@ export default function Navigation() {
 
           <button
             onClick={() => setShowSettings(true)}
-            className="glass rounded-full p-2 text-[#1F2348]/60 dark:text-white/60/50 hover:text-[#E9B213] hover:border-[#E9B213]/30 transition-all duration-200"
+            className="glass rounded-full p-2 text-[#1F2348]/60 dark:text-white/65 hover:text-[#E9B213] hover:border-[#E9B213]/30 transition-all duration-200"
             style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
             aria-label="Settings"
           >

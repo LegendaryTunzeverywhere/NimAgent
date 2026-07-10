@@ -20,7 +20,7 @@
     /* Nimiq light gray background */
     background-color: #FAFAFA;
     color: #1F2348;
-    font-family: 'Inter', 'Muli', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-mulish), 'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     position: relative;
     min-height: 100vh;
   }

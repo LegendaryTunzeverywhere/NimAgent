@@ -55,7 +55,7 @@ export default function NimiqPayRequired() {
 
           {/* Steps */}
           <div className="mt-5 rounded-2xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.02] p-4 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/65">
               How To Access
             </p>
             {[
@@ -67,14 +67,14 @@ export default function NimiqPayRequired() {
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3">
                 <span className="w-5 h-5 rounded-full bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
-                <p className="text-sm text-[#1F2348] dark:text-white/70 leading-relaxed">{text}</p>
+                <p className="text-sm text-[#1F2348] dark:text-white/75 leading-relaxed">{text}</p>
               </div>
             ))}
           </div>
 
           {/* URL display */}
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/5 px-3 py-2.5">
-            <p className="flex-1 text-xs font-mono text-[#1F2348] dark:text-white/70 truncate">{currentUrl}</p>
+            <p className="flex-1 text-xs font-mono text-[#1F2348] dark:text-white/80 truncate">{currentUrl}</p>
             <button
               type="button"
               onClick={copyLink}
@@ -105,7 +105,7 @@ export default function NimiqPayRequired() {
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/40 text-center">
+          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/60 text-center">
             NimAgent will be available as a registered Nimiq Pay mini app soon.
           </p>
         </div>

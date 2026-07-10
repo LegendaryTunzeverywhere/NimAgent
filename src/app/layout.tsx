@@ -1,18 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Space_Mono } from 'next/font/google';
+import { Mulish } from 'next/font/google';
 import './globals.css';
 import CsrfPrefetcher from '@/components/csrf-prefetcher';
 import AuthProvider from '@/components/AuthProvider';
 
-const inter = Inter({ 
+// Nimiq uses Mulish as their primary font
+const mulish = Mulish({ 
   subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const spaceMono = Space_Mono({ 
-  weight: ['400', '700'],
-  subsets: ['latin'],
-  variable: '--font-space-mono',
+  variable: '--font-mulish',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -70,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceMono.variable}`} suppressHydrationWarning={true}>
+    <html lang="en" className={mulish.variable} suppressHydrationWarning={true}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
