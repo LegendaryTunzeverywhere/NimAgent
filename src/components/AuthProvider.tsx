@@ -110,13 +110,12 @@ export default function AuthProvider() {
             wallet: { ...state.wallet, authChecked: true }
           }));
         } else {
-          console.log('[Auth] No valid session - disconnecting stale wallet state');
+          console.log('[Auth] No valid session found');
           localStorage.removeItem(authCacheKey);
           
-          // FIX: Disconnect wallet to clear stale connected state
-          useAppStore.getState().disconnectWallet();
-          
-          // Mark auth check as complete (even though auth failed)
+          // Mark auth check as complete but DON'T disconnect
+          // This allows fresh wallet connections to proceed to sign-in page
+          // Only the session staleness detector will auto-disconnect after inactivity
           useAppStore.setState((state) => ({
             wallet: { ...state.wallet, authChecked: true }
           }));
@@ -126,10 +125,8 @@ export default function AuthProvider() {
         console.error('[Auth] Session check failed:', err);
         localStorage.removeItem(authCacheKey);
         
-        // FIX: Disconnect wallet on check failure to clear stale state
-        useAppStore.getState().disconnectWallet();
-        
-        // Mark auth check as complete (even though check failed)
+        // Mark auth check as complete but DON'T disconnect on check failure
+        // Network errors shouldn't force disconnect
         useAppStore.setState((state) => ({
           wallet: { ...state.wallet, authChecked: true }
         }));

@@ -850,7 +850,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 Beta
               </span>
             </div>
-            <p className="text-sm sm:text-[15px] text-[#1F2348]/80 dark:text-white/60 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
+            <p className="text-sm sm:text-[15px] text-[#1F2348]/80 dark:text-white/70 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
               Connect your wallet to unlock AI chat, send NIM, and pay for everyday services from one clean Nimiq flow.
             </p>
 
@@ -870,7 +870,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     <p className="text-sm font-semibold text-[#1F2348] dark:text-white">
                       {feature.title}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#1F2348]/80 dark:text-white/58">
+                    <p className="mt-1 text-xs leading-relaxed text-[#1F2348]/80 dark:text-white/70">
                       {feature.description}
                     </p>
                   </div>
@@ -889,7 +889,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             >
               {connecting ? 'Connecting to your wallet...' : 'Connect Wallet to Start'}
             </Button>
-            <p className="mt-3 text-xs text-[#1F2348]/60 dark:text-white/45">
+            <p className="mt-3 text-xs text-[#1F2348]/60 dark:text-white/60">
               {connecting 
                 ? 'Please wait while we connect to Nimiq Pay...' 
                 : 'Connect once to open AI chat, view balances, and start payments.'}
@@ -901,7 +901,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       <div className="card-premium rounded-[10px] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45">Community</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/65">Community</p>
             <p className="mt-1 text-sm font-semibold text-[#1F2348] dark:text-white">Follow NimAgent</p>
           </div>
           <div className="flex items-center gap-2">
