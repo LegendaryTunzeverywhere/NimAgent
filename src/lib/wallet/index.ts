@@ -25,7 +25,11 @@ async function resolveAdapter(): Promise<WalletAdapter> {
 /** Resolve (and cache) the active wallet adapter for this session. */
 export async function getWalletAdapter(): Promise<WalletAdapter> {
   if (!adapterPromise) {
-    adapterPromise = resolveAdapter();
+    adapterPromise = resolveAdapter().catch((error) => {
+      // Reset adapterPromise on failure so retry attempts can probe fresh
+      adapterPromise = null;
+      throw error;
+    });
   }
   return adapterPromise;
 }

@@ -72,6 +72,11 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * Without the hint we use shorter probes to avoid stalling a normal browser,
  * BUT if payment/referral params are present (?to= or ?ref=) we extend the
  * timeout slightly to account for potential deep-link routing delays.
+ * 
+ * CACHING STRATEGY:
+ * - Positive results (true) are cached permanently — Nimiq Pay doesn't disappear mid-session
+ * - Negative results (false) are cached for only 5 seconds to allow manual retries
+ *   (e.g., user taps "Connect Wallet" again after a failed attempt)
  */
 export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
   if (typeof window === 'undefined') return Promise.resolve(false);
@@ -105,6 +110,15 @@ export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
 
       return false;
     })();
+    
+    // Reset cache for negative results after 5 seconds to allow retries
+    detection.then((result) => {
+      if (!result) {
+        setTimeout(() => {
+          detection = null;
+        }, 5000);
+      }
+    });
   }
   return detection;
 }

@@ -56,6 +56,11 @@ export const useAppStore = create<AppState>()(
           return;
         }
 
+        // Reset detection cache to allow fresh probe on manual retry
+        // This ensures a failed connection attempt can be retried cleanly
+        const { _resetDetectionCache } = await import('@/lib/wallet/detect');
+        _resetDetectionCache();
+
         set((state) => ({
           wallet: { ...state.wallet, loading: true, error: null },
         }));
