@@ -118,7 +118,7 @@ export default function BottomNav() {
                   ? ''
                   : isChatLocked
                     ? 'text-gray-400 dark:text-white/30 cursor-not-allowed'
-                    : 'text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80',
+                    : 'text-[#1F2348]/60 dark:text-white/60/55 hover:text-[#1F2348] dark:hover:text-white/80',
               ].join(' ')}
               style={isActive ? { 
                 color: accentColor,
@@ -157,3 +157,4 @@ export default function BottomNav() {
     </div>
   );
 }
+

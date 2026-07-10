@@ -35,23 +35,23 @@ export default function SignInPage() {
                 filter: 'blur(24px)'
               }} />
             {/* Lock container */}
-            <div className="relative w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-gray-100 dark:bg-[#1F1C3E]">
+            <div className="relative w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-white/80 dark:bg-[#1F1C3E]">
               <span style={{ filter: 'drop-shadow(0 2px 8px rgba(233, 178, 19, 0.3))' }}>
                 <Icon name="lock" size={44} strokeWidth={2.5} 
-                  className="text-gray-800 dark:text-white animate-lock-bob" />
+                  className="text-[#1F2348] dark:text-white animate-lock-bob" />
               </span>
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Secure Sign-In</h1>
-            <p className="text-base text-gray-600 dark:text-white/70 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
+            <h1 className="text-4xl font-black text-[#1F2348] dark:text-white tracking-tight leading-none">Secure Sign-In</h1>
+            <p className="text-base text-[#1F2348]/80 dark:text-white/70 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
           </div>
         </div>
         {/* What You'll Unlock */}
-        <div className="animate-fade-up rounded-2xl p-6 space-y-4 bg-gray-50 dark:bg-[#10121F] border border-gray-200 dark:border-white/[0.07]" 
+        <div className="animate-fade-up rounded-2xl p-6 space-y-4 bg-white/60 dark:bg-[#10121F] border border-[#1F2348]/10 dark:border-white/[0.07]" 
           style={{ animationDelay: '100ms' }}>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">What You'll Unlock</h3>
-          <ul className="space-y-3 text-sm text-gray-700 dark:text-white/70">
+          <h3 className="text-base font-semibold text-[#1F2348] dark:text-white">What You'll Unlock</h3>
+          <ul className="space-y-3 text-sm text-[#1F2348] dark:text-white/70">
             {[
               { icon: 'chat', text: 'AI-powered payment assistant', color: '#0582CA' },
               { icon: 'history', text: 'Transaction history & tracking', color: '#E9B213' },
@@ -72,10 +72,10 @@ export default function SignInPage() {
         </div>
         {/* Terms Checkbox */}
         <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <label className={`group flex items-start gap-3.5 p-5 rounded-2xl cursor-pointer transition-all duration-200 bg-gray-50 dark:bg-[#10121F] ${
+          <label className={`group flex items-start gap-3.5 p-5 rounded-2xl cursor-pointer transition-all duration-200 bg-white/60 dark:bg-[#10121F] ${
               agreedToTerms 
                 ? 'border-[2px] border-[#E9B213]' 
-                : 'border-[2px] border-gray-200 dark:border-white/[0.07]'
+                : 'border-[2px] border-[#1F2348]/10 dark:border-white/[0.07]'
             }`}
             style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
             <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
@@ -86,7 +86,7 @@ export default function SignInPage() {
                 accentColor: '#E9B213',
                 transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)',
               }} />
-            <span className="text-sm text-gray-700 dark:text-white/70 leading-relaxed flex-1">
+            <span className="text-sm text-[#1F2348] dark:text-white/70 leading-relaxed flex-1">
               I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }}
                 className="font-semibold hover:underline underline-offset-2"
                 style={{ color: '#E9B213' }}>Terms</button>
@@ -110,8 +110,8 @@ export default function SignInPage() {
           </Button>
           {wallet.address && (
             <div className="text-center space-y-2 pt-2">
-              <p className="text-xs text-gray-500 dark:text-white/40 uppercase tracking-widest font-semibold">Connected Wallet</p>
-              <p className="text-xs font-mono text-gray-700 dark:text-white/70 break-all px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#10121F]">{wallet.address}</p>
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/40 uppercase tracking-widest font-semibold">Connected Wallet</p>
+              <p className="text-xs font-mono text-[#1F2348] dark:text-white/70 break-all px-4 py-2 rounded-lg bg-white/80 dark:bg-[#10121F]">{wallet.address}</p>
             </div>
           )}
         </div>
@@ -122,37 +122,37 @@ export default function SignInPage() {
           onClick={() => setShowTerms(false)}>
           <div className="rounded-[10px] max-w-lg w-full max-h-[80vh] overflow-hidden shadow-2xl animate-modal-in glass-strong"
             onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-gray-200 dark:border-white/[0.08]">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-[#1F2348]/10 dark:border-white/[0.08]">
+              <h2 className="text-lg font-bold text-[#1F2348] dark:text-white">Terms and Conditions</h2>
               <button onClick={() => setShowTerms(false)} 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
                 <Icon name="close" size={18} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
-              <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h3>
+            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-[#1F2348] dark:text-white/70 leading-relaxed">
+              <p className="font-semibold text-[#1F2348] dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">1. Acceptance of Terms</h3>
                 <p>By signing in and using NimAgent, you agree to be bound by these Terms and Conditions.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">2. Service Description</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">2. Service Description</h3>
                 <p>NimAgent is an AI-powered assistant that facilitates cryptocurrency transactions, gift card purchases, airtime top-ups, and bill payments using the Nimiq blockchain.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">3. Wallet Authentication</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">3. Wallet Authentication</h3>
                 <p>Authentication requires a cryptographic signature from your wallet. Sessions last 24 hours and can be revoked at any time.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">4. User Responsibilities</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">4. User Responsibilities</h3>
                 <ul className="list-disc pl-5 space-y-1.5 mt-2">
                   <li>You are responsible for securing your wallet and private keys</li>
                   <li>You must verify all transaction details before confirming payments</li>
                   <li>You agree not to use the service for illegal activities</li>
                   <li>You understand that blockchain transactions are irreversible</li>
                 </ul></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">5. Third-Party Services</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">5. Third-Party Services</h3>
                 <p>Gift cards, airtime, and bill payment services are provided through third-party partners.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">6. Limitation of Liability</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">6. Limitation of Liability</h3>
                 <p>NimAgent and its operators are not liable for any losses resulting from wallet compromise, transaction errors, network issues, or third-party service failures.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">7. Modifications</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">7. Modifications</h3>
                 <p>We reserve the right to modify these terms at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-gray-200 dark:border-white/[0.08]">
+            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-[#1F2348]/10 dark:border-white/[0.08]">
               <Button
                 onClick={() => setShowTerms(false)}
                 variant="gold"
@@ -170,17 +170,17 @@ export default function SignInPage() {
           onClick={() => setShowPrivacy(false)}>
           <div className="rounded-[10px] max-w-lg w-full max-h-[80vh] overflow-hidden shadow-2xl animate-modal-in glass-strong"
             onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-gray-200 dark:border-white/[0.08]">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-[#1F2348]/10 dark:border-white/[0.08]">
+              <h2 className="text-lg font-bold text-[#1F2348] dark:text-white">Privacy Policy</h2>
               <button onClick={() => setShowPrivacy(false)} 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
                 <Icon name="close" size={18} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
-              <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Data We Collect</h3>
+            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-[#1F2348] dark:text-white/70 leading-relaxed">
+              <p className="font-semibold text-[#1F2348] dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">1. Data We Collect</h3>
                 <p>We collect minimal data required to provide our services:</p>
                 <ul className="list-disc pl-5 space-y-1.5 mt-2">
                   <li>Wallet Address: Your public Nimiq wallet address</li>
@@ -188,26 +188,26 @@ export default function SignInPage() {
                   <li>Chat History: AI conversation history</li>
                   <li>Session Data: 24-hour authentication cookies</li>
                 </ul></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">2. Data We Do NOT Collect</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">2. Data We Do NOT Collect</h3>
                 <ul className="list-disc pl-5 space-y-1.5">
                   <li>No private keys or wallet seeds</li>
                   <li>No personal identification</li>
                   <li>No location tracking</li>
                   <li>No third-party analytics</li>
                 </ul></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">3. How We Use Your Data</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">3. How We Use Your Data</h3>
                 <ul className="list-disc pl-5 space-y-1.5">
                   <li>Process and fulfill transactions</li>
                   <li>Provide transaction history</li>
                   <li>Maintain chat sessions</li>
                   <li>Prevent fraud</li>
                 </ul></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">4. Data Security</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">4. Data Security</h3>
                 <p>We implement industry-standard security measures including encrypted HTTPS, secure session cookies, and server-side validation.</p></section>
-              <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">5. Your Rights</h3>
+              <section><h3 className="font-bold text-base text-[#1F2348] dark:text-white mb-2">5. Your Rights</h3>
                 <p>You have the right to access, delete, and revoke authentication at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-gray-200 dark:border-white/[0.08]">
+            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-[#1F2348]/10 dark:border-white/[0.08]">
               <Button
                 onClick={() => setShowPrivacy(false)}
                 variant="gold"
@@ -222,3 +222,6 @@ export default function SignInPage() {
     </div>
   );
 }
+
+
+

@@ -71,7 +71,7 @@ export default function Button({
       disabled: 'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:bg-gray-100',
     },
     ghost: {
-      base: 'bg-transparent text-gray-700 dark:text-white/70 font-semibold',
+      base: 'bg-transparent text-[#1F2348] dark:text-white/70 font-semibold',
       hover: 'hover:bg-gray-100 dark:hover:bg-white/5',
       active: 'active:bg-gray-200 dark:active:bg-white/10',
       focus: 'focus:outline-none focus:ring-3 focus:ring-gray-300/25 dark:focus:ring-white/10',

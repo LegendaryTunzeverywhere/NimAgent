@@ -38,50 +38,50 @@ export default function NimiqPayRequired() {
   return (
     <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
-        <div className="w-full rounded-[2rem] border border-amber-200/80 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+        <div className="w-full rounded-[2rem] border border-[#E9B213]/20 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
 
-          <div className="inline-flex rounded-full border border-amber-300 dark:border-gold/30 bg-amber-100 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-800 dark:text-gold">
+          <div className="inline-flex rounded-full border border-[#E9B213]/30 dark:border-gold/30 bg-[#E9B213]/10 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#E9B213] dark:text-gold">
             Nimiq Pay Required
           </div>
 
-          <h1 className="mt-4 text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-2xl font-black tracking-tight text-[#1F2348] dark:text-white">
             Open NimAgent in Nimiq Pay
           </h1>
-          <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-white/65">
+          <p className="mt-3 text-sm leading-6 text-[#1F2348]/80 dark:text-white/65">
             {hasParams
               ? 'You have a payment or referral link. Open it inside Nimiq Pay\'s browser to continue.'
               : 'NimAgent runs inside Nimiq Pay\'s built-in browser. Follow the steps below to get started.'}
           </p>
 
           {/* Steps */}
-          <div className="mt-5 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-4 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">
+          <div className="mt-5 rounded-2xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.02] p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45">
               How To Access
             </p>
             {[
-              { n: '1', text: <>Install or open the <strong className="text-gray-900 dark:text-white">Nimiq Pay</strong> app.</> },
-              { n: '2', text: <>Tap the <strong className="text-gray-900 dark:text-white">buttom right corner</strong> inside Nimiq Pay.</> },
+              { n: '1', text: <>Install or open the <strong className="text-[#1F2348] dark:text-white">Nimiq Pay</strong> app.</> },
+              { n: '2', text: <>Tap the <strong className="text-[#1F2348] dark:text-white">buttom right corner</strong> inside Nimiq Pay.</> },
               { n: '3', text: hasParams
                 ? <>Paste the link you just copied into the address bar.</>
-                : <>Navigate to <strong className="text-amber-700 dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below.</> },
+                : <>Navigate to <strong className="text-[#E9B213] dark:text-gold font-mono text-xs">nimagent.online</strong> — or copy the link below.</> },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
-                <p className="text-sm text-gray-700 dark:text-white/70 leading-relaxed">{text}</p>
+                <span className="w-5 h-5 rounded-full bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
+                <p className="text-sm text-[#1F2348] dark:text-white/70 leading-relaxed">{text}</p>
               </div>
             ))}
           </div>
 
           {/* URL display */}
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 px-3 py-2.5">
-            <p className="flex-1 text-xs font-mono text-gray-700 dark:text-white/70 truncate">{currentUrl}</p>
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/5 px-3 py-2.5">
+            <p className="flex-1 text-xs font-mono text-[#1F2348] dark:text-white/70 truncate">{currentUrl}</p>
             <button
               type="button"
               onClick={copyLink}
               className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                 copied
                   ? 'bg-green-500/15 text-green-600 dark:text-green-400'
-                  : 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold hover:bg-amber-200 dark:hover:bg-gold/25'
+                  : 'bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] dark:text-gold hover:bg-[#E9B213]/20 dark:hover:bg-gold/25'
               }`}
             >
               {copied ? '✓ Copied' : 'Copy'}
@@ -99,13 +99,13 @@ export default function NimiqPayRequired() {
             <button
               type="button"
               onClick={() => openExternalUrl(X_URL)}
-              className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] py-3 text-sm font-semibold text-gray-900 dark:text-white"
+              className="w-full rounded-2xl border border-[#1F2348]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] py-3 text-sm font-semibold text-[#1F2348] dark:text-white"
             >
               Follow @nimiqagent on X
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-gray-500 dark:text-white/40 text-center">
+          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/40 text-center">
             NimAgent will be available as a registered Nimiq Pay mini app soon.
           </p>
         </div>

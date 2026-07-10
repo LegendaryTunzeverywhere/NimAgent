@@ -145,15 +145,15 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 function LoadingSkeleton() {
   return (
     <ThemeProvider>
-      <main className="min-h-screen bg-white dark:bg-[#0F1219] px-5 py-8">
+      <main className="min-h-screen bg-[#FAFAFA] dark:bg-[#0F1219] px-5 py-8">
         <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
-          <div className="w-full rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-8">
+          <div className="w-full rounded-[2rem] border border-[#1F2348]/10 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-8 shadow-lg">
             <div className="flex flex-col items-center justify-center py-8">
               <LoadingSpinner size="lg" />
-              <p className="mt-4 text-sm font-semibold text-gray-700 dark:text-white/75">
+              <p className="mt-4 text-sm font-semibold text-[#1F2348] dark:text-white/75">
                 Connecting to Nimiq Pay...
               </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-white/55">
+              <p className="mt-1 text-xs text-[#1F2348]/60 dark:text-white/55">
                 Please wait while we detect your environment
               </p>
             </div>

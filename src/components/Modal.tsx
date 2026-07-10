@@ -84,14 +84,14 @@ export default function Modal({
       {/* Panel - Nimiq glass surface with 10px radius */}
       <div className={`relative w-full ${maxWidth} glass-strong rounded-[10px] shadow-2xl animate-modal-in`}>
         {(title || subtitle) && (
-          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-gray-200 dark:border-white/[0.08]">
+          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-[#1F2348]/10 dark:border-white/[0.08]">
             <div>
-              {title && <h3 className="text-base font-bold text-gray-900 dark:text-white">{title}</h3>}
-              {subtitle && <p className="text-xs text-gray-600 dark:text-white/60 mt-0.5">{subtitle}</p>}
+              {title && <h3 className="text-base font-bold text-[#1F2348] dark:text-white">{title}</h3>}
+              {subtitle && <p className="text-xs text-[#1F2348]/70 dark:text-white/70/60 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/60/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
               style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}
               aria-label="Close"
             >
@@ -106,7 +106,7 @@ export default function Modal({
         <div className="px-6 py-5">{children}</div>
 
         {footer && (
-          <div className="px-6 pb-5 pt-2 flex gap-2 justify-end border-t border-gray-200 dark:border-white/[0.08]">{footer}</div>
+          <div className="px-6 pb-5 pt-2 flex gap-2 justify-end border-t border-[#1F2348]/10 dark:border-white/[0.08]">{footer}</div>
         )}
       </div>
     </div>

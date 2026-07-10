@@ -206,7 +206,7 @@ export default function AuthProvider() {
         className={`rounded-xl border shadow-lg px-3.5 py-2.5 flex items-center gap-2.5 ${
           authStatus === 'error'
             ? 'border-red-300/80 dark:border-error/25 bg-red-50 dark:bg-[#1c0000] cursor-pointer hover:bg-red-100 dark:hover:bg-[#2c0000] transition-colors'
-            : 'border-amber-300/80 dark:border-gold/25 bg-amber-50 dark:bg-[#1c1200] pointer-events-none'
+            : 'border-amber-300/80 dark:border-gold/25 bg-[#E9B213]/10 dark:bg-[#1c1200] pointer-events-none'
         }`}
         onClick={authStatus === 'error' ? handleSignIn : undefined}
       >
@@ -229,7 +229,7 @@ export default function AuthProvider() {
               <p className="text-xs font-semibold text-amber-900 dark:text-gold leading-snug">
                 Waiting for signature...
               </p>
-              <p className="text-[10px] text-amber-700 dark:text-gold/70 mt-0.5">
+              <p className="text-[10px] text-[#E9B213] dark:text-gold/70 mt-0.5">
                 Check Nimiq Pay for a secure signature request
               </p>
             </div>

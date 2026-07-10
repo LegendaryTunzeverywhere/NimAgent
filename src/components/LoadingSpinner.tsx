@@ -29,10 +29,10 @@ export default function LoadingSpinner({
     lg: 'w-10 h-10 border-3',
   };
 
-  // Color mappings - using Nimiq brand colors
+  // Color mappings - using Nimiq brand colors with better visibility
   const colorMap = {
-    gold: 'border-[#E9B213]/30 border-t-[#E9B213]',
-    blue: 'border-[#0582CA]/30 border-t-[#0582CA]',
+    gold: 'border-[#E9B213]/20 dark:border-[#E9B213]/30 border-t-[#E9B213]',
+    blue: 'border-[#0582CA]/20 dark:border-[#0582CA]/30 border-t-[#0582CA]',
     white: 'border-white/30 border-t-white',
     current: 'border-current/30 border-t-current',
   };
@@ -75,11 +75,11 @@ export function PageLoading({ message = 'Loading...', submessage }: PageLoadingP
   return (
     <div className="flex flex-col items-center justify-center py-10">
       <LoadingSpinner size="lg" />
-      <p className="mt-4 text-sm font-semibold text-gray-700 dark:text-white/75">
+      <p className="mt-4 text-sm font-semibold text-[#1F2348] dark:text-white/75">
         {message}
       </p>
       {submessage && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-white/55">
+        <p className="mt-1 text-xs text-[#1F2348]/60 dark:text-white/55">
           {submessage}
         </p>
       )}

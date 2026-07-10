@@ -344,21 +344,21 @@ export default function ChatPage() {
     >
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#0F1219] z-10">
+      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-[#1F2348]/10 dark:border-white/10 bg-white dark:bg-[#0F1219] z-10">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-blue-600 dark:bg-brand-blue flex items-center justify-center">
             <Icon name="robot" size={14} strokeWidth={2.2} className="text-white" />
           </div>
-          <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">AI Chat</span>
+          <span className="text-sm font-bold text-[#1F2348] dark:text-white tracking-tight">AI Chat</span>
         </div>
 
         <div className="flex items-center gap-1.5">
           {/* History / New */}
-          <div className="flex items-center rounded-full border border-gray-300 dark:border-white/12 overflow-hidden bg-gray-100 dark:bg-white/[0.05]">
+          <div className="flex items-center rounded-full border border-[#1F2348]/20 dark:border-white/12 overflow-hidden bg-white/80 dark:bg-white/[0.05]">
             <button
               onClick={() => { showSessions ? setShowSessions(false) : (fetchSessions(), setShowSessions(true)); }}
               disabled={!wallet.connected}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/70 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Icon name="history" size={12} strokeWidth={2.2} />
               <span className="hidden sm:inline">History</span>
@@ -371,7 +371,7 @@ export default function ChatPage() {
                 if (useAppStore.getState().messages.length > 0) clearMessages();
                 await addMessage({ role: 'ai', content: "Hi, I'm your NimAgent. Just ask in plain language what you'd like to do." });
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/70 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
               title="New chat"
             >
               <Icon name="plus" size={12} strokeWidth={2.5} />
@@ -389,7 +389,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/30 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] border border-[#E9B213]/30 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>
@@ -401,8 +401,8 @@ export default function ChatPage() {
       {showSessions && (
         <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 glass-strong rounded-2xl shadow-xl overflow-hidden animate-modal-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">
-            <span className="text-sm font-bold text-gray-900 dark:text-white">Chat Sessions</span>
-            <button onClick={() => setShowSessions(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
+            <span className="text-sm font-bold text-[#1F2348] dark:text-white">Chat Sessions</span>
+            <button onClick={() => setShowSessions(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/55 hover:bg-white dark:hover:bg-white/[0.06] transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
@@ -410,7 +410,7 @@ export default function ChatPage() {
             {loadingSessions ? (
               <div className="flex items-center justify-center py-8 gap-2">
                 <LoadingSpinner size="sm" />
-                <span className="text-xs text-gray-500 dark:text-white/55">Loading...</span>
+                <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Loading...</span>
               </div>
             ) : sessions.length ? sessions.map(s => (
               <div
@@ -418,15 +418,15 @@ export default function ChatPage() {
                 onClick={() => loadSession(s.sessionId)}
                 className={`flex items-start justify-between gap-2 p-3 rounded-xl cursor-pointer transition-all ${
                   s.sessionId === currentSessionId
-                    ? 'bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/30'
-                    : 'hover:bg-gray-100 dark:hover:bg-white/[0.07] border border-transparent'
+                    ? 'bg-[#E9B213]/10 dark:bg-gold/15 border border-[#E9B213]/30 dark:border-gold/30'
+                    : 'hover:bg-white dark:hover:bg-white/[0.07] border border-transparent'
                 }`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 dark:text-white/90 truncate font-medium">{s.lastMessage}</p>
-                  <p className="text-[11px] text-gray-500 dark:text-white/55 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
+                  <p className="text-sm text-[#1F2348] dark:text-white/90 truncate font-medium">{s.lastMessage}</p>
+                  <p className="text-[11px] text-[#1F2348]/60 dark:text-white/55 mt-0.5">{new Date(s.lastActivity).toLocaleString()}</p>
                   {s.sessionId === currentSessionId && (
-                    <p className="text-[10px] text-amber-700 dark:text-gold font-semibold mt-1 flex items-center gap-1">
+                    <p className="text-[10px] text-[#E9B213] font-semibold mt-1 flex items-center gap-1">
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
                       Current session
                     </p>
@@ -441,8 +441,8 @@ export default function ChatPage() {
               </div>
             )) : (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-600 dark:text-white/55">No previous sessions</p>
-                <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Start chatting to create one</p>
+                <p className="text-sm text-[#1F2348]/80 dark:text-white/55">No previous sessions</p>
+                <p className="text-xs text-[#1F2348]/60 dark:text-white/55 mt-1">Start chatting to create one</p>
               </div>
             )}
           </div>
@@ -470,8 +470,8 @@ export default function ChatPage() {
               {/* Bubble */}
               <div className={`rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed break-words ${
                 msg.role === 'user'
-                  ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary font-medium rounded-br-sm'
-                  : 'bg-gray-100 dark:bg-white/[0.07] text-gray-900 dark:text-white/90 border border-gray-200 dark:border-white/[0.06] rounded-bl-sm'
+                  ? 'bg-[#E9B213] text-white dark:text-background-primary font-medium rounded-br-sm'
+                  : 'bg-white/80 dark:bg-white/[0.07] text-[#1F2348] dark:text-white/90 border border-[#1F2348]/10 dark:border-white/[0.06] rounded-bl-sm'
               }`}>
                 {msg.content.split('\n').map((line, idx) => {
                   const txMatch = line.match(/Transaction Hash[:\s]+([a-f0-9]{64})/i);
@@ -497,7 +497,7 @@ export default function ChatPage() {
                           )}
                         </div>
                         <a href={`${base}${hash}`} onClick={(e) => { e.preventDefault(); openExternalUrl(`${base}${hash}`); }}
-                          className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors break-all">
+                          className="inline-flex items-center gap-1.5 text-[11px] text-[#E9B213]/80 hover:text-[#E9B213] dark:hover:text-gold transition-colors break-all">
                           <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                           <span className="underline underline-offset-2">View on Explorer</span>
                         </a>
@@ -511,7 +511,7 @@ export default function ChatPage() {
                     if (!trusted) return <p key={idx} className="break-all">{line}</p>;
                     return (
                       <a key={idx} href={url} onClick={(e) => { e.preventDefault(); openExternalUrl(url); }}
-                        className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-gold/80 hover:text-amber-700 dark:hover:text-gold transition-colors mt-1 break-all">
+                        className="inline-flex items-center gap-1.5 text-[11px] text-[#E9B213]/80 hover:text-[#E9B213] dark:hover:text-gold transition-colors mt-1 break-all">
                         <Icon name="explorer" size={11} strokeWidth={2} className="flex-shrink-0" />
                         <span className="underline underline-offset-2">View on Explorer</span>
                       </a>
@@ -531,7 +531,7 @@ export default function ChatPage() {
                     setCopiedMessageIndex(i);
                     setTimeout(() => setCopiedMessageIndex(null), 2000);
                   }}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-[#1F2348]/60 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white/80 hover:bg-white dark:hover:bg-white/5 transition-colors"
                 >
                   {copiedMessageIndex === i ? (
                     <><Icon name="check" size={10} strokeWidth={2} /> Copied!</>
@@ -542,7 +542,7 @@ export default function ChatPage() {
                 {msg.role === 'ai' && (
                   <button
                     onClick={() => { setInput(`Re: "${msg.content.slice(0, 60).replace(/\n/g, ' ').trim()}${msg.content.length > 60 ? '…' : ''}" `); inputRef.current?.focus(); }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-[#1F2348]/60 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white/80 hover:bg-white dark:hover:bg-white/5 transition-colors"
                   >
                     <Icon name="chevron-right" size={10} strokeWidth={2} /> Reply
                   </button>
@@ -575,10 +575,10 @@ export default function ChatPage() {
             className="pointer-events-auto flex flex-col items-center gap-0.5 group"
             aria-label="Scroll to latest message"
           >
-            <span className="text-[9px] font-medium text-gray-500 dark:text-white/50 group-hover:text-gray-700 dark:group-hover:text-white/70 transition-colors">
+            <span className="text-[9px] font-medium text-[#1F2348]/60 dark:text-white/50 group-hover:text-[#1F2348] dark:group-hover:text-white/70 transition-colors">
               new messages
             </span>
-            <span className="w-7 h-7 rounded-full bg-white dark:bg-[#1c1e2e] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-gray-500 dark:text-white/65 group-hover:text-amber-600 dark:group-hover:text-gold group-hover:border-amber-300 dark:group-hover:border-gold/30 transition-all animate-scroll-hint">
+            <span className="w-7 h-7 rounded-full bg-white dark:bg-[#1c1e2e] border border-[#1F2348]/10 dark:border-white/15 shadow-md flex items-center justify-center text-[#1F2348]/60 dark:text-white/65 group-hover:text-[#E9B213] dark:group-hover:text-gold group-hover:border-[#E9B213]/30 dark:group-hover:border-gold/30 transition-all animate-scroll-hint">
               <Icon name="chevron-down" size={14} strokeWidth={2.5} />
             </span>
           </button>
@@ -593,14 +593,14 @@ export default function ChatPage() {
         {aiLoading && (
           <div className="px-1 pb-2 animate-fade-in">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex items-center gap-2 text-[12px] text-gray-600 dark:text-white/62">
+              <div className="min-w-0 flex items-center gap-2 text-[12px] text-[#1F2348]/80 dark:text-white/62">
                 <span className="relative flex h-2.5 w-2.5 flex-shrink-0 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/30 dark:bg-gold/35 animate-ping" />
-                  <span className="relative h-1.5 w-1.5 rounded-full bg-amber-600 dark:bg-gold" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#E9B213]/100/30 dark:bg-gold/35 animate-ping" />
+                  <span className="relative h-1.5 w-1.5 rounded-full bg-[#E9B213]" />
                 </span>
                 <span className="truncate">{aiStatus || 'Thinking through your request'}</span>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-white/28">
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#1F2348]/50 dark:text-white/50 dark:text-white/28">
                 AI
               </span>
             </div>
@@ -615,8 +615,8 @@ export default function ChatPage() {
           isListening
             ? 'bg-red-50 dark:bg-error/8 border-red-300 dark:border-error/30'
             : wallet.connected && wallet.authCompleted === 0
-            ? 'bg-amber-50 dark:bg-gold/8 border-amber-300 dark:border-gold/30'
-            : 'bg-gray-50 dark:bg-white/[0.04] border-gray-200 dark:border-white/[0.08] focus-within:border-amber-400 dark:focus-within:border-gold/40 focus-within:bg-white dark:focus-within:bg-white/[0.06]'
+            ? 'bg-[#E9B213]/10 dark:bg-gold/8 border-[#E9B213]/30 dark:border-gold/30'
+            : 'bg-white/60 dark:bg-white/[0.04] border-[#1F2348]/10 dark:border-white/[0.08] focus-within:border-amber-400 dark:focus-within:border-gold/40 focus-within:bg-white dark:focus-within:bg-white/[0.06]'
         }`}>
           {/* Mic button */}
           <button
@@ -625,7 +625,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
-                : 'text-gray-500 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-gray-100 dark:hover:bg-white/[0.06]'
+                : 'text-[#1F2348]/60 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-white dark:hover:bg-white/[0.06]'
             } disabled:opacity-40`}
             title={
               wallet.connected && wallet.authCompleted === 0
@@ -656,12 +656,12 @@ export default function ChatPage() {
                 ? 'Listening…'
                 : 'Ask me anything…'
             }
-            className="flex-1 bg-transparent text-[14px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-[14px] text-[#1F2348] dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none disabled:cursor-not-allowed"
           />
 
           {/* Word count (only when near limit) */}
           {wordCount > MAX_WORDS * 0.75 && input.trim() && (
-            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-gray-500 dark:text-white/50'}`}>
+            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-[#1F2348]/60 dark:text-white/50'}`}>
               {wordCount}/{MAX_WORDS}
             </span>
           )}
@@ -672,8 +672,8 @@ export default function ChatPage() {
             disabled={!input.trim() || aiLoading || isOverLimit || (wallet.connected && wallet.authCompleted === 0)}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit && !(wallet.connected && wallet.authCompleted === 0)
-                ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
-                : 'bg-gray-100 dark:bg-white/[0.05] text-gray-400 dark:text-white/35'
+                ? 'bg-[#E9B213] text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
+                : 'bg-white/80 dark:bg-white/[0.05] text-[#1F2348]/50 dark:text-white/50 dark:text-white/35'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -690,7 +690,7 @@ export default function ChatPage() {
           </p>
         )}
         {!isListening && voiceUnavailableReason && !aiLoading && (
-          <p className="text-[11px] text-amber-600 dark:text-gold text-center mt-1.5">
+          <p className="text-[11px] text-[#E9B213] text-center mt-1.5">
             {voiceUnavailableReason}
           </p>
         )}
@@ -702,18 +702,18 @@ export default function ChatPage() {
                   (window as any).__triggerManualAuth();
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 dark:bg-[#E9B213]/100 text-white hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors shadow-sm"
             >
               <Icon name="lock" size={11} strokeWidth={2} />
               Sign In to Unlock
             </button>
-            <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+            <p className="text-[11px] text-[#E9B213] dark:text-amber-400 font-medium">
               24h session
             </p>
           </div>
         )}
         {!wallet.connected && !isListening && !aiLoading && (
-          <p className="text-[11px] text-gray-500 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">
+          <p className="text-[11px] text-[#1F2348]/60 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">
             <Icon name="wallet" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
             Connect your wallet for full functionality
           </p>
@@ -730,7 +730,7 @@ export default function ChatPage() {
         footer={
           <>
             <button onClick={() => setSessionToDelete(null)} disabled={deleting}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50">
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-[#1F2348]/60 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50">
               Cancel
             </button>
             <button onClick={confirmDelete} disabled={deleting}
@@ -744,7 +744,7 @@ export default function ChatPage() {
           <span className="w-9 h-9 rounded-xl bg-error/10 border border-error/20 text-error flex items-center justify-center flex-shrink-0">
             <Icon name="delete" size={18} strokeWidth={2} />
           </span>
-          <p className="text-sm text-gray-600 dark:text-white/65 leading-relaxed pt-1">This action cannot be undone.</p>
+          <p className="text-sm text-[#1F2348]/80 dark:text-white/65 leading-relaxed pt-1">This action cannot be undone.</p>
         </div>
       </Modal>
 
@@ -753,12 +753,12 @@ export default function ChatPage() {
         <div className="max-h-[60vh] overflow-y-auto scrollbar-hide space-y-4 relative" id="commands-container">
           {ALL_COMMANDS.map(section => (
             <div key={section.category} className="space-y-1.5">
-              <p className="text-xs font-bold text-amber-600 dark:text-gold px-1">{section.category}</p>
+              <p className="text-xs font-bold text-[#E9B213] px-1">{section.category}</p>
               <div className="space-y-1">
                 {section.commands.map(cmd => (
                   <button key={cmd}
                     onClick={() => { setShowHelp(false); setInput(cmd); setTimeout(() => inputRef.current?.focus(), 80); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-[12.5px] text-gray-700 dark:text-white/70 bg-gray-50 dark:bg-white/[0.03] hover:bg-amber-50 dark:hover:bg-gold/8 hover:text-amber-700 dark:hover:text-gold border border-transparent hover:border-amber-200 dark:hover:border-gold/20 transition-all">
+                    className="w-full text-left px-3 py-2 rounded-xl text-[12.5px] text-[#1F2348] dark:text-white/70 bg-white/60 dark:bg-white/[0.03] hover:bg-[#E9B213]/10 dark:hover:bg-gold/8 hover:text-[#E9B213] dark:hover:text-gold border border-transparent hover:border-[#E9B213]/20 dark:hover:border-gold/20 transition-all">
                     "{cmd}"
                   </button>
                 ))}
@@ -773,7 +773,7 @@ export default function ChatPage() {
           </div>
           {/* Scroll hint */}
           <div className="sticky bottom-0 left-0 right-0 flex justify-center pt-2 pb-1 pointer-events-none">
-            <span className="animate-scroll-hint text-gray-500 dark:text-white/50">
+            <span className="animate-scroll-hint text-[#1F2348]/60 dark:text-white/50">
               <Icon name="chevron-down" size={16} strokeWidth={2.5} />
             </span>
           </div>
@@ -788,27 +788,27 @@ export default function ChatPage() {
         subtitle="Your intelligent crypto assistant"
       >
         <div className="max-h-[70vh] overflow-y-auto scrollbar-hide space-y-5 relative" id="onboarding-container">
-          <p className="text-sm text-gray-600 dark:text-white/75 leading-relaxed">
+          <p className="text-sm text-[#1F2348]/80 dark:text-white/75 leading-relaxed">
             Chat naturally to manage crypto — send NIM, buy gift cards, top up airtime, pay bills, and more. No menus, no jargon.
           </p>
 
           <div className="grid grid-cols-2 gap-2.5">
             {[
               { icon: 'send'      as IconName, title: 'Send & Receive',  desc: 'Instant, feeless',        color: 'text-blue-600 dark:text-blue-400',    bg: 'bg-blue-100 dark:bg-blue-500/15',   border: 'border-blue-200 dark:border-blue-500/20' },
-              { icon: 'gift-card' as IconName, title: 'Gift Cards',       desc: 'Amazon, Steam & more',    color: 'text-amber-600 dark:text-gold',       bg: 'bg-amber-100 dark:bg-gold/15',      border: 'border-amber-200 dark:border-gold/20' },
+              { icon: 'gift-card' as IconName, title: 'Gift Cards',       desc: 'Amazon, Steam & more',    color: 'text-[#E9B213]',       bg: 'bg-[#E9B213]/10 dark:bg-gold/15',      border: 'border-[#E9B213]/20 dark:border-gold/20' },
               { icon: 'airtime'   as IconName, title: 'Mobile Top-ups',   desc: 'Airtime & data globally', color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-100 dark:bg-green-500/15', border: 'border-green-200 dark:border-green-500/20' },
               { icon: 'bill'      as IconName, title: 'Pay Bills',         desc: 'Electricity, TV & more', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-500/15', border: 'border-purple-200 dark:border-purple-500/20' },
             ].map(f => (
               <div key={f.title} className={`p-3 rounded-xl ${f.bg} border ${f.border}`}>
                 <Icon name={f.icon} size={18} strokeWidth={2} className={`${f.color} mb-1.5`} />
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">{f.title}</p>
-                <p className="text-[11px] text-gray-600 dark:text-white/65 mt-0.5">{f.desc}</p>
+                <p className="text-sm font-semibold text-[#1F2348] dark:text-white">{f.title}</p>
+                <p className="text-[11px] text-[#1F2348]/80 dark:text-white/65 mt-0.5">{f.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-bold text-amber-600 dark:text-gold">Try saying</p>
+            <p className="text-xs font-bold text-[#E9B213]">Try saying</p>
             {[
               { q: '"Send 100 NIM to my friend"',  a: "I'll guide you through the send" },
               { q: '"Buy a $50 Steam gift card"',   a: "I'll set it up with your NIM" },
@@ -821,10 +821,10 @@ export default function ChatPage() {
                   setInput(ex.q.replace(/['"]/g, ''));
                   setTimeout(() => inputRef.current?.focus(), 80);
                 }}
-                className="w-full text-left p-3 rounded-xl bg-amber-100 dark:bg-gold/10 border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/18 transition-all group"
+                className="w-full text-left p-3 rounded-xl bg-[#E9B213]/10 dark:bg-gold/10 border border-[#E9B213]/30 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/18 transition-all group"
               >
-                <p className="text-[13px] font-semibold text-amber-700 dark:text-gold">{ex.q}</p>
-                <p className="text-[11px] text-gray-600 dark:text-white/60 mt-0.5">→ {ex.a}</p>
+                <p className="text-[13px] font-semibold text-[#E9B213]">{ex.q}</p>
+                <p className="text-[11px] text-[#1F2348]/80 dark:text-white/60 mt-0.5">→ {ex.a}</p>
               </button>
             ))}
           </div>
@@ -842,13 +842,13 @@ export default function ChatPage() {
           <div className="flex gap-2.5">
             <button
               onClick={() => { setShowOnboarding(false); setShowHelp(true); }}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-white border border-gray-300 dark:border-white/15 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-[#1F2348] dark:text-white border border-[#1F2348]/20 dark:border-white/15 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
             >
               View Commands
             </button>
             <button
               onClick={() => { setShowOnboarding(false); localStorage.setItem('nimagent_onboarding_seen', 'true'); }}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#E9B213] text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
             >
               Start Chatting
             </button>
@@ -856,7 +856,7 @@ export default function ChatPage() {
 
           {/* Scroll hint */}
           <div className="sticky bottom-0 left-0 right-0 flex justify-center pt-1 pointer-events-none">
-            <span className="animate-scroll-hint text-gray-500 dark:text-white/50">
+            <span className="animate-scroll-hint text-[#1F2348]/60 dark:text-white/50">
               <Icon name="chevron-down" size={16} strokeWidth={2.5} />
             </span>
           </div>
@@ -865,3 +865,6 @@ export default function ChatPage() {
     </div>
   );
 }
+
+
+

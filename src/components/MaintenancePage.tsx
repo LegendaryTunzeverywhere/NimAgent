@@ -6,7 +6,7 @@ export default function MaintenancePage() {
   return (
     <main className="min-h-screen bg-white dark:bg-[#0F1219] flex items-center justify-center px-5 py-8">
       <div className="mx-auto max-w-md w-full">
-        <div className="rounded-[2rem] border border-amber-200/80 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] text-center">
+        <div className="rounded-[2rem] border border-[#E9B213]/20 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] text-center">
 
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -14,36 +14,36 @@ export default function MaintenancePage() {
           </div>
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 dark:border-gold/30 bg-amber-100 dark:bg-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-amber-800 dark:text-gold mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-gold animate-pulse" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E9B213]/30 bg-[#E9B213]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#E9B213] mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E9B213] animate-pulse" />
             Under Maintenance
           </div>
 
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">
+          <h1 className="text-2xl font-black tracking-tight text-[#1F2348] dark:text-white mb-3">
             NimAgent is being updated
           </h1>
 
-          <p className="text-sm leading-6 text-gray-600 dark:text-white/65 mb-6">
+          <p className="text-sm leading-6 text-[#1F2348]/80 dark:text-white/65 mb-6">
             We&apos;re making improvements to give you a better experience.
             NimAgent will be back shortly — check back in a few minutes.
           </p>
 
           {/* Status card */}
-          <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-4 mb-6 text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45 mb-3">
+          <div className="rounded-2xl border border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.02] p-4 mb-6 text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45 mb-3">
               What&apos;s happening
             </p>
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-white/70">
+            <ul className="space-y-2 text-sm text-[#1F2348] dark:text-white/70">
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold flex items-center justify-center text-[10px] flex-shrink-0">🔧</span>
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-[#E9B213]/10 text-[#E9B213] flex items-center justify-center text-[10px] flex-shrink-0">🔧</span>
                 Scheduled maintenance in progress
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold flex items-center justify-center text-[10px] flex-shrink-0">💎</span>
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-[#E9B213]/10 text-[#E9B213] flex items-center justify-center text-[10px] flex-shrink-0">💎</span>
                 Your wallet and funds are safe
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold flex items-center justify-center text-[10px] flex-shrink-0">⚡</span>
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-[#E9B213]/10 text-[#E9B213] flex items-center justify-center text-[10px] flex-shrink-0">⚡</span>
                 We&apos;ll be back online soon
               </li>
             </ul>
@@ -58,11 +58,11 @@ export default function MaintenancePage() {
             Check Again
           </button>
 
-          <p className="mt-4 text-xs text-gray-500 dark:text-white/45">
+          <p className="mt-4 text-xs text-[#1F2348]/60 dark:text-white/45">
             Follow{' '}
             <a
               href="https://x.com/nimiqagent"
-              className="text-amber-600 dark:text-gold underline underline-offset-2"
+              className="text-[#E9B213] underline underline-offset-2"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -75,3 +75,6 @@ export default function MaintenancePage() {
     </main>
   );
 }
+
+
+

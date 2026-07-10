@@ -355,8 +355,8 @@ export default function HistoryPage() {
     <div className="max-w-lg mx-auto px-4 pt-6 space-y-4 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Icon name="history" size={20} className="text-amber-600 dark:text-gold" />
+        <h1 className="text-lg font-bold text-[#1F2348] dark:text-white flex items-center gap-2">
+          <Icon name="history" size={20} className="text-[#E9B213]" />
           Transaction History
         </h1>
         <div className="flex items-center gap-2">
@@ -367,8 +367,8 @@ export default function HistoryPage() {
                 onClick={() => setShowDateFilter(true)}
                 className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
                   startDate || endDate 
-                  ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary shadow-md' 
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/10'
+                  ? 'bg-[#E9B213] text-[#1F2348] shadow-md' 
+                  : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70 hover:bg-white dark:hover:bg-white/10 border border-[#1F2348]/10 dark:border-white/10'
                 }`}
                 title="Filter by Date"
               >
@@ -377,7 +377,7 @@ export default function HistoryPage() {
               <button
                 onClick={() => fetchTransactions(true)}
                 disabled={loading}
-                className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 text-xs text-[#E9B213] hover:text-[#FC8702] transition-colors disabled:opacity-50"
               >
                 <svg
                   width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -406,10 +406,10 @@ export default function HistoryPage() {
               container.scrollBy({ left: -150, behavior: 'smooth' });
             }
           }}
-          className="absolute left-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-r from-white dark:from-background-primary via-white/80 dark:via-background-primary/80 to-transparent flex items-center justify-center hover:from-white dark:hover:from-background-primary transition-all group"
+          className="absolute left-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-r from-[#FAFAFA] dark:from-[#0F1219] via-[#FAFAFA]/80 dark:via-[#0F1219]/80 to-transparent flex items-center justify-center hover:from-[#FAFAFA] dark:hover:from-[#0F1219] transition-all group"
           aria-label="Scroll left"
         >
-          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-gray-300 dark:border-white/20 flex items-center justify-center group-hover:bg-gray-50 dark:group-hover:bg-white/15 group-hover:scale-110 transition-all">
+          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-[#1F2348]/20 dark:border-white/20 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-white/15 group-hover:scale-110 transition-all">
             <svg
               width="14"
               height="14"
@@ -419,7 +419,7 @@ export default function HistoryPage() {
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-gray-600 dark:text-white/80"
+              className="text-[#1F2348]/80 dark:text-white/80"
             >
               <polyline points="15 18 9 12 15 6" />
             </svg>
@@ -434,10 +434,10 @@ export default function HistoryPage() {
               container.scrollBy({ left: 150, behavior: 'smooth' });
             }
           }}
-          className="absolute right-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-l from-white dark:from-background-primary via-white/80 dark:via-background-primary/80 to-transparent flex items-center justify-center hover:from-white dark:hover:from-background-primary transition-all group"
+          className="absolute right-0 top-0 bottom-0 w-10 z-20 bg-gradient-to-l from-[#FAFAFA] dark:from-[#0F1219] via-[#FAFAFA]/80 dark:via-[#0F1219]/80 to-transparent flex items-center justify-center hover:from-[#FAFAFA] dark:hover:from-[#0F1219] transition-all group"
           aria-label="Scroll right"
         >
-          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-amber-300 dark:border-gold/30 flex items-center justify-center group-hover:bg-amber-100 dark:group-hover:bg-gold/15 group-hover:scale-110 transition-all animate-pulse">
+          <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-md border border-[#E9B213]/30 flex items-center justify-center group-hover:bg-[#E9B213]/10 dark:group-hover:bg-[#E9B213]/15 group-hover:scale-110 transition-all animate-pulse">
             <svg
               width="14"
               height="14"
@@ -447,7 +447,7 @@ export default function HistoryPage() {
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-amber-600 dark:text-gold"
+              className="text-[#E9B213]"
             >
               <polyline points="9 18 15 12 9 6" />
             </svg>
@@ -461,8 +461,8 @@ export default function HistoryPage() {
             onClick={() => setFilter(filterOption)}
             className={`rounded-full px-3 sm:px-4 py-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
               filter === filterOption
-                ? 'bg-amber-600 dark:bg-gold text-white dark:text-background-primary'
-                : 'glass text-gray-600 dark:text-white/65 hover:text-gray-800 dark:hover:text-white/70'
+                ? 'bg-[#E9B213] text-[#1F2348]'
+                : 'glass text-[#1F2348]/70 dark:text-white/65 hover:text-[#1F2348] dark:hover:text-white/70'
             }`}
           >
             {filterOption}
@@ -477,21 +477,21 @@ export default function HistoryPage() {
           <div className="max-w-md w-full card-premium rounded-3xl p-5 animate-fade-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Icon name="calendar" size={20} className="text-amber-600 dark:text-gold" />
-                <p className="text-sm font-bold text-gray-900 dark:text-white">Date Range Filter</p>
+                <Icon name="calendar" size={20} className="text-[#E9B213] dark:text-gold" />
+                <p className="text-sm font-bold text-[#1F2348] dark:text-white">Date Range Filter</p>
               </div>
               <button
                 onClick={() => setShowDateFilter(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+                className="w-8 h-8 rounded-xl bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10 flex items-center justify-center hover:bg-white dark:hover:bg-white/10 transition-all"
               >
-                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
+                <Icon name="chevron-right" size={14} className="rotate-90 text-[#1F2348]/60 dark:text-white/60" />
               </button>
             </div>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 dark:text-white/60">From</label>
+                  <label className="text-[10px] text-[#1F2348]/60 dark:text-white/60 font-semibold uppercase tracking-wide">From</label>
                   <div className="relative">
                     <input
                       type="date"
@@ -510,12 +510,12 @@ export default function HistoryPage() {
                         }
                         setStartDate(newStart);
                       }}
-                      className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-white/5 border border-[#1F2348]/20 dark:border-white/20 text-[#1F2348] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E9B213]"
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 dark:text-white/60">To</label>
+                  <label className="text-[10px] text-[#1F2348]/60 dark:text-white/60 font-semibold uppercase tracking-wide">To</label>
                   <div className="relative">
                     <input
                       type="date"
@@ -534,7 +534,7 @@ export default function HistoryPage() {
                         }
                         setEndDate(newEnd);
                       }}
-                      className="w-full px-3 py-2 rounded-xl text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-gold"
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-white/5 border border-[#1F2348]/20 dark:border-white/20 text-[#1F2348] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E9B213]"
                     />
                   </div>
                 </div>
@@ -549,7 +549,7 @@ export default function HistoryPage() {
                     setStartDate(weekAgo.toISOString().split('T')[0]);
                     setEndDate(now.toISOString().split('T')[0]);
                   }}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-[#E9B213]/10 text-[#E9B213] hover:bg-[#E9B213]/20 border border-[#E9B213]/20 transition-all"
                 >
                   Last 7 days
                 </button>
@@ -561,7 +561,7 @@ export default function HistoryPage() {
                     setStartDate(monthAgo.toISOString().split('T')[0]);
                     setEndDate(now.toISOString().split('T')[0]);
                   }}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-[#E9B213]/10 text-[#E9B213] hover:bg-[#E9B213]/20 border border-[#E9B213]/20 transition-all"
                 >
                   Last 30 days
                 </button>
@@ -573,7 +573,7 @@ export default function HistoryPage() {
                     setStartDate(fourMonthsAgo.toISOString().split('T')[0]);
                     setEndDate(now.toISOString().split('T')[0]);
                   }}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-gold hover:bg-amber-100 dark:hover:bg-gold/20 transition-all"
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-[#E9B213]/10 text-[#E9B213] hover:bg-[#E9B213]/20 border border-[#E9B213]/20 transition-all"
                 >
                   Last 4 months
                 </button>
@@ -582,7 +582,7 @@ export default function HistoryPage() {
                     setStartDate('');
                     setEndDate('');
                   }}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-white/80 dark:bg-white/10 border border-[#1F2348]/10 dark:border-white/10 text-[#1F2348]/70 dark:text-white/70 hover:bg-white dark:hover:bg-white/20 transition-all"
                 >
                   Reset
                 </button>
@@ -593,7 +593,7 @@ export default function HistoryPage() {
                   fetchTransactions(true);
                   setShowDateFilter(false);
                 }}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold bg-amber-600 dark:bg-gold text-white dark:text-background-primary hover:bg-amber-700 dark:hover:bg-gold-bright transition-all"
+                className="w-full py-2.5 rounded-xl text-xs font-semibold bg-[#E9B213] text-[#1F2348] hover:bg-[#FC8702] transition-all"
               >
                 Apply Filter
               </button>
@@ -615,7 +615,7 @@ export default function HistoryPage() {
                 <div key={tx.id} className="card-premium rounded-2xl overflow-hidden">
                   <div
                     onClick={() => setExpandedTx(expandedTx === tx.id ? null : tx.id)}
-                    className="px-4 py-4 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all cursor-pointer"
+                    className="px-4 py-4 flex items-center gap-3 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/[0.04] transition-all cursor-pointer"
                   >
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -628,16 +628,16 @@ export default function HistoryPage() {
                       <Icon name={TRANSACTION_ICONS[tx.type] || 'wallet'} size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-semibold text-[#1F2348] dark:text-white truncate">
                         {getTransactionLabel(tx)}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-gray-500 dark:text-white/65">{formatDate(tx.created_at)}</p>
+                        <p className="text-xs text-[#1F2348]/60 dark:text-white/65">{formatDate(tx.created_at)}</p>
                         <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-success/12 text-success">
                           <Icon name="check" size={9} strokeWidth={3} /> {tx.status}
                         </span>
                         {tx.cashback && (
-                          <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-amber-500/10 text-amber-600 dark:text-gold border border-amber-500/20 dark:border-gold/20">
+                          <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-[#E9B213]/10 text-[#E9B213] border border-[#E9B213]/20">
                             +{tx.cashback.amount_nim < 0.01
                               ? tx.cashback.amount_nim.toFixed(4)
                               : tx.cashback.amount_nim.toFixed(2)} NIM back
@@ -656,7 +656,7 @@ export default function HistoryPage() {
                         {formatAmount(tx.amount_luna, tx.type)}
                       </p>
                       {tx.tx_hash && (
-                        <p className="text-xs text-gray-500 dark:text-white/65 mt-0.5 font-mono">
+                        <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-0.5 font-mono">
                           {tx.tx_hash.slice(0, 6)}...
                         </p>
                       )}
@@ -666,30 +666,30 @@ export default function HistoryPage() {
                         name="chevron-down"
                         size={16}
                         strokeWidth={2}
-                        className={`text-gray-500 dark:text-white/65 transition-transform ${expandedTx === tx.id ? 'rotate-180' : ''}`}
+                        className={`text-[#1F2348]/60 dark:text-white/65 transition-transform ${expandedTx === tx.id ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </div>
                   
                   {/* Expanded Details */}
                   {expandedTx === tx.id && (
-                    <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-white/5 space-y-2 animate-fade-up">
+                    <div className="px-4 pb-4 pt-2 border-t border-[#1F2348]/10 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Type:</span>
-                        <span className="text-xs text-gray-700 dark:text-white/80 capitalize">{tx.type.replace('-', ' ')}</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Type:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/80 capitalize">{tx.type.replace('-', ' ')}</span>
                       </div>
                       {tx.from_address && (
                         <div className="flex justify-between items-start gap-2">
-                          <span className="text-xs text-gray-500 dark:text-white/55">From:</span>
-                          <span className="text-xs text-gray-700 dark:text-white/80 font-mono text-right break-all">
+                          <span className="text-xs text-[#1F2348]/60 dark:text-white/55">From:</span>
+                          <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono text-right break-all">
                             {tx.from_address}
                           </span>
                         </div>
                       )}
                       {tx.to_address && (
                         <div className="flex justify-between items-start gap-2">
-                          <span className="text-xs text-gray-500 dark:text-white/55">To:</span>
-                          <span className="text-xs text-gray-700 dark:text-white/80 font-mono text-right break-all">
+                          <span className="text-xs text-[#1F2348]/60 dark:text-white/55">To:</span>
+                          <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono text-right break-all">
                             {tx.to_address}
                           </span>
                         </div>
@@ -699,14 +699,14 @@ export default function HistoryPage() {
                         <>
                           {tx.details.product && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Product:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.details.product}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Product:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80">{tx.details.product}</span>
                             </div>
                           )}
                           {tx.details.recipientEmail && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Sent to:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.details.recipientEmail}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Sent to:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80">{tx.details.recipientEmail}</span>
                             </div>
                           )}
                           {tx.fulfillment_data?.code && (
@@ -757,10 +757,10 @@ export default function HistoryPage() {
                                     <p className="text-[10px] text-emerald-600/60 dark:text-emerald-400/50">⚠️ Keep this safe</p>
                                   </>
                                 ) : retrieval?.error ? (
-                                  <p className="text-[10px] text-amber-600 dark:text-gold">{retrieval.error}</p>
+                                  <p className="text-[10px] text-[#E9B213] dark:text-gold">{retrieval.error}</p>
                                 ) : (
                                   <>
-                                    <p className="text-[10px] text-gray-500 dark:text-white/55">Redemption code not yet available</p>
+                                    <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55">Redemption code not yet available</p>
                                     <button
                                       onClick={(e) => { e.stopPropagation(); handleRetrieveCode(tx.id); }}
                                       disabled={retrieval?.loading}
@@ -779,20 +779,20 @@ export default function HistoryPage() {
                         <>
                           {tx.details.phone && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Phone:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.details.phone}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Phone:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">{tx.details.phone}</span>
                             </div>
                           )}
                           {tx.details.operator && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Operator:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.fulfillment_data?.operatorName || tx.details.operator}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Operator:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80">{tx.fulfillment_data?.operatorName || tx.details.operator}</span>
                             </div>
                           )}
                           {tx.fulfillment_data?.deliveredAmount && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Delivered:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Delivered:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">
                                 {tx.fulfillment_data.deliveredAmount} {tx.fulfillment_data.deliveredAmountCurrency || ''}
                               </span>
                             </div>
@@ -816,8 +816,8 @@ export default function HistoryPage() {
                           )}
                           {tx.fulfillment_data?.reference && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Ref:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Ref:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
                             </div>
                           )}
                         </>
@@ -826,14 +826,14 @@ export default function HistoryPage() {
                         <>
                           {tx.details.service && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Service:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80">{tx.details.service}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Service:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80">{tx.details.service}</span>
                             </div>
                           )}
                           {tx.details.accountNumber && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Account:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.details.accountNumber}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Account:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">{tx.details.accountNumber}</span>
                             </div>
                           )}
                           {tx.fulfillment_data?.token && (
@@ -852,28 +852,28 @@ export default function HistoryPage() {
                           )}
                           {tx.fulfillment_data?.deliveryAmount && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Units:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Units:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">
                                 {tx.fulfillment_data.deliveryAmount} {tx.fulfillment_data.deliveryAmountCurrency || ''}
                               </span>
                             </div>
                           )}
                           {tx.fulfillment_data?.reference && (
                             <div className="flex justify-between items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-white/55">Ref:</span>
-                              <span className="text-xs text-gray-700 dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
+                              <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Ref:</span>
+                              <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">{tx.fulfillment_data.reference}</span>
                             </div>
                           )}
                         </>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Amount:</span>
-                        <span className="text-xs text-gray-700 dark:text-white/80 font-mono">
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Amount:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono">
                           {(tx.amount_luna / 100000).toFixed(5)} NIM
                         </span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Status:</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">
                           {tx.status}
                         </span>
@@ -881,8 +881,8 @@ export default function HistoryPage() {
                       {tx.cashback && (
                         <div className="mt-1 rounded-xl bg-amber-500/8 dark:bg-gold/8 border border-amber-500/15 dark:border-gold/15 px-3 py-2.5 space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-semibold text-amber-700 dark:text-gold">0.1% Cashback</span>
-                            <span className="text-xs font-bold text-amber-700 dark:text-gold">
+                            <span className="text-xs font-semibold text-[#E9B213] dark:text-gold">0.1% Cashback</span>
+                            <span className="text-xs font-bold text-[#E9B213] dark:text-gold">
                               +{tx.cashback.amount_nim < 0.01
                                 ? tx.cashback.amount_nim.toFixed(4)
                                 : tx.cashback.amount_nim.toFixed(2)} NIM
@@ -894,7 +894,7 @@ export default function HistoryPage() {
                               <span className={`text-[10px] font-semibold capitalize ${
                                 tx.cashback.status === 'paid' ? 'text-success' :
                                 tx.cashback.status === 'failed' ? 'text-error' :
-                                'text-amber-600 dark:text-gold'
+                                'text-[#E9B213] dark:text-gold'
                               }`}>
                                 {tx.cashback.status === 'paid' ? '✓ Sent to wallet' :
                                  tx.cashback.status === 'failed' ? 'Failed — retrying' :
@@ -913,16 +913,16 @@ export default function HistoryPage() {
                         </div>
                       )}
                       <div className="flex justify-between items-start gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Date & Time:</span>
-                        <span className="text-xs text-gray-700 dark:text-white/80">
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Date & Time:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/80">
                           {new Date(tx.created_at).toLocaleString()}
                         </span>
                       </div>
                       {tx.tx_hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-gray-500 dark:text-white/55">TX Hash:</span>
-                            <span className="text-xs text-gray-700 dark:text-white/80 font-mono text-right break-all">
+                            <span className="text-xs text-[#1F2348]/60 dark:text-white/55">TX Hash:</span>
+                            <span className="text-xs text-[#1F2348] dark:text-white/80 font-mono text-right break-all">
                               {tx.tx_hash}
                             </span>
                           </div>
@@ -931,7 +931,7 @@ export default function HistoryPage() {
                               e.stopPropagation();
                               openExplorer(tx.tx_hash!);
                             }}
-                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
+                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-[#E9B213]/20 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
                           </button>
@@ -944,11 +944,11 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="card-premium rounded-2xl p-10 text-center">
-              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-500 dark:text-white/65">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-[#1F2348]/60 dark:text-white/65">
                 <Icon name="history" size={26} />
               </div>
-              <p className="text-sm text-gray-600 dark:text-white/60">No transactions yet</p>
-              <p className="text-xs text-gray-500 dark:text-white/55 mt-1">
+              <p className="text-sm text-[#1F2348]/70 dark:text-white/60">No transactions yet</p>
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/55 mt-1">
                 Your transaction history will appear here
               </p>
             </div>
@@ -956,11 +956,11 @@ export default function HistoryPage() {
         </>
       ) : (
         <div className="card-premium rounded-2xl p-10 text-center">
-          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-100 dark:bg-gold/10 flex items-center justify-center text-amber-600 dark:text-gold">
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#E9B213]/20 dark:bg-gold/10 flex items-center justify-center text-[#E9B213] dark:text-gold">
             <Icon name="wallet" size={26} />
           </div>
-          <p className="text-sm text-gray-600 dark:text-white/60 mb-2">Connect your wallet</p>
-          <p className="text-xs text-gray-500 dark:text-white/55">
+          <p className="text-sm text-[#1F2348]/70 dark:text-white/60 mb-2">Connect your wallet</p>
+          <p className="text-xs text-[#1F2348]/60 dark:text-white/55">
             Connect your wallet to view your transaction history
           </p>
         </div>
@@ -971,21 +971,21 @@ export default function HistoryPage() {
         <div className="card-premium rounded-2xl p-3">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Total Sent</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Total Sent</p>
               <p className="text-base font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
-              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65">NIM</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Total Received</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Total Received</p>
               <p className="text-base font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
-              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65">NIM</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-0.5">Net Change</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Net Change</p>
               <p className={`text-base font-bold tabular-nums ${stats.netChange >= 0 ? 'text-success' : 'text-error'}`}>
                 {stats.netChange >= 0 ? '+' : ''}{stats.netChange.toFixed(2)}
               </p>
-              <p className="text-[10px] text-gray-500 dark:text-white/65">NIM</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65">NIM</p>
             </div>
           </div>
         </div>
@@ -993,3 +993,4 @@ export default function HistoryPage() {
     </div>
   );
 }
+

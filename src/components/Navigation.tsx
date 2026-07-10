@@ -16,14 +16,14 @@ export default function Navigation() {
           <Logo size={34} glow />
           <div className="flex flex-col leading-none min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="font-bold text-gray-900 dark:text-white text-[17px] tracking-tight">
+              <span className="font-bold text-[#1F2348] dark:text-white text-[17px] tracking-tight">
                 Nim<span className="text-[#E9B213]">Agent</span>
               </span>
               <span className="shrink-0 rounded-full border border-[#E9B213]/35 bg-[#E9B213]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#E9B213] shadow-[0_0_0_1px_rgba(233,178,19,0.08)]">
                 Beta
               </span>
             </div>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-white/50 mt-0.5">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#1F2348]/60 dark:text-white/60/50 mt-0.5">
               AI Payments
             </span>
           </div>
@@ -39,7 +39,7 @@ export default function Navigation() {
 
           <button
             onClick={() => setShowSettings(true)}
-            className="glass rounded-full p-2 text-gray-500 dark:text-white/50 hover:text-[#E9B213] hover:border-[#E9B213]/30 transition-all duration-200"
+            className="glass rounded-full p-2 text-[#1F2348]/60 dark:text-white/60/50 hover:text-[#E9B213] hover:border-[#E9B213]/30 transition-all duration-200"
             style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
             aria-label="Settings"
           >
@@ -69,3 +69,4 @@ export default function Navigation() {
     </>
   );
 }
+

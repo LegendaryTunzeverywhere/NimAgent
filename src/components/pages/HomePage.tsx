@@ -513,21 +513,21 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
-      <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.08] rounded-[10px] p-7 relative overflow-hidden shadow-sm">
+      <div className="animate-fade-up glass dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.08] rounded-[10px] p-7 relative overflow-hidden shadow-sm">
         <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-lg bg-[#E9B213]/15 border border-[#E9B213]/25 flex items-center justify-center text-[#E9B213]">
                 <Icon name="wallet" size={15} />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-white/55">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#1F2348]/60 dark:text-white/55">
                 Total Balance
               </span>
             </div>
             {wallet.connected && (
               <button
                 onClick={disconnectWallet}
-                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/65 border border-gray-200 dark:border-white/10 hover:bg-[#D94432]/10 hover:text-[#D94432] hover:border-[#D94432]/25 transition-all"
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-white/80 dark:bg-white/5 text-[#1F2348]/80 dark:text-white/65 border border-[#1F2348]/10 dark:border-white/10 hover:bg-[#D94432]/10 hover:text-[#D94432] hover:border-[#D94432]/25 transition-all"
                 style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
                 title="Disconnect Wallet"
               >
@@ -540,13 +540,13 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           {wallet.balance ? (
             <>
               <div className="mb-2 flex items-baseline gap-2">
-                <span className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter tabular-nums">
+                <span className="text-5xl font-black text-[#1F2348] dark:text-white tracking-tighter tabular-nums">
                   {wallet.balance.nim.balanceFormatted}
                 </span>
                 <span className="text-lg font-bold text-[#E9B213]">NIM</span>
               </div>
               <div className="flex items-center gap-2 mb-8">
-                <span className="text-sm text-gray-500 dark:text-white/55 font-mono">
+                <span className="text-sm text-[#1F2348]/60 dark:text-white/55 font-mono">
                   ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
@@ -625,20 +625,20 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
         <>
           <div className="grid grid-cols-2 gap-3 animate-fade-up-delay-1 -mt-2">
             <div className="card-premium rounded-[10px] p-5 text-center">
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
+              <p className="text-lg font-bold text-[#1F2348] dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
               {priceChange != null ? (
                 <p className={`text-xs mt-1 font-semibold ${priceChange >= 0 ? 'text-success' : 'text-error'}`}>
                   {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                 </p>
               ) : (
-                <p className="text-xs mt-1 text-gray-400 dark:text-white/30">—</p>
+                <p className="text-xs mt-1 text-[#1F2348]/50 dark:text-white/50 dark:text-white/30">—</p>
               )}
             </div>
             <div className="card-premium rounded-[10px] p-5 text-center">
-              <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
-              <p className="text-xs text-gray-500 dark:text-white/65 mt-1">
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
+              <p className="text-lg font-bold text-[#1F2348] dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-1">
                 ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
               </p>
             </div>
@@ -647,7 +647,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           
           {/* Markup Notice */}
           <div className="mt-4 card-premium rounded-[10px] p-4 text-center animate-fade-up-delay-2">
-            <p className="text-[11px] text-gray-600 dark:text-white/70 flex items-center justify-center gap-1">
+            <p className="text-[11px] text-[#1F2348]/80 dark:text-white/70 flex items-center justify-center gap-1">
               <Icon name="info" size={12} className="text-[#E9B213]" />
               Gift cards, Airtime and bills services include a small 0.5% markup to cover operational costs
             </p>
@@ -659,7 +659,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {wallet.connected && (
         <div className="animate-fade-up-delay-2 pt-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white/80 uppercase tracking-widest">
               Quick Actions
             </h2>
             <button
@@ -699,7 +699,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   >
                     <Icon name={action.icon} size={20} />
                   </span>
-                  <span className="text-[10px] font-semibold text-gray-600 dark:text-white/72 text-center leading-tight px-1">
+                  <span className="text-[10px] font-semibold text-[#1F2348]/80 dark:text-white/72 text-center leading-tight px-1">
                     {action.label}
                   </span>
                 </button>
@@ -713,7 +713,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {wallet.connected && (
         <div className="animate-fade-up-delay-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-gray-700 dark:text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white/80 uppercase tracking-widest">
               Recent Activity
             </h2>
             <button 
@@ -748,8 +748,8 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                       <Icon name={txIconFor(tx)} size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{tx.label}</p>
-                      <p className="text-xs text-gray-500 dark:text-white/55">{tx.time}</p>
+                      <p className="text-sm font-semibold text-[#1F2348] dark:text-white truncate">{tx.label}</p>
+                      <p className="text-xs text-[#1F2348]/60 dark:text-white/55">{tx.time}</p>
                     </div>
                     <p className="text-sm font-bold flex-shrink-0" style={{ color: txColor }}>{tx.amount} NIM</p>
                     <svg
@@ -761,7 +761,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={`text-gray-500 dark:text-white/65 transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
+                      className={`text-[#1F2348]/60 dark:text-white/65 transition-transform flex-shrink-0 ${expandedTx === tx.id.toString() ? 'rotate-180' : ''}`}
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
@@ -769,30 +769,30 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   
                   {/* Expanded Details */}
                   {expandedTx === tx.id.toString() && (
-                    <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-white/5 space-y-2 animate-fade-up">
+                    <div className="px-4 pb-4 pt-2 border-t border-[#1F2348]/10 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Type:</span>
-                        <span className="text-xs text-gray-700 dark:text-white/70 capitalize">{tx.category}</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Type:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/70 capitalize">{tx.category}</span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Amount:</span>
-                        <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.amount} NIM</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Amount:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono">{tx.amount} NIM</span>
                       </div>
                       {tx.usd && (
                         <div className="flex justify-between items-center gap-2">
-                          <span className="text-xs text-gray-500 dark:text-white/55">USD Value:</span>
-                          <span className="text-xs text-gray-700 dark:text-white/70 font-mono">{tx.usd}</span>
+                          <span className="text-xs text-[#1F2348]/60 dark:text-white/55">USD Value:</span>
+                          <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono">{tx.usd}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-white/55">Status:</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">{tx.status}</span>
                       </div>
                       {tx.hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-gray-500 dark:text-white/55">TX Hash:</span>
-                            <span className="text-xs text-gray-700 dark:text-white/70 font-mono text-right break-all">
+                            <span className="text-xs text-[#1F2348]/60 dark:text-white/55">TX Hash:</span>
+                            <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono text-right break-all">
                               {tx.hash}
                             </span>
                           </div>
@@ -801,7 +801,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                               e.stopPropagation();
                               openExternalUrl(`https://nimiq.watch/#${tx.hash}`);
                             }}
-                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-amber-100 dark:bg-gold/10 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-amber-100 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
+                            className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-[#E9B213]/10 dark:bg-gold/10 text-[#E9B213] border border-[#E9B213]/30 dark:border-gold/20 hover:bg-[#E9B213]/10 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
                             <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
                           </button>
@@ -823,8 +823,8 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           ) : (
             <div className="card-premium rounded-[10px] p-8 text-center">
               <div className="text-3xl mb-2 opacity-50">📊</div>
-              <p className="text-sm text-gray-600 dark:text-white/55">No recent transactions</p>
-              <p className="text-xs text-gray-500 dark:text-white/65 mt-1">Start by sending NIM or making a payment</p>
+              <p className="text-sm text-[#1F2348]/80 dark:text-white/55">No recent transactions</p>
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-1">Start by sending NIM or making a payment</p>
             </div>
           )}
         </div>
@@ -838,19 +838,19 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             <div className="flex justify-center mb-4">
               <Logo size={64} glow />
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/70 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:text-gold mb-4">
-              <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-gold" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E9B213]/30/70 dark:border-gold/25 bg-[#E9B213]/10 dark:bg-gold/10 px-3 py-1 text-[11px] font-semibold text-[#E9B213] mb-4">
+              <span className="h-2 w-2 rounded-full bg-[#E9B213]" />
               Wallet required for AI chat
             </div>
             <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
-              <h2 className="text-2xl sm:text-[2rem] font-black text-gray-900 dark:text-white text-balance">
+              <h2 className="text-2xl sm:text-[2rem] font-black text-[#1F2348] dark:text-white text-balance">
                 Welcome to Nim<span className="text-gradient-gold">Agent</span>
               </h2>
-              <span className="shrink-0 rounded-full border border-amber-300 dark:border-gold/35 bg-amber-100 dark:bg-gold/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold shadow-[0_0_0_1px_rgba(245,166,35,0.08)]">
+              <span className="shrink-0 rounded-full border border-[#E9B213]/30 dark:border-gold/35 bg-[#E9B213]/10 dark:bg-gold/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#E9B213] dark:text-gold shadow-[0_0_0_1px_rgba(245,166,35,0.08)]">
                 Beta
               </span>
             </div>
-            <p className="text-sm sm:text-[15px] text-gray-600 dark:text-white/60 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
+            <p className="text-sm sm:text-[15px] text-[#1F2348]/80 dark:text-white/60 mb-6 max-w-md mx-auto leading-relaxed text-pretty">
               Connect your wallet to unlock AI chat, send NIM, and pay for everyday services from one clean Nimiq flow.
             </p>
 
@@ -858,7 +858,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               {WELCOME_HIGHLIGHTS.map((feature) => (
                 <div
                   key={feature.title}
-                  className="flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50/90 dark:bg-white/[0.03] px-4 py-3"
+                  className="flex items-start gap-3 rounded-2xl border border-[#1F2348]/10 dark:border-white/[0.07] bg-gray-50/90 dark:bg-white/[0.03] px-4 py-3"
                 >
                   <span
                     className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
@@ -867,10 +867,10 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     <Icon name={feature.icon} size={18} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <p className="text-sm font-semibold text-[#1F2348] dark:text-white">
                       {feature.title}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-white/58">
+                    <p className="mt-1 text-xs leading-relaxed text-[#1F2348]/80 dark:text-white/58">
                       {feature.description}
                     </p>
                   </div>
@@ -889,7 +889,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             >
               {connecting ? 'Connecting to your wallet...' : 'Connect Wallet to Start'}
             </Button>
-            <p className="mt-3 text-xs text-gray-500 dark:text-white/45">
+            <p className="mt-3 text-xs text-[#1F2348]/60 dark:text-white/45">
               {connecting 
                 ? 'Please wait while we connect to Nimiq Pay...' 
                 : 'Connect once to open AI chat, view balances, and start payments.'}
@@ -901,8 +901,8 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       <div className="card-premium rounded-[10px] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">Community</p>
-            <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">Follow NimAgent</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1F2348]/60 dark:text-white/45">Community</p>
+            <p className="mt-1 text-sm font-semibold text-[#1F2348] dark:text-white">Follow NimAgent</p>
           </div>
           <div className="flex items-center gap-2">
             {SOCIAL_LINKS.map((social) => {
@@ -911,15 +911,15 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               
               // X (Twitter) uses gray/white, Discord uses Discord purple
               const getIconColor = () => {
-                if (social.icon === 'x-twitter') return 'text-gray-900 dark:text-white';
+                if (social.icon === 'x-twitter') return 'text-[#1F2348] dark:text-white';
                 if (social.icon === 'discord') return 'text-[#5865F2]';
                 return 'text-gray-400 dark:text-white/30';
               };
               
               const getBgColor = () => {
-                if (social.icon === 'x-twitter') return 'border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-white/10 hover:scale-105 hover:bg-gray-200 dark:hover:bg-white/20';
+                if (social.icon === 'x-twitter') return 'border-[#1F2348]/20 dark:border-white/20 bg-white/80 dark:bg-white/10 hover:scale-105 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/20';
                 if (social.icon === 'discord') return 'border-[#5865F2]/25 bg-[#5865F2]/10 hover:scale-105 hover:bg-[#5865F2]/20';
-                return 'border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40';
+                return 'border-dashed border-[#1F2348]/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.02] opacity-40';
               };
               
               return social.href ? (
@@ -954,44 +954,44 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-overlay-in" onClick={() => setShowReferralModal(false)}>
           <div className="max-w-md w-full flex flex-col rounded-t-[1.25rem] sm:rounded-[10px] animate-fade-up glass-strong shadow-2xl overflow-hidden" style={{ maxHeight: '88vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-0 sm:hidden"><div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-white/20" /></div>
-            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-200 dark:border-white/[0.08]">
+            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-[#1F2348]/10 dark:border-white/[0.08]">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
-                  <Icon name="gift" size={16} className="text-amber-600 dark:text-gold" />
+                <div className="w-9 h-9 rounded-lg bg-[#E9B213]/10 dark:bg-gold/15 border border-[#E9B213]/30 dark:border-gold/25 flex items-center justify-center">
+                  <Icon name="gift" size={16} className="text-[#E9B213]" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-black text-gray-900 dark:text-white">Referral Program</h2>
-                  <p className="text-[11px] text-gray-500 dark:text-white/50">Earn NIM for every qualified friend</p>
+                  <h2 className="text-sm font-black text-[#1F2348] dark:text-white">Referral Program</h2>
+                  <p className="text-[11px] text-[#1F2348]/60 dark:text-white/50">Earn NIM for every qualified friend</p>
                 </div>
               </div>
-              <button onClick={() => setShowReferralModal(false)} className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200 ml-2"
+              <button onClick={() => setShowReferralModal(false)} className="w-8 h-8 rounded-lg bg-white/80 dark:bg-white/5 flex items-center justify-center hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/10 transition-all duration-200 ml-2"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 dark:text-white/50"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#1F2348]/60 dark:text-white/50"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: 'Total', value: String(totalReferrals), color: 'text-gray-900 dark:text-white' },
+                  { label: 'Total', value: String(totalReferrals), color: 'text-[#1F2348] dark:text-white' },
                   { label: 'Qualified', value: String(qualifiedReferrals), color: 'text-success' },
-                  { label: 'Claimable', value: totalClaimableNim.toFixed(2), color: 'text-amber-600 dark:text-gold', sub: 'NIM' },
-                  { label: 'Claimed', value: totalClaimedNim.toFixed(2), color: 'text-gray-900 dark:text-white', sub: 'NIM' },
+                  { label: 'Claimable', value: totalClaimableNim.toFixed(2), color: 'text-[#E9B213]', sub: 'NIM' },
+                  { label: 'Claimed', value: totalClaimedNim.toFixed(2), color: 'text-[#1F2348] dark:text-white', sub: 'NIM' },
                 ].map(({ label, value, color, sub }) => (
-                  <div key={label} className="rounded-lg border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.03] p-2.5 text-center">
-                    <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-1">{label}</p>
+                  <div key={label} className="rounded-lg border border-[#1F2348]/10 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.03] p-2.5 text-center">
+                    <p className="text-[9px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-1">{label}</p>
                     <p className={`text-sm font-black tabular-nums ${color} leading-tight`}>{value}</p>
-                    {sub && <p className="text-[8px] font-bold text-gray-400 dark:text-white/30 mt-0.5">{sub}</p>}
+                    {sub && <p className="text-[8px] font-bold text-[#1F2348]/50 dark:text-white/50 dark:text-white/30 mt-0.5">{sub}</p>}
                   </div>
                 ))}
               </div>
-              <div className="rounded-[10px] border border-amber-200 dark:border-gold/20 bg-amber-50/60 dark:bg-gold/[0.06] p-4">
+              <div className="rounded-[10px] border border-[#E9B213]/20 dark:border-gold/20 bg-[#E9B213]/10/60 dark:bg-gold/[0.06] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-xs font-semibold text-gray-800 dark:text-white/80">Lifetime Earnings</p>
-                    <p className="text-[11px] text-gray-500 dark:text-white/50 mt-0.5">Rewards paid in real NIM</p>
+                    <p className="text-xs font-semibold text-[#1F2348] dark:text-white/80">Lifetime Earnings</p>
+                    <p className="text-[11px] text-[#1F2348]/60 dark:text-white/50 mt-0.5">Rewards paid in real NIM</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-black text-amber-600 dark:text-gold tabular-nums">{totalEarnedNim.toFixed(4)}</p>
+                    <p className="text-xl font-black text-[#E9B213] tabular-nums">{totalEarnedNim.toFixed(4)}</p>
                     <p className="text-[10px] font-bold text-amber-500 dark:text-gold/70">NIM</p>
                   </div>
                 </div>
@@ -1005,13 +1005,13 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 >
                   {totalClaimableNim > 0 ? `Claim ${totalClaimableNim.toFixed(4)} NIM` : 'No claimable rewards yet'}
                 </Button>
-                {referralClaimNotice && <p className="mt-2 text-xs text-center font-medium text-gray-600 dark:text-white/60">{referralClaimNotice}</p>}
+                {referralClaimNotice && <p className="mt-2 text-xs text-center font-medium text-[#1F2348]/80 dark:text-white/60">{referralClaimNotice}</p>}
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referral Link</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-2">Your Referral Link</p>
                 <div className="flex gap-2 items-center">
-                  <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/[0.08] rounded-lg px-3 py-2.5">
-                    <p className="text-[11px] text-gray-700 dark:text-white/70 font-mono truncate">{referralLink || 'Loading…'}</p>
+                  <div className="flex-1 min-w-0 bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/[0.08] rounded-lg px-3 py-2.5">
+                    <p className="text-[11px] text-[#1F2348] dark:text-white/70 font-mono truncate">{referralLink || 'Loading…'}</p>
                   </div>
                   <Button
                     onClick={async () => {
@@ -1029,8 +1029,8 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   </Button>
                 </div>
               </div>
-              <div className="rounded-[10px] border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-3">How It Works</p>
+              <div className="rounded-[10px] border border-[#1F2348]/10 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.02] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-3">How It Works</p>
                 <div className="space-y-2.5">
                   {[
                     { step: '1', text: 'Share your referral link with friends' },
@@ -1038,37 +1038,37 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     { step: '3', text: 'Earn NIM when they spend $1,000 total' },
                   ].map(({ step, text }) => (
                     <div key={step} className="flex items-center gap-3">
-                      <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-black flex items-center justify-center flex-shrink-0">{step}</span>
-                      <p className="text-xs text-gray-700 dark:text-white/65">{text}</p>
+                      <span className="w-5 h-5 rounded-full bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] text-[10px] font-black flex items-center justify-center flex-shrink-0">{step}</span>
+                      <p className="text-xs text-[#1F2348] dark:text-white/65">{text}</p>
                     </div>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referrals</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-2">Your Referrals</p>
                 {loadingReferral ? (
                   <div className="flex items-center justify-center gap-2 py-6">
                     <LoadingSpinner size="sm" />
-                    <p className="text-sm text-gray-500 dark:text-white/50">Loading…</p>
+                    <p className="text-sm text-[#1F2348]/60 dark:text-white/50">Loading…</p>
                   </div>
                 ) : referrals.length === 0 ? (
-                  <div className="rounded-[10px] border border-dashed border-gray-200 dark:border-white/[0.08] p-6 text-center">
+                  <div className="rounded-[10px] border border-dashed border-[#1F2348]/10 dark:border-white/[0.08] p-6 text-center">
                     <Icon name="gift" size={24} className="mx-auto text-gray-300 dark:text-white/20 mb-2" />
-                    <p className="text-sm text-gray-500 dark:text-white/50">No referrals yet</p>
-                    <p className="text-[11px] text-gray-400 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
+                    <p className="text-sm text-[#1F2348]/60 dark:text-white/50">No referrals yet</p>
+                    <p className="text-[11px] text-[#1F2348]/50 dark:text-white/50 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto overscroll-contain">
                     {referrals.map((referral: any) => (
-                      <div key={referral.id} className="rounded-lg border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-3 flex items-center justify-between gap-3">
+                      <div key={referral.id} className="rounded-lg border border-[#1F2348]/10 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.02] p-3 flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-white font-mono truncate">{referral.referred_wallet.slice(0, 8)}…{referral.referred_wallet.slice(-4)}</p>
+                          <p className="text-xs font-semibold text-[#1F2348] dark:text-white font-mono truncate">{referral.referred_wallet.slice(0, 8)}…{referral.referred_wallet.slice(-4)}</p>
                           <div className="flex items-center gap-3 mt-0.5">
-                            <p className="text-[10px] text-gray-500 dark:text-white/45">${(referral.total_spent_usd || 0).toFixed(2)} spent</p>
-                            <p className="text-[10px] text-amber-600 dark:text-gold">+{(referral.amount_earned_nim || 0).toFixed(4)} NIM</p>
+                            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/45">${(referral.total_spent_usd || 0).toFixed(2)} spent</p>
+                            <p className="text-[10px] text-[#E9B213]">+{(referral.amount_earned_nim || 0).toFixed(4)} NIM</p>
                           </div>
                         </div>
-                        <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${referral.is_qualified ? 'bg-success/10 text-success' : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-white/40'}`}>
+                        <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${referral.is_qualified ? 'bg-success/10 text-success' : 'bg-gray-200 dark:bg-white/10 text-[#1F2348]/60 dark:text-white/40'}`}>
                           {referral.is_qualified ? '✓ Qualified' : 'Pending'}
                         </span>
                       </div>
@@ -1077,7 +1077,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 )}
               </div>
             </div>
-            <div className="flex-shrink-0 px-5 py-4 border-t border-gray-200 dark:border-white/[0.08]">
+            <div className="flex-shrink-0 px-5 py-4 border-t border-[#1F2348]/10 dark:border-white/[0.08]">
               <Button
                 variant="gold"
                 fullWidth
@@ -1100,16 +1100,16 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   <Icon name="trophy" size={18} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Referral Leaderboard</h2>
-                  <p className="text-xs text-gray-500 dark:text-white/55">Top 20 referrers</p>
+                  <h2 className="text-lg font-bold text-[#1F2348] dark:text-white">Referral Leaderboard</h2>
+                  <p className="text-xs text-[#1F2348]/60 dark:text-white/55">Top 20 referrers</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowLeaderboardModal(false)}
-                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200"
+                className="w-8 h-8 rounded-lg bg-white/80 dark:bg-white/5 flex items-center justify-center hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/10 transition-all duration-200"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}
               >
-                <Icon name="close" size={14} className="text-gray-500 dark:text-white/50" />
+                <Icon name="close" size={14} className="text-[#1F2348]/60 dark:text-white/50" />
               </button>
             </div>
 
@@ -1119,7 +1119,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               <div className="space-y-3 mb-6">
                 {/* Top 3 Special Display */}
                 {leaderboard.length > 0 && (
-                  <div className="flex justify-center gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/[0.08]">
+                  <div className="flex justify-center gap-4 mb-6 pb-4 border-b border-[#1F2348]/10 dark:border-white/[0.08]">
                     {[1, 0, 2].map((pos) => {
                       const entry = leaderboard[pos];
                       if (!entry) return null;
@@ -1132,8 +1132,8 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                           }`}>
                             {pos === 0 ? '🥇' : pos === 1 ? '🥈' : '🥉'}
                           </div>
-                          <p className="text-xs font-bold text-gray-700 dark:text-white/80">{pos + 1}</p>
-                          <p className="text-[10px] font-mono text-gray-500 dark:text-white/60 truncate max-w-[60px]">
+                          <p className="text-xs font-bold text-[#1F2348] dark:text-white/80">{pos + 1}</p>
+                          <p className="text-[10px] font-mono text-[#1F2348]/60 dark:text-white/60 truncate max-w-[60px]">
                             {entry.wallet.slice(0, 4)}...{entry.wallet.slice(-2)}
                           </p>
                           <p className="text-[10px] font-bold text-green-600 dark:text-success">
@@ -1152,24 +1152,24 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                       key={index}
                       className={`flex items-center gap-3 p-3 rounded-lg ${
                         index === 0 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-500/10 dark:to-yellow-600/5 border-2 border-yellow-200 dark:border-yellow-500/20' :
-                        index === 1 ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/5 border-2 border-gray-200 dark:border-gray-500/20' :
+                        index === 1 ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/5 border-2 border-[#1F2348]/10 dark:border-gray-500/20' :
                         index === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-500/10 dark:to-orange-600/5 border-2 border-orange-200 dark:border-orange-500/20' :
-                        'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.08]'
+                        'bg-white/60 dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.08]'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                         index === 0 ? 'bg-yellow-200 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' :
-                        index === 1 ? 'bg-gray-200 text-gray-700 dark:bg-gray-500/20 dark:text-gray-300' :
+                        index === 1 ? 'bg-gray-200 text-[#1F2348] dark:text-white dark:bg-gray-500/20 dark:text-gray-300' :
                         index === 2 ? 'bg-orange-200 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' :
-                        'bg-gray-200 text-gray-500 dark:bg-white/15 dark:text-white/55'
+                        'bg-gray-200 text-[#1F2348]/60 dark:text-white/60 dark:bg-white/15 dark:text-white/55'
                       }`}>
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 dark:text-white truncate font-mono">
+                        <p className="text-xs font-semibold text-[#1F2348] dark:text-white truncate font-mono">
                           {entry.wallet.slice(0, 8)}...{entry.wallet.slice(-4)}
                         </p>
-                        <p className="text-[10px] text-gray-500 dark:text-white/55">
+                        <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55">
                           {entry.totalInvited} invited • {entry.referrals} qualified
                         </p>
                       </div>
@@ -1184,11 +1184,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               </div>
             ) : (
               <div className="text-center py-10">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/5 flex items-center justify-center text-gray-500 dark:text-white/65 shadow-inner">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-white/10 dark:to-white/5 flex items-center justify-center text-[#1F2348]/60 dark:text-white/65 shadow-inner">
                   <Icon name="trophy" size={24} />
                 </div>
-                <p className="text-sm text-gray-600 dark:text-white/60">No referrals yet!</p>
-                <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Be the first to refer someone!</p>
+                <p className="text-sm text-[#1F2348]/80 dark:text-white/60">No referrals yet!</p>
+                <p className="text-xs text-[#1F2348]/60 dark:text-white/55 mt-1">Be the first to refer someone!</p>
               </div>
             )}
 
@@ -1211,10 +1211,13 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           </div>
           <div>
             <p className="text-sm font-semibold">Referral Link Copied!</p>
-            <p className="text-xs text-gray-400 dark:text-gray-600">Share it with friends to earn rewards</p>
+            <p className="text-xs text-[#1F2348]/50 dark:text-white/50 dark:text-gray-600">Share it with friends to earn rewards</p>
           </div>
         </div>
       )}
     </div>
   );
 }
+
+
+

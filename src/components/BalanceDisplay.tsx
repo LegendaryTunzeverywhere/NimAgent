@@ -56,7 +56,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
       <div className="card-premium rounded-2xl p-6 max-w-sm">
         <div className="flex items-center justify-center gap-2.5">
           <div className="w-5 h-5 border-2 border-amber-600 dark:border-gold border-t-transparent rounded-full animate-spin" />
-          <span className="text-gray-500 dark:text-white/50 text-sm">Loading balance…</span>
+          <span className="text-[#1F2348]/60 dark:text-white/50 text-sm">Loading balance…</span>
         </div>
       </div>
     );
@@ -70,10 +70,10 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
             <circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" />
           </svg>
         </div>
-        <p className="text-gray-500 dark:text-white/70 text-sm">{error}</p>
+        <p className="text-[#1F2348]/60 dark:text-white/70 text-sm">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white text-sm hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors"
+          className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-[#1F2348] dark:text-white text-sm hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors"
         >
           Retry
         </button>
@@ -84,7 +84,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
   return (
     <div className="card-premium rounded-2xl p-5 space-y-4 max-w-sm">
       <div className="flex items-center gap-2">
-        <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-200 dark:border-gold/25 text-amber-700 dark:text-gold flex items-center justify-center">
+        <span className="w-7 h-7 rounded-lg bg-[#E9B213]/20 dark:bg-gold/15 border border-amber-200 dark:border-gold/25 text-[#E9B213] dark:text-gold flex items-center justify-center">
           <Icon name="wallet" size={15} />
         </span>
         <h3 className="text-gray-900 dark:text-white font-semibold text-sm">Wallet Balance</h3>
@@ -92,13 +92,13 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
 
       {/* NIM Balance */}
       {balances.nim && !balances.nim.error && (
-        <div className="bg-amber-50 dark:bg-gold/[0.06] border border-amber-200 dark:border-gold/20 rounded-xl p-4 space-y-3">
+        <div className="bg-[#E9B213]/10 dark:bg-gold/[0.06] border border-amber-200 dark:border-gold/20 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold flex items-center justify-center font-bold text-sm">N</span>
+              <span className="w-7 h-7 rounded-lg bg-[#E9B213]/20 dark:bg-gold/15 text-[#E9B213] dark:text-gold flex items-center justify-center font-bold text-sm">N</span>
               <span className="text-gray-900 dark:text-white font-semibold">NIM</span>
             </div>
-            <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold text-[10px] font-bold uppercase tracking-wide">
+            <span className="px-2 py-0.5 rounded-md bg-[#E9B213]/20 dark:bg-gold/15 text-[#E9B213] dark:text-gold text-[10px] font-bold uppercase tracking-wide">
               Nimiq
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
             <div className="text-3xl font-black text-gray-900 dark:text-white tabular-nums tracking-tight">
               {balances.nim.balanceFormatted}
             </div>
-            <div className="text-gray-500 dark:text-white/45 text-sm font-mono mt-0.5">
+            <div className="text-[#1F2348]/60 dark:text-white/45 text-sm font-mono mt-0.5">
               ≈ ${balances.nim.balanceUSD} USD
             </div>
           </div>
@@ -123,13 +123,13 @@ export default function BalanceDisplay({ walletAddress }: BalanceDisplayProps) {
 
       {/* Total */}
       <div className="pt-3 border-t border-gray-100 dark:border-white/[0.07] flex items-center justify-between">
-        <span className="text-gray-500 dark:text-white/50 text-sm">Total Balance</span>
+        <span className="text-[#1F2348]/60 dark:text-white/50 text-sm">Total Balance</span>
         <span className="text-gray-900 dark:text-white font-bold text-xl tabular-nums">${balances.totalUSD}</span>
       </div>
 
       <button
         onClick={handleShowQR}
-        className="w-full py-2.5 rounded-lg bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white/80 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2"
+        className="w-full py-2.5 rounded-lg bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 text-[#1F2348] dark:text-white/80 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2"
       >
         <Icon name="qr-code" size={15} strokeWidth={2} /> Show QR Code
       </button>

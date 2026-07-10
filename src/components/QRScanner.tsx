@@ -437,11 +437,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         )}
 
         {cameraUnavailableReason && !error && (
-          <div className="bg-amber-50 dark:bg-gold/10 border border-amber-200 dark:border-gold/20 rounded-xl p-3 flex items-start gap-2">
-            <span className="text-amber-600 dark:text-gold mt-0.5">
+          <div className="bg-[#E9B213]/10 dark:bg-gold/10 border border-amber-200 dark:border-gold/20 rounded-xl p-3 flex items-start gap-2">
+            <span className="text-[#E9B213] dark:text-gold mt-0.5">
               <Icon name="info" size={15} strokeWidth={2} />
             </span>
-            <p className="text-amber-700 dark:text-gold text-sm">{cameraUnavailableReason}</p>
+            <p className="text-[#E9B213] dark:text-gold text-sm">{cameraUnavailableReason}</p>
           </div>
         )}
 
@@ -530,7 +530,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           </button>
         </div>
 
-        <div className="flex items-start gap-2 text-gray-500 dark:text-white/40 text-xs">
+        <div className="flex items-start gap-2 text-[#1F2348]/60 dark:text-white/40 text-xs">
           <span className="text-gold mt-0.5">
             <Icon name="qr-code" size={13} strokeWidth={2} />
           </span>
@@ -575,7 +575,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           placeholder="NQ.. address, https://nimagent.online/pay/..., or nimiq:..."
           className="w-full px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-mono placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 resize-none break-all"
         />
-        <p className="text-gray-500 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
+        <p className="text-[#1F2348]/60 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
       </Modal>
     </>
   );
