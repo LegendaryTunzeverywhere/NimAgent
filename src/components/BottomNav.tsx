@@ -117,8 +117,8 @@ export default function BottomNav() {
                 isActive
                   ? ''
                   : isChatLocked
-                    ? 'text-gray-400 dark:text-white/30 cursor-not-allowed'
-                    : 'text-[#1F2348]/60 dark:text-white/60/55 hover:text-[#1F2348] dark:hover:text-white/80',
+                    ? 'text-gray-400 dark:text-white/40 cursor-not-allowed'
+                    : 'text-[#1F2348]/60 dark:text-white/70 hover:text-[#1F2348] dark:hover:text-white',
               ].join(' ')}
               style={isActive ? { 
                 color: accentColor,

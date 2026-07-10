@@ -520,14 +520,14 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               <span className="w-7 h-7 rounded-lg bg-[#E9B213]/15 border border-[#E9B213]/25 flex items-center justify-center text-[#E9B213]">
                 <Icon name="wallet" size={15} />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#1F2348]/60 dark:text-white/55">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#1F2348]/60 dark:text-white/70">
                 Total Balance
               </span>
             </div>
             {wallet.connected && (
               <button
                 onClick={disconnectWallet}
-                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-white/80 dark:bg-white/5 text-[#1F2348]/80 dark:text-white/65 border border-[#1F2348]/10 dark:border-white/10 hover:bg-[#D94432]/10 hover:text-[#D94432] hover:border-[#D94432]/25 transition-all"
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-white/80 dark:bg-white/5 text-[#1F2348]/80 dark:text-white/75 border border-[#1F2348]/10 dark:border-white/10 hover:bg-[#D94432]/10 hover:text-[#D94432] hover:border-[#D94432]/25 transition-all"
                 style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
                 title="Disconnect Wallet"
               >
@@ -546,7 +546,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <span className="text-lg font-bold text-[#E9B213]">NIM</span>
               </div>
               <div className="flex items-center gap-2 mb-8">
-                <span className="text-sm text-[#1F2348]/60 dark:text-white/55 font-mono">
+                <span className="text-sm text-[#1F2348]/60 dark:text-white/70 font-mono">
                   ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
@@ -625,20 +625,20 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
         <>
           <div className="grid grid-cols-2 gap-3 animate-fade-up-delay-1 -mt-2">
             <div className="card-premium rounded-[10px] p-5 text-center">
-              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/70 mb-2 uppercase tracking-wider">NIM Price</p>
               <p className="text-lg font-bold text-[#1F2348] dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
               {priceChange != null ? (
                 <p className={`text-xs mt-1 font-semibold ${priceChange >= 0 ? 'text-success' : 'text-error'}`}>
                   {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                 </p>
               ) : (
-                <p className="text-xs mt-1 text-[#1F2348]/50 dark:text-white/50 dark:text-white/30">—</p>
+                <p className="text-xs mt-1 text-[#1F2348]/50 dark:text-white/60">—</p>
               )}
             </div>
             <div className="card-premium rounded-[10px] p-5 text-center">
-              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/70 mb-2 uppercase tracking-wider">Sent Today</p>
               <p className="text-lg font-bold text-[#1F2348] dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
-              <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-1">
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/70 mt-1">
                 ${nimPrice ? (sentToday * nimPrice).toFixed(2) : '0.00'}
               </p>
             </div>
@@ -659,7 +659,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {wallet.connected && (
         <div className="animate-fade-up-delay-2 pt-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white uppercase tracking-widest">
               Quick Actions
             </h2>
             <button
@@ -699,7 +699,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   >
                     <Icon name={action.icon} size={20} />
                   </span>
-                  <span className="text-[10px] font-semibold text-[#1F2348]/80 dark:text-white/72 text-center leading-tight px-1">
+                  <span className="text-[10px] font-semibold text-[#1F2348]/80 dark:text-white/80 text-center leading-tight px-1">
                     {action.label}
                   </span>
                 </button>
@@ -713,7 +713,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {wallet.connected && (
         <div className="animate-fade-up-delay-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white/80 uppercase tracking-widest">
+            <h2 className="text-sm font-bold text-[#1F2348] dark:text-white uppercase tracking-widest">
               Recent Activity
             </h2>
             <button 
@@ -749,7 +749,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#1F2348] dark:text-white truncate">{tx.label}</p>
-                      <p className="text-xs text-[#1F2348]/60 dark:text-white/55">{tx.time}</p>
+                      <p className="text-xs text-[#1F2348]/60 dark:text-white/70">{tx.time}</p>
                     </div>
                     <p className="text-sm font-bold flex-shrink-0" style={{ color: txColor }}>{tx.amount} NIM</p>
                     <svg
@@ -771,28 +771,28 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   {expandedTx === tx.id.toString() && (
                     <div className="px-4 pb-4 pt-2 border-t border-[#1F2348]/10 dark:border-white/5 space-y-2 animate-fade-up">
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Type:</span>
-                        <span className="text-xs text-[#1F2348] dark:text-white/70 capitalize">{tx.category}</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/70">Type:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/85 capitalize">{tx.category}</span>
                       </div>
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Amount:</span>
-                        <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono">{tx.amount} NIM</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/70">Amount:</span>
+                        <span className="text-xs text-[#1F2348] dark:text-white/85 font-mono">{tx.amount} NIM</span>
                       </div>
                       {tx.usd && (
                         <div className="flex justify-between items-center gap-2">
-                          <span className="text-xs text-[#1F2348]/60 dark:text-white/55">USD Value:</span>
-                          <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono">{tx.usd}</span>
+                          <span className="text-xs text-[#1F2348]/60 dark:text-white/70">USD Value:</span>
+                          <span className="text-xs text-[#1F2348] dark:text-white/85 font-mono">{tx.usd}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Status:</span>
+                        <span className="text-xs text-[#1F2348]/60 dark:text-white/70">Status:</span>
                         <span className="text-xs text-success font-semibold capitalize">{tx.status}</span>
                       </div>
                       {tx.hash && (
                         <>
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs text-[#1F2348]/60 dark:text-white/55">TX Hash:</span>
-                            <span className="text-xs text-[#1F2348] dark:text-white/70 font-mono text-right break-all">
+                            <span className="text-xs text-[#1F2348]/60 dark:text-white/70">TX Hash:</span>
+                            <span className="text-xs text-[#1F2348] dark:text-white/85 font-mono text-right break-all">
                               {tx.hash}
                             </span>
                           </div>
@@ -1048,7 +1048,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-2">Your Referrals</p>
                 {loadingReferral ? (
                   <div className="flex items-center justify-center gap-2 py-6">
-                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="sm" type="circular" />
                     <p className="text-sm text-[#1F2348]/60 dark:text-white/50">Loading…</p>
                   </div>
                 ) : referrals.length === 0 ? (

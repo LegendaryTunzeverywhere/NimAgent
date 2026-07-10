@@ -35,7 +35,17 @@ export default function AuthProvider() {
 
   // Silent session check on mount (no automatic signature prompts)
   useEffect(() => {
-    if (!isReady || !wallet.connected || !wallet.address || hasCheckedSession) {
+    // If no wallet connected, mark auth check as complete immediately
+    if (!wallet.connected) {
+      if (!wallet.authChecked) {
+        useAppStore.setState((state) => ({
+          wallet: { ...state.wallet, authChecked: true }
+        }));
+      }
+      return;
+    }
+    
+    if (!isReady || !wallet.address || hasCheckedSession) {
       return;
     }
 
@@ -59,6 +69,11 @@ export default function AuthProvider() {
           
           // Also set sessionStorage for in-session performance
           sessionStorage.setItem(`nimagent_session_authenticated_${walletAddress}`, 'true');
+          
+          // Mark auth check as complete
+          useAppStore.setState((state) => ({
+            wallet: { ...state.wallet, authChecked: true }
+          }));
           return;
         } else {
           console.log('[Auth] Auth cache expired - checking server');
@@ -89,16 +104,37 @@ export default function AuthProvider() {
           sessionStorage.setItem(`nimagent_session_authenticated_${walletAddress}`, 'true');
           
           useAppStore.getState().notifyAuthComplete();
+          
+          // Mark auth check as complete
+          useAppStore.setState((state) => ({
+            wallet: { ...state.wallet, authChecked: true }
+          }));
         } else {
-          console.log('[Auth] No valid session - user must sign in manually');
+          console.log('[Auth] No valid session - disconnecting stale wallet state');
           localStorage.removeItem(authCacheKey);
+          
+          // FIX: Disconnect wallet to clear stale connected state
+          useAppStore.getState().disconnectWallet();
+          
+          // Mark auth check as complete (even though auth failed)
+          useAppStore.setState((state) => ({
+            wallet: { ...state.wallet, authChecked: true }
+          }));
         }
       })
       .catch((err) => {
         console.error('[Auth] Session check failed:', err);
         localStorage.removeItem(authCacheKey);
+        
+        // FIX: Disconnect wallet on check failure to clear stale state
+        useAppStore.getState().disconnectWallet();
+        
+        // Mark auth check as complete (even though check failed)
+        useAppStore.setState((state) => ({
+          wallet: { ...state.wallet, authChecked: true }
+        }));
       });
-  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]);
+  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset check flag when wallet disconnects
   useEffect(() => {

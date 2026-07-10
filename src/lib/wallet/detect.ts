@@ -8,6 +8,7 @@
 import type { NimiqProvider } from '@nimiq/mini-app-sdk';
 
 let cachedProvider: NimiqProvider | null = null;
+let providerPromise: Promise<NimiqProvider | null> | null = null;
 // null  = not yet started
 // Promise<boolean> = in-flight or settled
 let detection: Promise<boolean> | null = null;
@@ -16,6 +17,7 @@ let detection: Promise<boolean> | null = null;
 // so tests (and hot-reload) can clear the cache.
 export function _resetDetectionCache() {
   cachedProvider = null;
+  providerPromise = null;
   detection = null;
 }
 
@@ -35,22 +37,29 @@ export function hasNimiqPayHostHint(): boolean {
 /**
  * Resolve (and cache) the injected Nimiq provider, or null if not present.
  * Detection runs once; subsequent calls return the cached result.
+ * Uses an in-flight promise lock to prevent concurrent init() calls that
+ * would trigger multiple connect prompts.
  */
 export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | null> {
   if (typeof window === 'undefined') return null;
-  if (cachedProvider) {
-    return cachedProvider;
-  }
+  if (cachedProvider) return cachedProvider;
+  if (providerPromise) return providerPromise;
 
-  try {
-    const { init } = await import('@nimiq/mini-app-sdk');
-    const provider = await init({ timeout });
-    cachedProvider = provider;
-    return provider;
-  } catch (err) {
-    // init() rejects/times out when not running inside Nimiq Pay.
-    return null;
-  }
+  providerPromise = (async () => {
+    try {
+      const { init } = await import('@nimiq/mini-app-sdk');
+      const provider = await init({ timeout });
+      cachedProvider = provider;
+      return provider;
+    } catch (err) {
+      // init() rejects/times out when not running inside Nimiq Pay.
+      return null;
+    } finally {
+      providerPromise = null;
+    }
+  })();
+
+  return providerPromise;
 }
 
 /**

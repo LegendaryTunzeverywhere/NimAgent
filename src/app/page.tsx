@@ -149,7 +149,7 @@ function LoadingSkeleton() {
         <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
           <div className="w-full rounded-[2rem] border border-[#1F2348]/10 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-8 shadow-lg">
             <div className="flex flex-col items-center justify-center py-8">
-              <LoadingSpinner size="lg" />
+              <LoadingSpinner size="lg" type="loading" />
               <p className="mt-4 text-sm font-semibold text-[#1F2348] dark:text-white/75">
                 Connecting to Nimiq Pay...
               </p>
@@ -302,8 +302,18 @@ export default function Home() {
         </div>
 
         <div className="flex-1 relative">
-          {/* Show SignInPage if wallet is connected but not authenticated */}
-          {wallet.connected && wallet.authCompleted === 0 ? (
+          {/* Show loading state while checking auth for connected wallet */}
+          {wallet.connected && !wallet.authChecked ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <LoadingSpinner size="lg" type="loading" />
+                <p className="text-sm font-semibold text-[#1F2348] dark:text-white/75">
+                  Checking authentication...
+                </p>
+              </div>
+            </div>
+          ) : wallet.connected && wallet.authCompleted === 0 ? (
+            /* Show SignInPage if wallet is connected, auth checked, but not authenticated */
             <SignInPage />
           ) : (
             <>

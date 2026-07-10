@@ -104,6 +104,7 @@ export interface WalletState {
   loading: boolean;
   error: string | null;
   authCompleted: number;
+  authChecked: boolean;  // Set to true after mount-time auth check completes
 }
 
 export interface AppState {

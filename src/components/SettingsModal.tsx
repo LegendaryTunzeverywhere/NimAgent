@@ -26,7 +26,7 @@ export default function SettingsModal({
         <div className="space-y-6">
           {/* Appearance Section */}
           <div>
-            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white/80 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white mb-3 flex items-center gap-2">
               <Icon name="sparkles" size={14} strokeWidth={2} className="text-[#E9B213] dark:text-gold" />
               Appearance
             </h3>
@@ -34,7 +34,7 @@ export default function SettingsModal({
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.06]">
                 <div>
                   <p className="text-sm font-semibold text-[#1F2348] dark:text-white">Theme</p>
-                  <p className="text-xs text-[#1F2348]/60 dark:text-white/60/55 mt-0.5">Choose your display theme</p>
+                  <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-0.5">Choose your display theme</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -42,7 +42,7 @@ export default function SettingsModal({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       theme === 'dark'
                         ? 'bg-[#E9B213] dark:bg-gold text-white'
-                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-white/90 dark:hover:bg-white/10'
+                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/75 hover:bg-white/90 dark:hover:bg-white/10'
                     }`}
                   >
                     Dark
@@ -52,7 +52,7 @@ export default function SettingsModal({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       theme === 'light'
                         ? 'bg-[#E9B213] dark:bg-gold text-white'
-                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-white/90 dark:hover:bg-white/10'
+                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/75 hover:bg-white/90 dark:hover:bg-white/10'
                     }`}
                   >
                     Light
@@ -64,8 +64,8 @@ export default function SettingsModal({
 
           {/* App Actions Section */}
           <div>
-            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white/80 mb-3 flex items-center gap-2">
-              <Icon name="settings" size={14} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60/55" />
+            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white mb-3 flex items-center gap-2">
+              <Icon name="settings" size={14} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/65" />
               App Actions
             </h3>
             <div className="space-y-3">
@@ -98,24 +98,24 @@ export default function SettingsModal({
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-semibold text-[#1F2348] dark:text-white">Refresh App</p>
-                    <p className="text-xs text-[#1F2348]/60 dark:text-white/60/55 mt-0.5">Clear cache and reload</p>
+                    <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-0.5">Clear cache and reload</p>
                   </div>
                 </div>
-                <Icon name="chevron-right" size={16} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60/50 group-hover:text-[#1F2348]/80 dark:group-hover:text-white/50 transition-colors" />
+                <Icon name="chevron-right" size={16} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60 group-hover:text-[#1F2348]/80 dark:group-hover:text-white/80 transition-colors" />
               </button>
             </div>
           </div>
 
           {/* About Section */}
           <div>
-            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white/80 mb-3 flex items-center gap-2">
-              <Icon name="info" size={14} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60/55" />
+            <h3 className="text-sm font-bold text-[#1F2348] dark:text-white mb-3 flex items-center gap-2">
+              <Icon name="info" size={14} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/65" />
               About
             </h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.03]">
-                <p className="text-xs text-[#1F2348]/60 dark:text-white/60/55">Version</p>
-                <p className="text-xs font-mono text-[#1F2348] dark:text-white/70">1.1.0</p>
+                <p className="text-xs text-[#1F2348]/60 dark:text-white/65">Version</p>
+                <p className="text-xs font-mono text-[#1F2348] dark:text-white/85">1.1.0</p>
               </div>
             </div>
           </div>

@@ -29,6 +29,7 @@ export const useAppStore = create<AppState>()(
         loading: false,
         error: null,
         authCompleted: 0,
+        authChecked: false,
       },
       transactions: [],
       messages: [],
@@ -129,6 +130,7 @@ export const useAppStore = create<AppState>()(
             loading: false,
             error: null,
             authCompleted: 0,
+            authChecked: false,
           },
           currentSessionId: null,
         });

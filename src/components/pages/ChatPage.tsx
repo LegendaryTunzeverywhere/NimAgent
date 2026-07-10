@@ -409,7 +409,7 @@ export default function ChatPage() {
           <div className="max-h-60 overflow-y-auto p-2 space-y-1">
             {loadingSessions ? (
               <div className="flex items-center justify-center py-8 gap-2">
-                <LoadingSpinner size="sm" />
+                <LoadingSpinner size="sm" type="circular" />
                 <span className="text-xs text-[#1F2348]/60 dark:text-white/55">Loading...</span>
               </div>
             ) : sessions.length ? sessions.map(s => (
@@ -593,14 +593,14 @@ export default function ChatPage() {
         {aiLoading && (
           <div className="px-1 pb-2 animate-fade-in">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex items-center gap-2 text-[12px] text-[#1F2348]/80 dark:text-white/62">
+              <div className="min-w-0 flex items-center gap-2 text-[12px] text-[#1F2348]/80 dark:text-white/75">
                 <span className="relative flex h-2.5 w-2.5 flex-shrink-0 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#E9B213]/100/30 dark:bg-gold/35 animate-ping" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#E9B213]/30 dark:bg-gold/35 animate-ping" />
                   <span className="relative h-1.5 w-1.5 rounded-full bg-[#E9B213]" />
                 </span>
                 <span className="truncate">{aiStatus || 'Thinking through your request'}</span>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#1F2348]/50 dark:text-white/50 dark:text-white/28">
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#1F2348]/50 dark:text-white/50">
                 AI
               </span>
             </div>
@@ -656,12 +656,12 @@ export default function ChatPage() {
                 ? 'Listening…'
                 : 'Ask me anything…'
             }
-            className="flex-1 bg-transparent text-[14px] text-[#1F2348] dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-[14px] text-[#1F2348] dark:text-white placeholder-gray-400 dark:placeholder-white/45 outline-none disabled:cursor-not-allowed"
           />
 
           {/* Word count (only when near limit) */}
           {wordCount > MAX_WORDS * 0.75 && input.trim() && (
-            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-[#1F2348]/60 dark:text-white/50'}`}>
+            <span className={`text-[10px] font-mono flex-shrink-0 ${isOverLimit ? 'text-red-500 dark:text-error' : 'text-[#1F2348]/60 dark:text-white/60'}`}>
               {wordCount}/{MAX_WORDS}
             </span>
           )}
@@ -673,7 +673,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit && !(wallet.connected && wallet.authCompleted === 0)
                 ? 'bg-[#E9B213] text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
-                : 'bg-white/80 dark:bg-white/[0.05] text-[#1F2348]/50 dark:text-white/50 dark:text-white/35'
+                : 'bg-white/80 dark:bg-white/[0.05] text-[#1F2348]/50 dark:text-white/50'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -713,7 +713,7 @@ export default function ChatPage() {
           </div>
         )}
         {!wallet.connected && !isListening && !aiLoading && (
-          <p className="text-[11px] text-[#1F2348]/60 dark:text-white/50 text-center mt-1.5 flex items-center justify-center gap-1">
+          <p className="text-[11px] text-[#1F2348]/60 dark:text-white/60 text-center mt-1.5 flex items-center justify-center gap-1">
             <Icon name="wallet" size={11} strokeWidth={2} className="text-amber-500 dark:text-gold/80" />
             Connect your wallet for full functionality
           </p>
@@ -735,7 +735,7 @@ export default function ChatPage() {
             </button>
             <button onClick={confirmDelete} disabled={deleting}
               className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 dark:bg-error text-white hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1.5">
-              {deleting ? <><LoadingSpinner size="sm" color="white" /> Deleting…</> : <><Icon name="delete" size={14} strokeWidth={2.2} /> Delete</>}
+              {deleting ? <><LoadingSpinner size="sm" type="circular" color="white" /> Deleting…</> : <><Icon name="delete" size={14} strokeWidth={2.2} /> Delete</>}
             </button>
           </>
         }
@@ -744,7 +744,7 @@ export default function ChatPage() {
           <span className="w-9 h-9 rounded-xl bg-error/10 border border-error/20 text-error flex items-center justify-center flex-shrink-0">
             <Icon name="delete" size={18} strokeWidth={2} />
           </span>
-          <p className="text-sm text-[#1F2348]/80 dark:text-white/65 leading-relaxed pt-1">This action cannot be undone.</p>
+          <p className="text-sm text-[#1F2348]/80 dark:text-white/70 leading-relaxed pt-1">This action cannot be undone.</p>
         </div>
       </Modal>
 
@@ -835,14 +835,14 @@ export default function ChatPage() {
             </div>
             <div>
               <p className="text-sm font-bold text-green-800 dark:text-green-300 mb-0.5">Non-custodial</p>
-              <p className="text-[11px] text-green-700 dark:text-green-300/90 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
+              <p className="text-[11px] text-green-700 dark:text-green-200 leading-relaxed">Your wallet stays under your control. AI cannot move funds without your approval on every transaction.</p>
             </div>
           </div>
 
           <div className="flex gap-2.5">
             <button
               onClick={() => { setShowOnboarding(false); setShowHelp(true); }}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-[#1F2348] dark:text-white border border-[#1F2348]/20 dark:border-white/15 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-white/10 text-[#1F2348] dark:text-white border border-[#1F2348]/20 dark:border-white/20 hover:bg-gray-300 dark:hover:bg-white/15 transition-colors"
             >
               View Commands
             </button>
@@ -856,7 +856,7 @@ export default function ChatPage() {
 
           {/* Scroll hint */}
           <div className="sticky bottom-0 left-0 right-0 flex justify-center pt-1 pointer-events-none">
-            <span className="animate-scroll-hint text-[#1F2348]/60 dark:text-white/50">
+            <span className="animate-scroll-hint text-[#1F2348]/60 dark:text-white/60">
               <Icon name="chevron-down" size={16} strokeWidth={2.5} />
             </span>
           </div>
