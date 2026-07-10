@@ -21,35 +21,48 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="fixed inset-x-0 max-w-2xl mx-auto w-full bg-gradient-to-b from-white to-amber-50/30 dark:from-gray-950 dark:to-gray-900 overflow-y-auto scrollbar-hide"
+    <div className="fixed inset-x-0 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-hide bg-white dark:bg-[#0A0C17]"
       style={{ top: '60px', bottom: '80px', height: 'calc(100dvh - 140px)' }}>
       <div className="max-w-lg mx-auto px-5 py-10 space-y-8">
         {/* Hero Section */}
         <div className="text-center space-y-5 animate-fade-up">
           <div className="relative inline-flex">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-500 dark:to-amber-700 rounded-3xl blur-2xl opacity-20 animate-pulse" />
-            <div className="relative w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 dark:from-amber-600 dark:via-amber-500 dark:to-amber-400 flex items-center justify-center shadow-2xl shadow-amber-500/30 transform hover:scale-105 transition-transform duration-300">
-              <Icon name="lock" size={44} strokeWidth={2.5} className="text-white drop-shadow-lg" />
+            {/* Glow effect */}
+            <div className="absolute inset-0 rounded-3xl opacity-20 dark:opacity-30 animate-lock-pulse"
+              style={{
+                background: 'radial-gradient(circle, rgba(245, 166, 35, 0.4) 0%, transparent 70%)',
+                filter: 'blur(24px)'
+              }} />
+            {/* Lock container */}
+            <div className="relative w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-gray-100 dark:bg-[#1F1C3E]">
+              <span style={{ filter: 'drop-shadow(0 2px 8px rgba(245, 166, 35, 0.3))' }}>
+                <Icon name="lock" size={44} strokeWidth={2.5} 
+                  className="text-gray-800 dark:text-white animate-lock-bob" />
+              </span>
             </div>
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Secure Sign-In</h1>
-            <p className="text-base text-gray-600 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
+            <p className="text-base text-gray-600 dark:text-white/70 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
           </div>
         </div>
         {/* What You'll Unlock */}
-        <div className="animate-fade-up rounded-2xl bg-white dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 p-6 space-y-4" style={{ animationDelay: '100ms' }}>
+        <div className="animate-fade-up rounded-2xl p-6 space-y-4 bg-gray-50 dark:bg-[#10121F] border border-gray-200 dark:border-white/[0.07]" 
+          style={{ animationDelay: '100ms' }}>
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">What You'll Unlock</h3>
-          <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+          <ul className="space-y-3 text-sm text-gray-700 dark:text-white/70">
             {[
-              { icon: 'chat', text: 'AI-powered payment assistant' },
-              { icon: 'history', text: 'Transaction history & tracking' },
-              { icon: 'send', text: 'Send NIM with ease' },
-              { icon: 'gift-card', text: 'Buy gift cards & pay bills' },
+              { icon: 'chat', text: 'AI-powered payment assistant', color: '#2B6BD6' },
+              { icon: 'history', text: 'Transaction history & tracking', color: '#F5A623' },
+              { icon: 'send', text: 'Send NIM with ease', color: '#F5A623' },
+              { icon: 'gift-card', text: 'Buy gift cards & pay bills', color: '#2B6BD6' },
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                  <Icon name={item.icon as any} size={16} strokeWidth={2} className="text-amber-600 dark:text-amber-400" />
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${item.color}${item.color === '#2B6BD6' ? '20' : '15'}` }}>
+                  <span style={{ color: item.color }}>
+                    <Icon name={item.icon as any} size={16} strokeWidth={2} />
+                  </span>
                 </div>
                 <span>{item.text}</span>
               </li>
@@ -58,43 +71,73 @@ export default function SignInPage() {
         </div>
         {/* Terms Checkbox */}
         <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <label className="group flex items-start gap-3.5 p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-600 cursor-pointer transition-all duration-200 bg-white dark:bg-gray-800/30 hover:shadow-md hover:shadow-amber-500/5">
+          <label className={`group flex items-start gap-3.5 p-5 rounded-2xl cursor-pointer transition-all duration-200 bg-gray-50 dark:bg-[#10121F] ${
+              agreedToTerms 
+                ? 'border-[2px] border-[#F5A623]' 
+                : 'border-[2px] border-gray-200 dark:border-white/[0.07]'
+            }`}>
             <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
-              className="mt-0.5 w-5 h-5 rounded-md border-2 border-gray-300 dark:border-gray-600 text-amber-600 dark:text-amber-500 focus:ring-2 focus:ring-amber-500/50 dark:focus:ring-amber-400/50 cursor-pointer bg-white dark:bg-gray-700 transition-colors" />
-            <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed flex-1">
+              className="mt-0.5 w-5 h-5 rounded-md border-2 cursor-pointer transition-colors"
+              style={{
+                borderColor: agreedToTerms ? '#F5A623' : undefined,
+                backgroundColor: agreedToTerms ? '#F5A623' : 'transparent',
+                accentColor: '#F5A623'
+              }} />
+            <span className="text-sm text-gray-700 dark:text-white/70 leading-relaxed flex-1">
               I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }}
-                className="text-amber-600 dark:text-amber-400 font-semibold hover:underline underline-offset-2">Terms</button>
+                className="font-semibold hover:underline underline-offset-2"
+                style={{ color: '#F5A623' }}>Terms</button>
               {' '}and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}
-                className="text-amber-600 dark:text-amber-400 font-semibold hover:underline underline-offset-2">Privacy Policy</button>
+                className="font-semibold hover:underline underline-offset-2"
+                style={{ color: '#F5A623' }}>Privacy Policy</button>
             </span>
           </label>
         </div>
         {/* CTA Button */}
         <div className="animate-fade-up space-y-4" style={{ animationDelay: '300ms' }}>
           <button onClick={handleSignIn} disabled={!agreedToTerms}
-            className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-bold rounded-2xl bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-700 dark:hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-600 dark:disabled:hover:bg-amber-500 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-amber-500/25">
+            className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-bold rounded-2xl active:scale-[0.98] transition-all duration-200"
+            style={{
+              backgroundColor: agreedToTerms ? '#F5A623' : 'rgba(245, 166, 35, 0.3)',
+              color: agreedToTerms ? '#0A0C17' : 'rgba(0, 0, 0, 0.4)',
+              cursor: agreedToTerms ? 'pointer' : 'not-allowed',
+              boxShadow: agreedToTerms ? '0 4px 16px rgba(245, 166, 35, 0.3)' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (agreedToTerms) {
+                e.currentTarget.style.backgroundColor = '#FBBF4D';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (agreedToTerms) {
+                e.currentTarget.style.backgroundColor = '#F5A623';
+              }
+            }}>
             <Icon name="unlock" size={22} strokeWidth={2.5} />
             <span>Sign In Securely</span>
           </button>
           {wallet.address && (
             <div className="text-center space-y-2 pt-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-semibold">Connected Wallet</p>
-              <p className="text-xs font-mono text-gray-600 dark:text-gray-400 break-all px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/50">{wallet.address}</p>
+              <p className="text-xs text-gray-500 dark:text-white/40 uppercase tracking-widest font-semibold">Connected Wallet</p>
+              <p className="text-xs font-mono text-gray-700 dark:text-white/70 break-all px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#10121F]">{wallet.address}</p>
             </div>
           )}
         </div>
       </div>
       {/* Terms Modal */}
       {showTerms && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowTerms(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-5 flex items-center justify-between z-10">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/80"
+          onClick={() => setShowTerms(false)}>
+          <div className="rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in bg-white dark:bg-[#10121F] border border-gray-200 dark:border-white/10"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 bg-white dark:bg-[#10121F] border-b border-gray-200 dark:border-white/[0.07]">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
-              <button onClick={() => setShowTerms(false)} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <button onClick={() => setShowTerms(false)} 
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors bg-gray-100 dark:bg-white/[0.05]">
                 <Icon name="close" size={20} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
               <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h3>
                 <p>By signing in and using NimAgent, you agree to be bound by these Terms and Conditions.</p></section>
@@ -116,23 +159,32 @@ export default function SignInPage() {
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">7. Modifications</h3>
                 <p>We reserve the right to modify these terms at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-5">
-              <button onClick={() => setShowTerms(false)} className="w-full py-3 rounded-xl bg-amber-600 dark:bg-amber-500 text-white font-semibold hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20">Close</button>
+            <div className="sticky bottom-0 px-6 py-5 bg-white dark:bg-[#10121F] border-t border-gray-200 dark:border-white/[0.07]">
+              <button onClick={() => setShowTerms(false)} 
+                className="w-full py-3 rounded-xl font-semibold transition-colors"
+                style={{ backgroundColor: '#F5A623', color: '#0A0C17' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FBBF4D'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F5A623'}>
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
       {/* Privacy Policy Modal */}
       {showPrivacy && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPrivacy(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-5 flex items-center justify-between z-10">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/80"
+          onClick={() => setShowPrivacy(false)}>
+          <div className="rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in bg-white dark:bg-[#10121F] border border-gray-200 dark:border-white/10"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 bg-white dark:bg-[#10121F] border-b border-gray-200 dark:border-white/[0.07]">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
-              <button onClick={() => setShowPrivacy(false)} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <button onClick={() => setShowPrivacy(false)} 
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors bg-gray-100 dark:bg-white/[0.05]">
                 <Icon name="close" size={20} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
               <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Data We Collect</h3>
                 <p>We collect minimal data required to provide our services:</p>
@@ -161,8 +213,14 @@ export default function SignInPage() {
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">5. Your Rights</h3>
                 <p>You have the right to access, delete, and revoke authentication at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-5">
-              <button onClick={() => setShowPrivacy(false)} className="w-full py-3 rounded-xl bg-amber-600 dark:bg-amber-500 text-white font-semibold hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20">Close</button>
+            <div className="sticky bottom-0 px-6 py-5 bg-white dark:bg-[#10121F] border-t border-gray-200 dark:border-white/[0.07]">
+              <button onClick={() => setShowPrivacy(false)} 
+                className="w-full py-3 rounded-xl font-semibold transition-colors"
+                style={{ backgroundColor: '#F5A623', color: '#0A0C17' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FBBF4D'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F5A623'}>
+                Close
+              </button>
             </div>
           </div>
         </div>

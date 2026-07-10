@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { signInWithWallet, checkAuthStatus } from '@/lib/auth';
 
@@ -42,31 +42,61 @@ export default function AuthProvider() {
     const walletAddress = wallet.address;
     setHasCheckedSession(true);
 
-    // Check sessionStorage FIRST (instant, no network)
-    const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
-    const hasSessionFlag = sessionStorage.getItem(sessionAuthKey);
-
-    if (hasSessionFlag === 'true') {
-      console.log('[Auth] Session flag found - user is authenticated');
-      useAppStore.getState().notifyAuthComplete();
-      return;
+    // Check localStorage FIRST (instant, no network, survives app close)
+    // localStorage persists across app suspensions, unlike sessionStorage
+    const authCacheKey = `nimagent_auth_cache_${walletAddress}`;
+    const authCache = localStorage.getItem(authCacheKey);
+    
+    if (authCache) {
+      try {
+        const cached = JSON.parse(authCache);
+        const now = Date.now();
+        
+        // Auth cache is valid for 23 hours (less than server's 24h to avoid edge cases)
+        if (cached.authenticated && cached.expiresAt > now) {
+          console.log('[Auth] Valid auth cache found - user is authenticated');
+          useAppStore.getState().notifyAuthComplete();
+          
+          // Also set sessionStorage for in-session performance
+          sessionStorage.setItem(`nimagent_session_authenticated_${walletAddress}`, 'true');
+          return;
+        } else {
+          console.log('[Auth] Auth cache expired - checking server');
+          localStorage.removeItem(authCacheKey);
+        }
+      } catch (err) {
+        console.warn('[Auth] Failed to parse auth cache:', err);
+        localStorage.removeItem(authCacheKey);
+      }
     }
 
-    // No session flag - check server silently for valid 24h session
+    // No valid cache - check server silently for valid 24h session
     console.log('[Auth] Checking server for valid 24h session...');
     
     checkAuthStatus()
       .then((status) => {
         if (status.authenticated && status.wallet === walletAddress) {
           console.log('[Auth] Valid 24h session found - user is authenticated');
-          sessionStorage.setItem(sessionAuthKey, 'true');
+          
+          // Cache the auth status in localStorage (23 hours)
+          const expiresAt = Date.now() + (23 * 60 * 60 * 1000);
+          localStorage.setItem(authCacheKey, JSON.stringify({
+            authenticated: true,
+            expiresAt
+          }));
+          
+          // Also set sessionStorage for in-session performance
+          sessionStorage.setItem(`nimagent_session_authenticated_${walletAddress}`, 'true');
+          
           useAppStore.getState().notifyAuthComplete();
         } else {
           console.log('[Auth] No valid session - user must sign in manually');
+          localStorage.removeItem(authCacheKey);
         }
       })
       .catch((err) => {
         console.error('[Auth] Session check failed:', err);
+        localStorage.removeItem(authCacheKey);
       });
   }, [isReady, wallet.connected, wallet.address, hasCheckedSession]);
 
@@ -78,7 +108,7 @@ export default function AuthProvider() {
   }, [wallet.connected]);
 
   // Manual sign-in function (called from UI button)
-  const handleSignIn = () => {
+  const handleSignIn = useCallback(() => {
     if (!wallet.address) {
       console.log('[Auth] Cannot sign in - no wallet address');
       return;
@@ -101,7 +131,16 @@ export default function AuthProvider() {
       .then(() => {
         console.log('[Auth] Successfully signed in');
         
+        // Cache auth in both localStorage (survives app close) and sessionStorage (performance)
+        const authCacheKey = `nimagent_auth_cache_${walletAddress}`;
         const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+        
+        // Cache for 23 hours (less than server's 24h to avoid edge cases)
+        const expiresAt = Date.now() + (23 * 60 * 60 * 1000);
+        localStorage.setItem(authCacheKey, JSON.stringify({
+          authenticated: true,
+          expiresAt
+        }));
         sessionStorage.setItem(sessionAuthKey, 'true');
         
         setShowFeedback(false);
@@ -131,19 +170,26 @@ export default function AuthProvider() {
           setAuthStatus('idle');
         }, 8000);
       });
-  };
+  }, [wallet.address, authStatus]);
 
   // Expose sign-in function globally for UI components to call
+  // Use useRef to avoid recreating the function on every wallet.address change
+  const handleSignInRef = useRef(handleSignIn);
+  
+  useEffect(() => {
+    handleSignInRef.current = handleSignIn;
+  }, [handleSignIn]);
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__triggerManualAuth = handleSignIn;
+      (window as any).__triggerManualAuth = () => handleSignInRef.current();
     }
     return () => {
       if (typeof window !== 'undefined') {
         delete (window as any).__triggerManualAuth;
       }
     };
-  }, [wallet.address]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only set up once
 
   // Don't render anything if status is idle
   if (authStatus === 'idle' || !showFeedback) {

@@ -50,7 +50,7 @@ This system explicitly rejects generic crypto‑exchange clutter, skeuomorphic p
 
 **Key Characteristics:**
 - Conversational UI at the core
-- Strict dark‑mode‑only design
+- dark‑mode and light-mode design
 - Dual accent palette (Nimiq Gold for crypto, Commerce Blue for services)
 - Generous spacing, no cramped layouts
 - Reduced‑motion support built in

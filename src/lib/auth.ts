@@ -19,6 +19,10 @@ interface AuthChallenge {
   expiresAt: string;
 }
 
+// Global lock to prevent concurrent sign-in attempts
+let signingInProgress = false;
+let signingPromise: Promise<AuthSession> | null = null;
+
 /**
  * Check if running inside Nimiq Pay mini-app
  */
@@ -89,45 +93,61 @@ async function verifyChallenge(
  * @throws Error if authentication fails or user cancels
  */
 export async function signInWithWallet(walletAddress: string): Promise<AuthSession> {
-  try {
-    // Step 1: Request challenge from server
-    const { message, expiresAt } = await requestChallenge(walletAddress);
-    
-    console.log('[Auth] Challenge received, requesting signature...');
-
-    // Step 2: Sign the message with the working wallet adapter
-    let signed: { publicKey?: string; signature: string };
-    
-    try {
-      signed = await walletSignMessage(message, walletAddress);
-    } catch (err) {
-      console.error('[Auth] User cancelled signing or signing failed:', err);
-      throw new Error('Authentication cancelled. Please try again.');
-    }
-
-    if (!signed.publicKey) {
-      throw new Error('Wallet did not return a public key with the signature.');
-    }
-
-    console.log('[Auth] Message signed, verifying with server...');
-
-    // Step 3: miniAppAdapter returns lowercase hex strings already - use directly
-    // No Buffer conversion needed
-    const result = await verifyChallenge(walletAddress, signed.publicKey, signed.signature);
-
-    if (result.success) {
-      console.log('[Auth] Authentication successful!');
-      return {
-        authenticated: true,
-        wallet: result.wallet,
-      };
-    }
-
-    throw new Error('Authentication failed');
-  } catch (err) {
-    console.error('[Auth] Sign-in error:', err);
-    throw err;
+  // Global deduplication - if a sign-in is already in progress, return that promise
+  if (signingInProgress && signingPromise) {
+    console.log('[Auth] Sign-in already in progress - returning existing promise');
+    return signingPromise;
   }
+
+  signingInProgress = true;
+  
+  signingPromise = (async () => {
+    try {
+      // Step 1: Request challenge from server
+      const { message, expiresAt } = await requestChallenge(walletAddress);
+      
+      console.log('[Auth] Challenge received, requesting signature...');
+
+      // Step 2: Sign the message with the working wallet adapter
+      let signed: { publicKey?: string; signature: string };
+      
+      try {
+        signed = await walletSignMessage(message, walletAddress);
+      } catch (err) {
+        console.error('[Auth] User cancelled signing or signing failed:', err);
+        throw new Error('Authentication cancelled. Please try again.');
+      }
+
+      if (!signed.publicKey) {
+        throw new Error('Wallet did not return a public key with the signature.');
+      }
+
+      console.log('[Auth] Message signed, verifying with server...');
+
+      // Step 3: miniAppAdapter returns lowercase hex strings already - use directly
+      // No Buffer conversion needed
+      const result = await verifyChallenge(walletAddress, signed.publicKey, signed.signature);
+
+      if (result.success) {
+        console.log('[Auth] Authentication successful!');
+        return {
+          authenticated: true,
+          wallet: result.wallet,
+        };
+      }
+
+      throw new Error('Authentication failed');
+    } catch (err) {
+      console.error('[Auth] Sign-in error:', err);
+      throw err;
+    } finally {
+      // Always reset the lock after completion (success or failure)
+      signingInProgress = false;
+      signingPromise = null;
+    }
+  })();
+
+  return signingPromise;
 }
 
 /**
@@ -156,10 +176,19 @@ export async function checkAuthStatus(): Promise<AuthSession> {
 /**
  * Sign out and destroy session
  * 
+ * @param walletAddress - Optional wallet address to clear specific auth cache
  * @returns Promise resolving when sign-out is complete
  */
-export async function signOut(): Promise<void> {
+export async function signOut(walletAddress?: string): Promise<void> {
   try {
+    // Clear local auth cache
+    if (walletAddress) {
+      const authCacheKey = `nimagent_auth_cache_${walletAddress}`;
+      const sessionAuthKey = `nimagent_session_authenticated_${walletAddress}`;
+      localStorage.removeItem(authCacheKey);
+      sessionStorage.removeItem(sessionAuthKey);
+    }
+    
     await fetch('/api/auth/logout', {
       method: 'POST',
       headers: await getClientPlatformHeaders(),

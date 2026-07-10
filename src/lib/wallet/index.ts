@@ -9,6 +9,10 @@ import { isInsideNimiqPay } from './detect';
 
 let adapterPromise: Promise<WalletAdapter> | null = null;
 
+// Global lock to prevent concurrent getUserAddress calls (prevents double wallet popups)
+let gettingAddress = false;
+let addressPromise: Promise<string> | null = null;
+
 async function resolveAdapter(): Promise<WalletAdapter> {
   const inside = await isInsideNimiqPay();
   if (!inside) {
@@ -44,8 +48,27 @@ export function prewarmHub(): void {
 
 /** Prompt the user to share/choose an account; returns the address. */
 export async function getUserAddress(): Promise<string> {
-  const adapter = await getWalletAdapter();
-  return adapter.getUserAddress();
+  // Deduplicate concurrent calls - if already getting address, return that promise
+  if (gettingAddress && addressPromise) {
+    console.log('[Wallet] getUserAddress already in progress - returning existing promise');
+    return addressPromise;
+  }
+
+  gettingAddress = true;
+  
+  addressPromise = (async () => {
+    try {
+      const adapter = await getWalletAdapter();
+      const address = await adapter.getUserAddress();
+      return address;
+    } finally {
+      // Reset lock after completion (success or failure)
+      gettingAddress = false;
+      addressPromise = null;
+    }
+  })();
+
+  return addressPromise;
 }
 
 /** Read-only Nimiq wallet/network state exposed by the mini-app provider. */

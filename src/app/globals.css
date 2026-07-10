@@ -424,3 +424,21 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-scroll-hint { animation: none; opacity: 0.85; }
 }
+
+/* Lock animations for Sign-In page */
+@keyframes lockPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+.animate-lock-pulse { animation: lockPulse 3s ease-in-out infinite; }
+
+@keyframes lockBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-lock-bob { animation: lockBob 2.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-lock-pulse { animation: none; opacity: 0.3; }
+  .animate-lock-bob { animation: none; }
+}
