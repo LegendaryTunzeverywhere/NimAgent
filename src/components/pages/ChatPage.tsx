@@ -470,7 +470,7 @@ export default function ChatPage() {
               {/* Bubble */}
               <div className={`rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed break-words ${
                 msg.role === 'user'
-                  ? 'bg-[#E9B213] text-white dark:text-background-primary font-medium rounded-br-sm'
+                  ? 'bg-[#E9B213] text-white dark:text-[#1F2348] font-medium rounded-br-sm'
                   : 'bg-white/80 dark:bg-white/[0.07] text-[#1F2348] dark:text-white/90 border border-[#1F2348]/10 dark:border-white/[0.06] rounded-bl-sm'
               }`}>
                 {msg.content.split('\n').map((line, idx) => {
@@ -587,7 +587,7 @@ export default function ChatPage() {
 
       {/* ── Input area ──────────────────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-3 pt-2 bg-white dark:bg-background-primary border-t border-gray-100 dark:border-white/[0.05] z-10"
+        className="shrink-0 px-3 pt-2 bg-white dark:bg-[#0F1219] border-t border-gray-100 dark:border-white/[0.05] z-10"
         style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
       >
         {aiLoading && (
@@ -672,7 +672,7 @@ export default function ChatPage() {
             disabled={!input.trim() || aiLoading || isOverLimit || (wallet.connected && wallet.authCompleted === 0)}
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit && !(wallet.connected && wallet.authCompleted === 0)
-                ? 'bg-[#E9B213] text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
+                ? 'bg-[#E9B213] text-white dark:text-[#1F2348] shadow-sm shadow-amber-500/25'
                 : 'bg-white/80 dark:bg-white/[0.08] text-[#1F2348]/50 dark:text-white/60'
             }`}
           >
@@ -848,7 +848,7 @@ export default function ChatPage() {
             </button>
             <button
               onClick={() => { setShowOnboarding(false); localStorage.setItem('nimagent_onboarding_seen', 'true'); }}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#E9B213] text-white dark:text-background-primary hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#E9B213] text-white dark:text-[#1F2348] hover:bg-amber-600 dark:hover:bg-gold-bright transition-colors"
             >
               Start Chatting
             </button>
