@@ -294,14 +294,14 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm text-[#1F2348] dark:text-white">Your Referral Link</p>
-            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60/55 font-mono uppercase">
+            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 font-mono uppercase">
               {referralCount} REFERRAL{referralCount !== 1 ? 'S' : ''}
             </p>
           </div>
         </div>
         
         <div className="bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10 rounded-xl p-3 mb-3">
-          <p className="text-[11px] text-[#1F2348]/70 dark:text-white/70/60 font-mono break-all">
+          <p className="text-[11px] text-[#1F2348]/70 dark:text-white/70 font-mono break-all">
             {referralLink}
           </p>
         </div>
@@ -352,7 +352,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm text-[#1F2348] dark:text-white">Referral Leaderboard</p>
-            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60/55 font-mono uppercase">
+            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 font-mono uppercase">
               TOP REFERRERS
             </p>
           </div>
@@ -364,9 +364,9 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-[#1F2348]/70 dark:text-white/70/65 mb-1">No referrals yet</p>
-            <p className="text-xs text-[#1F2348]/60 dark:text-white/60/55">Be the first to refer friends!</p>
-            <p className="text-[10px] text-gray-400 dark:text-white/40 mt-2">
+            <p className="text-sm text-[#1F2348]/70 dark:text-white/70 mb-1">No referrals yet</p>
+            <p className="text-xs text-[#1F2348]/60 dark:text-white/65">Be the first to refer friends!</p>
+            <p className="text-[10px] text-gray-400 dark:text-white/60 mt-2">
               * Referrals count only after $1000 spend
             </p>
           </div>
@@ -390,7 +390,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                       {entry.total_qualified || entry.referrals || 0}
                     </span>
                     {(entry.total_referrals || entry.total) && (entry.total_referrals || entry.total) > (entry.total_qualified || entry.referrals || 0) && (
-                      <span className="text-[10px] text-[#1F2348]/60 dark:text-white/60/55 ml-1">
+                      <span className="text-[10px] text-[#1F2348]/60 dark:text-white/65 ml-1">
                         /{entry.total_referrals || entry.total}
                       </span>
                     )}
@@ -398,7 +398,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                 </div>
               );
             })}
-            <div className="text-[10px] text-gray-400 dark:text-white/40 text-center pt-1">
+            <div className="text-[10px] text-gray-400 dark:text-white/60 text-center pt-1">
               * Qualified referrals shown (after $1000 spend)
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div>
             <p className="font-semibold text-sm text-[#1F2348] dark:text-white">Get Support</p>
-            <p className="text-[10px] font-mono text-[#1F2348]/60 dark:text-white/60/55">HELP · FEEDBACK · BUG REPORT</p>
+            <p className="text-[10px] font-mono text-[#1F2348]/60 dark:text-white/65">HELP · FEEDBACK · BUG REPORT</p>
           </div>
         </div>
         <div className="space-y-2 mb-3">
@@ -460,7 +460,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#1F2348] dark:text-white">{social.label}</p>
-                      <p className="text-[11px] text-[#1F2348]/60 dark:text-white/60/55">{social.description}</p>
+                      <p className="text-[11px] text-[#1F2348]/60 dark:text-white/65">{social.description}</p>
                     </div>
                   </div>
                   <span className="rounded-full bg-[#21BCA5]/10 border border-[#21BCA5]/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#21BCA5] flex-shrink-0">
@@ -480,10 +480,10 @@ export default function ActionCard({ action }: ActionCardProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#1F2348] dark:text-white">{social.label}</p>
-                      <p className="text-[11px] text-[#1F2348]/60 dark:text-white/60/55">{social.description}</p>
+                      <p className="text-[11px] text-[#1F2348]/60 dark:text-white/65">{social.description}</p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1F2348]/70 dark:text-white/70/45 flex-shrink-0">
+                  <span className="rounded-full bg-gray-200 dark:bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1F2348]/70 dark:text-white/65 flex-shrink-0">
                     Soon
                   </span>
                 </div>
@@ -505,7 +505,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             </svg>
           </button>
         ) : (
-          <p className="text-sm text-[#1F2348]/70 dark:text-white/70/65">Support form coming soon! Please check back later.</p>
+          <p className="text-sm text-[#1F2348]/70 dark:text-white/70">Support form coming soon! Please check back later.</p>
         )}
       </div>
     );
@@ -526,7 +526,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-sm text-[#1F2348] dark:text-white">Saved Contacts</p>
-            <p className="text-[10px] text-[#1F2348]/70 dark:text-white/70/55 font-mono">
+            <p className="text-[10px] text-[#1F2348]/70 dark:text-white/70 font-mono">
               {loadingContacts ? 'LOADING...' : `${savedContacts.length} CONTACT${savedContacts.length !== 1 ? 'S' : ''}`}
             </p>
           </div>
@@ -538,8 +538,8 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
         ) : savedContacts.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-sm text-[#1F2348]/70 dark:text-white/70/65 mb-1">No saved contacts yet</p>
-            <p className="text-xs text-[#1F2348]/60 dark:text-white/60/45">
+            <p className="text-sm text-[#1F2348]/70 dark:text-white/70 mb-1">No saved contacts yet</p>
+            <p className="text-xs text-[#1F2348]/60 dark:text-white/60">
               Save addresses by saying "Save [address] as [name]"
             </p>
           </div>
@@ -566,10 +566,10 @@ export default function ActionCard({ action }: ActionCardProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] sm:text-xs font-mono text-[#1F2348]/70 dark:text-white/70/65 break-all">
+                  <p className="text-[11px] sm:text-xs font-mono text-[#1F2348]/70 dark:text-white/70 break-all">
                     {contact.recipient_address}
                   </p>
-                  <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60/45 mt-0.5">
+                  <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60 mt-0.5">
                     {isValidAddr ? (
                       contact.usage_count > 0 
                         ? `Used ${contact.usage_count} time${contact.usage_count !== 1 ? 's' : ''}`
@@ -1125,7 +1125,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Details */}
       {action.type === 'send' && (
         <div className="flex justify-between items-center">
-          <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">To</span>
+          <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">To</span>
           <span className="text-[#1F2348] dark:text-white font-mono text-xs">{action.recipient?.substring(0, 14)}...</span>
         </div>
       )}
@@ -1145,12 +1145,12 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'gift-card' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Product</span>
+            <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Product</span>
             <span className="text-[#1F2348] dark:text-white font-semibold">{action.product}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Value</span>
+              <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Value</span>
               <span className="text-[#1F2348] dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -1159,7 +1159,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           {/* Show available denominations from catalog — display only, not selectable */}
           {availableAmounts && availableAmounts.length > 0 && !success && (
             <div className="space-y-1">
-              <p className="text-[#1F2348]/60 dark:text-white/60/55 text-[10px] font-medium uppercase tracking-wider">Available amounts</p>
+              <p className="text-[#1F2348]/60 dark:text-white/65 text-[10px] font-medium uppercase tracking-wider">Available amounts</p>
               <div className="flex flex-wrap gap-1.5">
                 {availableAmounts.map(a => (
                   <span
@@ -1167,7 +1167,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                     className={`text-[11px] font-mono px-2 py-0.5 rounded select-none ${
                       Number(action.fiatAmount) === a
                         ? 'bg-[#E9B213]/20 dark:bg-gold/15 text-[#E9B213] dark:text-gold/90 ring-1 ring-amber-300 dark:ring-gold/30'
-                        : 'bg-white/80 dark:bg-white/[0.04] text-[#1F2348]/60 dark:text-white/60/55'
+                        : 'bg-white/80 dark:bg-white/[0.04] text-[#1F2348]/60 dark:text-white/65'
                     }`}
                   >
                     {CURRENCY_SYMBOLS[action.currency || 'USD']}{a}
@@ -1177,20 +1177,20 @@ export default function ActionCard({ action }: ActionCardProps) {
             </div>
           )}
           {amountRange && !availableAmounts && !success && (
-            <p className="text-[#1F2348]/60 dark:text-white/60/55 text-[10px]">
+            <p className="text-[#1F2348]/60 dark:text-white/65 text-[10px]">
               Range: {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.min} – {CURRENCY_SYMBOLS[amountRange.currency]}{amountRange.max}
             </p>
           )}
           <div className="space-y-1">
-            <label className="text-[#1F2348]/70 dark:text-white/70/65 text-xs font-medium">Email (optional)</label>
+            <label className="text-[#1F2348]/70 dark:text-white/70 text-xs font-medium">Email (optional)</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full px-3 py-2 rounded-lg bg-white/80 dark:bg-white/5 border-2 border-[#1F2348]/10 dark:border-white/10 text-[#1F2348] dark:text-white text-sm placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20"
+              className="w-full px-3 py-2 rounded-lg bg-white/80 dark:bg-white/5 border-2 border-[#1F2348]/10 dark:border-white/10 text-[#1F2348] dark:text-white text-sm placeholder-gray-500 dark:placeholder-white/60 outline-none focus:border-amber-500 dark:focus:border-gold/50 focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-gold/20"
             />
-            <p className="text-[#1F2348]/60 dark:text-white/60/45 text-xs">We'll send the gift card code to this email</p>
+            <p className="text-[#1F2348]/60 dark:text-white/60 text-xs">We'll send the gift card code to this email</p>
           </div>
         </>
       )}
@@ -1198,23 +1198,23 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'airtime' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Phone</span>
+            <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Phone</span>
             <span className="text-[#1F2348] dark:text-white font-semibold">{action.phone}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Operator</span>
+            <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Operator</span>
             <span className="text-[#1F2348] dark:text-white font-semibold">{action.operator}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Amount</span>
+              <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Amount</span>
               <span className="text-[#1F2348] dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
             </div>
           )}
           {amountRange && !success && (
-            <p className="text-[#1F2348]/60 dark:text-white/60/55 text-[10px]">
+            <p className="text-[#1F2348]/60 dark:text-white/65 text-[10px]">
               Valid range: {amountRange.currency} {amountRange.min} – {amountRange.max}
             </p>
           )}
@@ -1224,16 +1224,16 @@ export default function ActionCard({ action }: ActionCardProps) {
       {action.type === 'bill' && (
         <>
           <div className="flex justify-between items-center">
-            <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Service</span>
+            <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Service</span>
             <span className="text-[#1F2348] dark:text-white font-semibold">{action.service}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Account</span>
+            <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Account</span>
             <span className="text-[#1F2348] dark:text-white font-mono text-xs">{action.accountNumber}</span>
           </div>
           {action.fiatAmount && (
             <div className="flex justify-between items-center">
-              <span className="text-[#1F2348]/70 dark:text-white/70/65 text-sm font-medium">Amount</span>
+              <span className="text-[#1F2348]/70 dark:text-white/70 text-sm font-medium">Amount</span>
               <span className="text-[#1F2348] dark:text-white font-semibold">
                 {CURRENCY_SYMBOLS[action.currency || 'USD']}{action.fiatAmount}
               </span>
@@ -1263,7 +1263,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Amount Input */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-[#1F2348]/70 dark:text-white/70/65 text-xs font-medium">Amount to pay</label>
+          <label className="text-[#1F2348]/70 dark:text-white/70 text-xs font-medium">Amount to pay</label>
           {isOrder && !success && quoteExpiry && (
             <button
               onClick={refreshQuote}
@@ -1289,12 +1289,12 @@ export default function ActionCard({ action }: ActionCardProps) {
             placeholder="0.00"
             disabled={loading || success || failed || amountLocked}
             readOnly={amountLocked}
-            className="flex-1 bg-transparent text-[#1F2348] dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/40"
+            className="flex-1 bg-transparent text-[#1F2348] dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/60"
           />
           <span className="text-[#1F2348] dark:text-white/65 text-sm font-bold">NIM</span>
         </div>
         {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
-          <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-[#1F2348]/70 dark:text-white/70/55'} text-right`}>
+          <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-[#1F2348]/70 dark:text-white/70'} text-right`}>
             Quote expires in {timeRemaining}s
           </p>
         )}
@@ -1361,4 +1361,5 @@ export default function ActionCard({ action }: ActionCardProps) {
     </div>
   );
 }
+
 

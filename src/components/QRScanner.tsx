@@ -420,7 +420,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             <Icon name="qr-scan" size={22} />
           </div>
           <h3 className="text-[#1F2348] dark:text-white font-semibold">QR Code Scanner</h3>
-          <p className="text-[#1F2348]/80 dark:text-white/50 text-sm mt-0.5">
+          <p className="text-[#1F2348]/80 dark:text-white/65 text-sm mt-0.5">
             {isScanning ? 'Point your camera at a QR code' : 'Scan Nimiq addresses or payment requests'}
           </p>
         </div>
@@ -530,7 +530,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           </button>
         </div>
 
-        <div className="flex items-start gap-2 text-[#1F2348]/60 dark:text-white/40 text-xs">
+        <div className="flex items-start gap-2 text-[#1F2348]/60 dark:text-white/60 text-xs">
           <span className="text-gold mt-0.5">
             <Icon name="qr-code" size={13} strokeWidth={2} />
           </span>
@@ -573,10 +573,11 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           }}
           rows={3}
           placeholder="NQ.. address, https://nimagent.online/pay/..., or nimiq:..."
-          className="w-full px-3 py-2.5 rounded-xl bg-white/80 dark:bg-white/[0.04] border border-[#1F2348]/15 dark:border-white/[0.08] text-[#1F2348] dark:text-white text-sm font-mono placeholder-[#1F2348]/40 dark:placeholder-white/25 outline-none focus:border-[#E9B213] dark:focus:border-gold/50 resize-none break-all"
+          className="w-full px-3 py-2.5 rounded-xl bg-white/80 dark:bg-white/[0.04] border border-[#1F2348]/15 dark:border-white/[0.08] text-[#1F2348] dark:text-white text-sm font-mono placeholder-[#1F2348]/40 dark:placeholder-white/60 outline-none focus:border-[#E9B213] dark:focus:border-gold/50 resize-none break-all"
         />
-        <p className="text-[#1F2348]/60 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
+        <p className="text-[#1F2348]/60 dark:text-white/60 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
       </Modal>
     </>
   );
 }
+

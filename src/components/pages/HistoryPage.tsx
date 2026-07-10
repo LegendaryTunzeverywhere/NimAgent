@@ -948,7 +948,7 @@ export default function HistoryPage() {
                 <Icon name="history" size={26} />
               </div>
               <p className="text-sm text-[#1F2348]/70 dark:text-white/60">No transactions yet</p>
-              <p className="text-xs text-[#1F2348]/60 dark:text-white/55 mt-1">
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/65 mt-1">
                 Your transaction history will appear here
               </p>
             </div>
@@ -971,17 +971,17 @@ export default function HistoryPage() {
         <div className="card-premium rounded-2xl p-3">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Total Sent</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 mb-0.5">Total Sent</p>
               <p className="text-base font-bold text-error tabular-nums">{stats.totalSent.toFixed(2)}</p>
               <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65">NIM</p>
             </div>
             <div>
-              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Total Received</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 mb-0.5">Total Received</p>
               <p className="text-base font-bold text-success tabular-nums">{stats.totalReceived.toFixed(2)}</p>
               <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65">NIM</p>
             </div>
             <div>
-              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/55 mb-0.5">Net Change</p>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 mb-0.5">Net Change</p>
               <p className={`text-base font-bold tabular-nums ${stats.netChange >= 0 ? 'text-success' : 'text-error'}`}>
                 {stats.netChange >= 0 ? '+' : ''}{stats.netChange.toFixed(2)}
               </p>
@@ -993,4 +993,5 @@ export default function HistoryPage() {
     </div>
   );
 }
+
 

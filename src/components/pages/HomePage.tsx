@@ -978,9 +978,9 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   { label: 'Claimed', value: totalClaimedNim.toFixed(2), color: 'text-[#1F2348] dark:text-white', sub: 'NIM' },
                 ].map(({ label, value, color, sub }) => (
                   <div key={label} className="rounded-lg border border-[#1F2348]/10 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.03] p-2.5 text-center">
-                    <p className="text-[9px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-1">{label}</p>
+                    <p className="text-[9px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/60 mb-1">{label}</p>
                     <p className={`text-sm font-black tabular-nums ${color} leading-tight`}>{value}</p>
-                    {sub && <p className="text-[8px] font-bold text-[#1F2348]/50 dark:text-white/50 dark:text-white/30 mt-0.5">{sub}</p>}
+                    {sub && <p className="text-[8px] font-bold text-[#1F2348]/50 dark:text-white/65 dark:text-white/30 mt-0.5">{sub}</p>}
                   </div>
                 ))}
               </div>
@@ -988,7 +988,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-xs font-semibold text-[#1F2348] dark:text-white/80">Lifetime Earnings</p>
-                    <p className="text-[11px] text-[#1F2348]/60 dark:text-white/50 mt-0.5">Rewards paid in real NIM</p>
+                    <p className="text-[11px] text-[#1F2348]/60 dark:text-white/65 mt-0.5">Rewards paid in real NIM</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-black text-[#E9B213] tabular-nums">{totalEarnedNim.toFixed(4)}</p>
@@ -1008,7 +1008,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 {referralClaimNotice && <p className="mt-2 text-xs text-center font-medium text-[#1F2348]/80 dark:text-white/60">{referralClaimNotice}</p>}
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-2">Your Referral Link</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/60 mb-2">Your Referral Link</p>
                 <div className="flex gap-2 items-center">
                   <div className="flex-1 min-w-0 bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/[0.08] rounded-lg px-3 py-2.5">
                     <p className="text-[11px] text-[#1F2348] dark:text-white/70 font-mono truncate">{referralLink || 'Loading…'}</p>
@@ -1030,7 +1030,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 </div>
               </div>
               <div className="rounded-[10px] border border-[#1F2348]/10 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.02] p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-3">How It Works</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/60 mb-3">How It Works</p>
                 <div className="space-y-2.5">
                   {[
                     { step: '1', text: 'Share your referral link with friends' },
@@ -1045,7 +1045,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 </div>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/45 mb-2">Your Referrals</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1F2348]/60 dark:text-white/60 mb-2">Your Referrals</p>
                 {loadingReferral ? (
                   <div className="flex items-center justify-center gap-2 py-6">
                     <LoadingSpinner size="sm" type="circular" />
@@ -1053,9 +1053,9 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   </div>
                 ) : referrals.length === 0 ? (
                   <div className="rounded-[10px] border border-dashed border-[#1F2348]/10 dark:border-white/[0.08] p-6 text-center">
-                    <Icon name="gift" size={24} className="mx-auto text-gray-300 dark:text-white/20 mb-2" />
+                    <Icon name="gift" size={24} className="mx-auto text-gray-300 dark:text-white/60 mb-2" />
                     <p className="text-sm text-[#1F2348]/60 dark:text-white/50">No referrals yet</p>
-                    <p className="text-[11px] text-[#1F2348]/50 dark:text-white/50 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
+                    <p className="text-[11px] text-[#1F2348]/50 dark:text-white/65 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto overscroll-contain">
@@ -1211,13 +1211,14 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           </div>
           <div>
             <p className="text-sm font-semibold">Referral Link Copied!</p>
-            <p className="text-xs text-[#1F2348]/50 dark:text-white/50 dark:text-gray-600">Share it with friends to earn rewards</p>
+            <p className="text-xs text-[#1F2348]/50 dark:text-white/65 dark:text-gray-600">Share it with friends to earn rewards</p>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 
 
 

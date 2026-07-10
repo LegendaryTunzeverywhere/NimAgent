@@ -110,7 +110,7 @@ export default function SignInPage() {
           </Button>
           {wallet.address && (
             <div className="text-center space-y-2 pt-2">
-              <p className="text-xs text-[#1F2348]/60 dark:text-white/40 uppercase tracking-widest font-semibold">Connected Wallet</p>
+              <p className="text-xs text-[#1F2348]/60 dark:text-white/60 uppercase tracking-widest font-semibold">Connected Wallet</p>
               <p className="text-xs font-mono text-[#1F2348] dark:text-white/70 break-all px-4 py-2 rounded-lg bg-white/80 dark:bg-[#10121F]">{wallet.address}</p>
             </div>
           )}
@@ -125,7 +125,7 @@ export default function SignInPage() {
             <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-[#1F2348]/10 dark:border-white/[0.08]">
               <h2 className="text-lg font-bold text-[#1F2348] dark:text-white">Terms and Conditions</h2>
               <button onClick={() => setShowTerms(false)} 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/65 hover:text-[#1F2348] dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
                 <Icon name="close" size={18} strokeWidth={2} />
               </button>
@@ -173,7 +173,7 @@ export default function SignInPage() {
             <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-[#1F2348]/10 dark:border-white/[0.08]">
               <h2 className="text-lg font-bold text-[#1F2348] dark:text-white">Privacy Policy</h2>
               <button onClick={() => setShowPrivacy(false)} 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#1F2348]/60 dark:text-white/65 hover:text-[#1F2348] dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all duration-200"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
                 <Icon name="close" size={18} strokeWidth={2} />
               </button>
@@ -222,6 +222,7 @@ export default function SignInPage() {
     </div>
   );
 }
+
 
 
 
