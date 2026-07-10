@@ -2,40 +2,86 @@
 name: NimAgent
 description: AI‑powered Nimiq payment platform
 colors:
-  nimiq-gold: "#F5A623"
-  commerce-blue: "#2B6BD6"
-  deep-space: "#0A0C17"
-  tinted-slate: "#10121F"
-  bright-gold: "#FBBF4D"
-  dim-gold: "#C9881A"
-  bright-blue: "#5B8FE6"
-  dim-blue: "#1F4FA0"
-  brand-navy: "#1F1C3E"
-  success: "#34D399"
-  error: "#F87171"
+  # Official Nimiq Brand Palette (@nimiq/style)
+  nimiq-blue: "#1F2348"
+  nimiq-gold: "#E9B213"
+  nimiq-light-blue: "#0582CA"
+  nimiq-light-blue-bright: "#0CA6FE"
+  nimiq-green: "#21BCA5"
+  nimiq-orange: "#FC8702"
+  nimiq-red: "#D94432"
+  nimiq-red-bright: "#FF5C48"
+  
+  # Light mode surfaces
+  light-gray: "#FAFAFA"
+  near-white: "#FFFFFF"
+  
+  # Status colors (Nimiq standard)
+  success: "#21BCA5"
+  error: "#D94432"
+  warning: "#E9B213"
+  info: "#0582CA"
+  
 typography:
   body:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Inter, Muli, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "16px"
+    lineHeight: "1.6"
   mono:
-    fontFamily: "Space Mono, monospace"
+    fontFamily: "Fira Mono, 'Courier New', monospace"
+    fontSize: "14px"
+    lineHeight: "1.5"
+  scale:
+    h1: "3rem"      # 24px on 8px grid
+    h2: "2.5rem"    # 20px
+    h3: "2rem"      # 16px
+    body: "2rem"    # 16px
+    small: "1.75rem" # 14px
+    tiny: "1.5rem"  # 12px
 rounded:
-  sm: "4px"
-  md: "8px"
-  lg: "12px"
+  input: "4px"     # Nimiq input radius
+  card: "10px"     # Nimiq card radius
+  button: "13.5px" # Nimiq button radius
+  pill: "500px"    # Nimiq pill radius
 spacing:
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
-  xl: "32px"
+  # Nimiq 8px grid system (1rem = 8px)
+  1: "8px"
+  2: "16px"
+  3: "24px"
+  4: "32px"
+  5: "40px"
+  6: "48px"
+  7: "56px"
+  8: "64px"
+easing:
+  nimiq: "cubic-bezier(0.25, 0, 0, 1)"
+duration:
+  fast: "150ms"
+  normal: "200ms"
+  slow: "300ms"
 components:
   button-gold:
     backgroundColor: "{colors.nimiq-gold}"
-    textColor: "{colors.deep-space}"
+    textColor: "{colors.nimiq-blue}"
     padding: "12px 24px"
+    fontWeight: "700"
+    borderRadius: "{rounded.button}"
+    transition: "all {duration.normal} {easing.nimiq}"
+    hoverBackground: "{colors.nimiq-orange}"
   button-blue:
-    backgroundColor: "{colors.commerce-blue}"
-    textColor: "#ffffff"
+    backgroundColor: "{colors.nimiq-light-blue}"
+    textColor: "#FFFFFF"
     padding: "12px 24px"
+    fontWeight: "700"
+    borderRadius: "{rounded.button}"
+    transition: "all {duration.normal} {easing.nimiq}"
+    hoverBackground: "{colors.nimiq-light-blue-bright}"
+  glass-surface:
+    background: "rgba(255, 255, 255, 0.92)"
+    backdropFilter: "blur(20px)"
+    border: "1px solid rgba(31, 35, 72, 0.08)"
+    darkBackground: "rgba(31, 35, 72, 0.55)"
+    darkBorder: "1px solid rgba(255, 255, 255, 0.08)"
 ---
 
 # Design System: NimAgent
@@ -57,77 +103,153 @@ This system explicitly rejects generic crypto‑exchange clutter, skeuomorphic p
 
 ## 2. Colors
 
-A two‑accent dark‑mode palette, split by functional intent rather than brand whim.
+Official Nimiq brand palette from `@nimiq/style`, used consistently across Nimiq ecosystem.
 
-### Primary Accents
-- **Nimiq Gold** (#F5A623): For crypto‑native actions—send, receive, QR codes, swaps, balance displays
-- **Bright Gold** (#FBBF4D): Hover/active state for gold‑accented elements
-- **Dim Gold** (#C9881A): Subtle gold accents
+### Brand Colors
+- **Nimiq Blue** (#1F2348): Primary brand color, dark mode background
+- **Nimiq Gold** (#E9B213): Primary accent for crypto actions (send, receive, balance)
+- **Nimiq Light Blue** (#0582CA): Secondary accent for commerce/AI features
+- **Nimiq Green** (#21BCA5): Success states, positive feedback
+- **Nimiq Red** (#D94432): Error states, warnings
+- **Nimiq Orange** (#FC8702): Hover states for gold elements
 
-### Secondary Accents
-- **Commerce Blue** (#2B6BD6): For services and AI—gift cards, airtime, bills, agent interactions
-- **Bright Blue** (#5B8FE6): Hover/active state for blue‑accented elements
-- **Dim Blue** (#1F4FA0): Subtle blue accents
-- **Brand Navy** (#1F1C3E): Elevated dark surfaces (backdrop blur included)
+### Light Mode
+- **Light Gray** (#FAFAFA): Primary background
+- **White** (#FFFFFF): Card surfaces, elevated elements
 
-### Neutrals
-- **Deep Space** (#0A0C17): Primary background
-- **Tinted Slate** (#10121F): Secondary background/surfaces
+### Dark Mode
+- **Nimiq Blue** (#1F2348): Primary background
+- **White** (#FFFFFF): Primary text
+- Glass surfaces with `rgba(31, 35, 72, 0.55)` + 20px blur
 
-### Status
-- **Success** (#34D399): Positive outcomes
-- **Error** (#F87171): Errors
+### Status Colors (Semantic)
+- **Success** (#21BCA5 / Nimiq Green): Confirmations, completed actions
+- **Error** (#D94432 / Nimiq Red): Errors, failed transactions
+- **Warning** (#E9B213 / Nimiq Gold): Cautions, important notices
+- **Info** (#0582CA / Nimiq Light Blue): Informational messages
 
-### Named Rules
-**The Split Accent Rule.** Gold is only for crypto; blue is only for commerce/AI. Never mix them decoratively.
-**The No Flat Grays Rule.** All dark surfaces are tinted toward the brand hues, never pure black/gray.
+### Color Usage Rules
+**Functional Color Split:** Gold for crypto-native actions (send NIM, show balance, QR codes). Light Blue for commerce/services (gift cards, airtime, bills, AI chat). Never swap them.
+
+**Contrast Requirements:** All text must meet WCAG 2.1 AA standards—4.5:1 for body text, 3:1 for large text (≥18px or bold ≥14px).
+
+**Tinted Surfaces:** All neutral surfaces are subtly tinted toward Nimiq Blue (chroma 0.005–0.015) to avoid flat gray.
 
 ## 3. Typography
 
-**Body Font:** Inter (with system‑ui fallback)
-**Mono/Label Font:** Space Mono (with monospace fallback)
+Nimiq's official type stack: **Inter + Muli** for UI, **Fira Mono** for technical content.
 
-**Character:** Clean, legible sans for text, technical monospace for crypto values (addresses, hashes, balances) to signal precision.
+### Font Stack
+- **Primary:** Inter, Muli, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+- **Monospace:** Fira Mono, 'Courier New', monospace
 
-### Hierarchy
-- **Body** (400, 1rem, 1.5): Default text, max line length 65–75ch
-- **Label** (500, 0.875rem): Buttons, form labels, statuses
+### Type Scale (Fixed, not fluid—product UI standard)
+Based on Nimiq's 8px grid (1rem = 8px):
+- **h1:** 3rem (24px) / 700 weight / -0.02em letter-spacing
+- **h2:** 2.5rem (20px) / 700 weight / -0.02em letter-spacing
+- **h3:** 2rem (16px) / 700 weight / -0.02em letter-spacing
+- **Body:** 2rem (16px) / 400 weight / 1.6 line-height
+- **Small:** 1.75rem (14px) / 500 weight / labels, secondary text
+- **Tiny:** 1.5rem (12px) / 600 weight / captions, metadata
 
-### Named Rules
-**The Mono for Crypto Rule.** All wallet addresses, transaction hashes, NIM/BTC values use Space Mono.
+### Scale Ratio
+1.125 between steps (tighter than brand surfaces—product UI standard). Keeps visual hierarchy without excessive contrast noise.
 
-## 4. Elevation
+### Line Length
+- **Prose content:** 65–75 characters maximum
+- **UI labels/buttons:** No limit (compact by nature)
+- **Data tables:** 120+ characters acceptable
 
-Hybrid tonal layering + soft shadows. Depth comes from tinted surface colors first, subtle shadows second—no harsh or distracting drops.
+### Usage Rules
+**Monospace for Precision:** All wallet addresses, transaction hashes, NIM amounts, timestamps use Fira Mono. This signals "exact value, don't round mentally."
+
+**Weights:** 400 (body), 500 (labels), 600 (small caps/metadata), 700 (headings, buttons). Never 300 or 800—keeps the range disciplined.
+
+## 4. Elevation & Surfaces
+
+Nimiq uses **glass surfaces** (backdrop blur + subtle transparency) for depth, not heavy shadows.
+
+### Glass Effect
+Light mode: `rgba(255, 255, 255, 0.92)` + `blur(20px)` + `border: 1px solid rgba(31, 35, 72, 0.08)`
+Dark mode: `rgba(31, 35, 72, 0.55)` + `blur(20px)` + `border: 1px solid rgba(255, 255, 255, 0.08)`
 
 ### Shadow Vocabulary
-- **Soft ambient glow** (`0 0 0 0 rgba(245, 166, 35, 0.35)` to `0 0 0 8px rgba(245, 166, 35, 0)`): Used for gold accent pulse state
+- **Card shadow:** `0 1px 3px rgba(31, 35, 72, 0.04), 0 4px 12px rgba(31, 35, 72, 0.02)`
+- **Card hover:** `0 2px 4px rgba(31, 35, 72, 0.06), 0 8px 24px rgba(31, 35, 72, 0.04)`
+- **Button focus:** `0 0 0 3px rgba(233, 178, 19, 0.25)` (gold) or `rgba(5, 130, 202, 0.25)` (blue)
 
-### Named Rules
-**The Tonal First Rule.** Surfaces get depth from color tint first; shadows are only used for interactive feedback.
+### Z-index Scale (Semantic)
+- **Base:** 0 (default content)
+- **Sticky nav:** 10
+- **Dropdown:** 20
+- **Modal backdrop:** 30
+- **Modal:** 40
+- **Toast:** 50
+- **Tooltip:** 60
+
+Never arbitrary values like 999 or 9999.
+
+### Surface Rules
+**Tonal First:** Depth comes from surface color variation (light → slightly darker) before shadows. Shadows only for interactive feedback (hover, focus) or floating elements (modals, dropdowns).
 
 ## 5. Components
 
+Every component has **all interaction states:** default, hover, focus, active, disabled, loading, error. Non-negotiable.
+
 ### Buttons
-- **Shape:** Gently rounded (8px radius)
-- **Gold Button:** Nimiq Gold background, Deep Space text, 12px vertical / 24px horizontal padding; hover to Bright Gold
-- **Blue Button:** Commerce Blue background, white text, 12px vertical / 24px horizontal padding; hover to Bright Blue
-- **States:** Focus visible with subtle ring; reduced‑motion variants available
+**Radius:** 13.5px (Nimiq standard button radius)
+**Padding:** 12px vertical / 24px horizontal (3rem horizontal on 8px grid)
+**Font:** 700 weight, 16px
+**Transition:** `200ms cubic-bezier(0.25, 0, 0, 1)` (Nimiq easing)
 
-### Cards / Containers
-- **Corner Style:** Gentle rounding (12px)
-- **Background:** Tinted Slate or Brand Navy (with optional backdrop blur)
-- **Border:** No borders—use color contrast for separation
-- **Internal Padding:** Generous (24px)
+**Gold Button (crypto actions):**
+- Default: `#E9B213` background, `#1F2348` text
+- Hover: `#FC8702` background, `translateY(-1px)`
+- Focus: 3px gold ring `rgba(233, 178, 19, 0.25)`
+- Active: `translateY(0)`
+- Disabled: 50% opacity, `cursor: not-allowed`
 
-### Inputs / Fields
-- **Style:** Soft corners (8px), Tinted Slate background
-- **Focus:** Subtle border shift to Bright Gold/Bright Blue depending on context
-- **Error:** Accented with Error color
+**Blue Button (commerce/AI):**
+- Default: `#0582CA` background, white text
+- Hover: `#0CA6FE` background, `translateY(-1px)`
+- Focus: 3px blue ring `rgba(5, 130, 202, 0.25)`
+- Active: `translateY(0)`
+- Disabled: 50% opacity, `cursor: not-allowed`
+
+### Cards
+**Radius:** 10px (Nimiq card radius)
+**Padding:** 24px (3rem on 8px grid)
+**Background:** Glass surface (see Elevation section)
+**Border:** 1px subtle (see glass effect colors)
+**Hover:** `translateY(-1px)` + deeper shadow (interactive cards only)
+
+### Input Fields
+**Radius:** 4px (Nimiq input radius)
+**Padding:** 12px horizontal, 10px vertical
+**Background:** Light: `rgba(31, 35, 72, 0.04)` / Dark: `rgba(255, 255, 255, 0.06)`
+**Border:** 1px solid, transparent default
+**Focus:** Border shifts to accent color (gold or blue per context), 3px ring
+**Error:** Red border + error message below
+
+### Icons
+**System:** Line-stroke icons (Feather/Lucide style), 1.9px stroke width
+**Size:** 20px default, scale up/down by context (16px small, 24px large)
+**Color:** `currentColor` (inherits from parent text color)
+**Nimiq Icons:** When available, use official Nimiq icon sprite from `@nimiq/style`
+
+### Loading States
+**Skeletons** for content placeholders (not spinners mid-screen)
+**Shimmer animation:** `1.8s cubic-bezier(0.25, 0, 0, 1)` with gold accent gradient
+**Reduced motion:** Instant opacity fade, no shimmer
+
+### Empty States
+**Never:** "No data" or "Nothing here"
+**Always:** Teach the interface—"Send your first NIM transaction" with action button
 
 ### Navigation
-- **Style:** Bottom‑nav for mobile (primary), clean tabbed for desktop
-- **States:** Active state uses the appropriate accent color (gold/blue per section)
+**Bottom nav (mobile primary):** Glass surface, rounded top corners, active state with gold/blue accent
+**Top nav (desktop):** Glass surface with logo, wallet address badge, settings
+**Tab switching:** 200ms transition, active indicator slides with Nimiq easing
 
 ## 6. Do's and Don'ts
 

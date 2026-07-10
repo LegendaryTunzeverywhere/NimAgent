@@ -9,22 +9,24 @@ import { claimReferralRewards, getReferralLink, getReferralStatus, trackReferral
 import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 
+import Button from '@/components/Button';
+
 interface QuickAction {
   icon: IconName;
   label: string;
   action: () => void;
 }
 
-// Maps semantic color names (from transaction data) to hex values.
-// Disciplined palette: gold for NIM-native, blue for commerce, green/red for status.
+// Maps semantic color names (from transaction data) to Nimiq brand colors.
+// Functional palette: gold for NIM-native, light blue for commerce, green/red for status.
 const TX_COLOR_MAP: Record<string, string> = {
-  success: '#34D399',
-  error: '#F87171',
-  warning: '#F5A623',
-  info: '#2B6BD6',
-  gold: '#F5A623',
-  purple: '#8e1caaff',
-  blue: '#2B6BD6',
+  success: '#21BCA5', // Nimiq Green
+  error: '#D94432',   // Nimiq Red
+  warning: '#E9B213', // Nimiq Gold
+  info: '#0582CA',    // Nimiq Light Blue
+  gold: '#E9B213',    // Nimiq Gold
+  purple: '#5F4B8B',  // Nimiq Purple
+  blue: '#0582CA',    // Nimiq Light Blue
 };
 
 const WELCOME_HIGHLIGHTS: Array<{
@@ -37,19 +39,19 @@ const WELCOME_HIGHLIGHTS: Array<{
     icon: 'send',
     title: 'Send NIM fast',
     description: 'Feeless transfers with QR, saved contacts, and plain-language prompts.',
-    color: '#F5A623',
+    color: '#E9B213', // Nimiq Gold - crypto
   },
   {
     icon: 'robot',
     title: 'Ask the agent',
     description: 'Get guided help for payments, balances, and wallet actions in one place.',
-    color: '#2B6BD6',
+    color: '#0582CA', // Nimiq Light Blue - AI
   },
   {
     icon: 'gift-card',
     title: 'Pay for services',
     description: 'Buy gift cards, top up airtime, and pay bills from the same wallet.',
-    color: '#F5A623',
+    color: '#0582CA', // Nimiq Light Blue - commerce
   },
 ];
 
@@ -489,16 +491,16 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
   ];
 
   // Per-action accent colors for the quick-action tiles
-  // Two-accent system: GOLD = NIM-native actions, BLUE = commerce/services.
+  // Functional color split: GOLD (#E9B213) = crypto actions, LIGHT BLUE (#0582CA) = commerce/AI
   const actionAccents: Record<string, string> = {
-    'Send NIM': '#F5A623',
-    'Generate QR': '#F5A623',
-    'Scan QR': '#F5A623',
-    'Gift Cards': '#F5A623',
-    'Airtime': '#2B6BD6',
-    'Pay Bills': '#2B6BD6',
-    'Referral Link': '#2B6BD6',
-    'Leaderboard': '#2B6BD6',
+    'Send NIM': '#E9B213',      // Gold - crypto
+    'Generate QR': '#E9B213',   // Gold - crypto
+    'Scan QR': '#E9B213',       // Gold - crypto
+    'Gift Cards': '#0582CA',    // Light Blue - commerce
+    'Airtime': '#0582CA',       // Light Blue - commerce
+    'Pay Bills': '#0582CA',     // Light Blue - commerce
+    'Referral Link': '#E9B213', // Gold - crypto rewards
+    'Leaderboard': '#E9B213',   // Gold - crypto competition
   };
 
 
@@ -510,11 +512,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
       {/* Hero Balance Card - only shown when connected (Welcome card covers the disconnected state) */}
       {wallet.connected && (
-      <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-3xl p-7 relative overflow-hidden shadow-sm">
+      <div className="animate-fade-up glass dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.08] rounded-[10px] p-7 relative overflow-hidden shadow-sm">
         <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center text-amber-600 dark:text-gold">
+              <span className="w-7 h-7 rounded-lg bg-[#E9B213]/15 border border-[#E9B213]/25 flex items-center justify-center text-[#E9B213]">
                 <Icon name="wallet" size={15} />
               </span>
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-white/55">
@@ -524,10 +526,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             {wallet.connected && (
               <button
                 onClick={disconnectWallet}
-                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/65 border border-gray-200 dark:border-white/10 hover:bg-red-100 dark:hover:bg-error/15 hover:text-red-600 dark:hover:text-error hover:border-red-300 dark:hover:border-error/25 transition-colors"
+                className="flex items-center gap-1.5 text-xs rounded-full px-2.5 py-1 font-semibold bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/65 border border-gray-200 dark:border-white/10 hover:bg-[#D94432]/10 hover:text-[#D94432] hover:border-[#D94432]/25 transition-all"
+                style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
                 title="Disconnect Wallet"
               >
-                <Icon name="disconnect" size={12} strokeWidth={2.2} />
+                <Icon name="disconnect" size={12} strokeWidth={2} />
                 Disconnect
               </button>
             )}
@@ -539,14 +542,20 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <span className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter tabular-nums">
                   {wallet.balance.nim.balanceFormatted}
                 </span>
-                <span className="text-lg font-bold text-amber-600 dark:text-gold">NIM</span>
+                <span className="text-lg font-bold text-[#E9B213]">NIM</span>
               </div>
               <div className="flex items-center gap-2 mb-8">
                 <span className="text-sm text-gray-500 dark:text-white/55 font-mono">
                   ≈ ${wallet.balance.nim.balanceUSD} USD
                 </span>
                 {priceChange != null && (
-                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${priceChange >= 0 ? 'text-green-600 dark:text-success bg-green-100 dark:bg-success/10' : 'text-red-600 dark:text-error bg-red-100 dark:bg-error/10'}`}>
+                  <span 
+                    className="text-xs font-semibold px-1.5 py-0.5 rounded-md"
+                    style={{
+                      backgroundColor: priceChange >= 0 ? 'rgba(33, 188, 165, 0.1)' : 'rgba(217, 68, 50, 0.1)',
+                      color: priceChange >= 0 ? '#21BCA5' : '#D94432',
+                    }}
+                  >
                     {priceChange >= 0 ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
                   </span>
                 )}
@@ -561,43 +570,50 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               <div className="mb-4" />
             </>
           ) : (
-            <div className="mb-6 rounded-2xl border border-red-200 dark:border-error/20 bg-red-50 dark:bg-error/10 p-4 text-center">
-              <p className="text-sm font-semibold text-red-700 dark:text-error">
+            <div className="mb-6 rounded-2xl border border-[#D94432]/20 bg-[#D94432]/10 p-4 text-center">
+              <p className="text-sm font-semibold text-[#D94432]">
                 {wallet.error?.includes('syncing') ? 'Nimiq Pay is syncing' : 'Couldn&apos;t load your balance'}
               </p>
-              <p className="mt-1 text-xs text-red-600/80 dark:text-error/80">
+              <p className="mt-1 text-xs text-[#D94432]/80">
                 {wallet.error?.includes('syncing')
                   ? 'Wait a moment for the wallet to establish Nimiq consensus, then refresh the balance.'
                   : 'Try again. NimAgent will fall back to direct network balance lookup inside Nimiq Pay.'}
               </p>
-              <button
+              <Button
                 onClick={() => fetchBalance()}
-                className="mt-3 inline-flex items-center justify-center rounded-xl border border-red-300 dark:border-error/30 px-4 py-2 text-xs font-semibold text-red-700 dark:text-error hover:bg-red-100 dark:hover:bg-error/15 transition-colors"
+                variant="ghost"
+                size="sm"
+                icon="refresh"
+                className="mt-3 border border-[#D94432]/30 text-[#D94432] hover:bg-[#D94432]/15"
               >
                 {wallet.error?.includes('syncing') ? 'Check again' : 'Retry balance'}
-              </button>
+              </Button>
             </div>
           )}
 
           <div className="flex gap-3">
-            <button
-              className="btn-gold flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-amber-600 dark:bg-gold text-white hover:bg-amber-700 dark:hover:bg-gold/90"
+            <Button
+              variant="gold"
+              size="md"
+              icon="chat"
+              className="flex-1"
               onClick={() => setActiveTab('chat')}
             >
-              <Icon name="chat" size={16} strokeWidth={2.2} />
               Start AI Chat
-            </button>
-            <button
-              className="flex-1 rounded-2xl py-3 text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-white/5 text-amber-600 dark:text-gold border border-amber-300 dark:border-gold/30 hover:bg-amber-100 dark:hover:bg-gold/10 transition-all"
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              icon="history"
+              className="flex-1"
               onClick={() => setActiveTab('history')}
             >
-              <Icon name="history" size={16} strokeWidth={2.2} />
               History
-            </button>
+            </Button>
           </div>
 
           {wallet.error && (
-            <p className="text-xs text-red-600 dark:text-error mt-3 text-center">{wallet.error}</p>
+            <p className="text-xs mt-3 text-center" style={{ color: '#D94432' }}>{wallet.error}</p>
           )}
         </div>
       </div>
@@ -607,7 +623,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
       {wallet.connected && (
         <>
           <div className="grid grid-cols-2 gap-3 animate-fade-up-delay-1 -mt-2">
-            <div className="card-premium rounded-2xl p-5 text-center">
+            <div className="card-premium rounded-[10px] p-5 text-center">
               <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">NIM Price</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">${nimPrice?.toFixed(4) || '—'}</p>
               {priceChange != null ? (
@@ -618,7 +634,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <p className="text-xs mt-1 text-gray-400 dark:text-white/30">—</p>
               )}
             </div>
-            <div className="card-premium rounded-2xl p-5 text-center">
+            <div className="card-premium rounded-[10px] p-5 text-center">
               <p className="text-[10px] text-gray-500 dark:text-white/55 mb-2 uppercase tracking-wider">Sent Today</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{sentToday.toFixed(0)}</p>
               <p className="text-xs text-gray-500 dark:text-white/65 mt-1">
@@ -629,9 +645,9 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           </div>
           
           {/* Markup Notice */}
-          <div className="mt-4 card-premium rounded-2xl p-4 text-center animate-fade-up-delay-2">
+          <div className="mt-4 card-premium rounded-[10px] p-4 text-center animate-fade-up-delay-2">
             <p className="text-[11px] text-gray-600 dark:text-white/70 flex items-center justify-center gap-1">
-              <Icon name="info" size={12} className="text-amber-600 dark:text-gold" />
+              <Icon name="info" size={12} className="text-[#E9B213]" />
               Gift cards, Airtime and bills services include a small 0.5% markup to cover operational costs
             </p>
           </div>
@@ -646,7 +662,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               Quick Actions
             </h2>
             <button
-              className="text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors font-semibold"
+              className="text-xs font-semibold transition-colors"
+              style={{ 
+                color: '#E9B213',
+                transition: 'color 200ms cubic-bezier(0.25, 0, 0, 1)',
+              }}
               onClick={() => setActiveTab('chat')}
             >
               See all
@@ -696,7 +716,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               Recent Activity
             </h2>
             <button 
-              className="text-xs text-amber-600 dark:text-gold hover:text-amber-700 dark:hover:text-gold-bright transition-colors"
+              className="text-xs font-semibold transition-colors"
+              style={{ 
+                color: '#E9B213',
+                transition: 'color 200ms cubic-bezier(0.25, 0, 0, 1)',
+              }}
               onClick={() => setActiveTab('history')}
             >
               View all
@@ -707,7 +731,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               {recentTransactions.map((tx) => {
                 const txColor = TX_COLOR_MAP[tx.color] || '#F5A623';
                 return (
-                <div key={tx.id} className="card-premium rounded-2xl overflow-hidden">
+                <div key={tx.id} className="card-premium rounded-[10px] overflow-hidden">
                   <div
                     onClick={() => setExpandedTx(expandedTx === tx.id.toString() ? null : tx.id.toString())}
                     className="p-4 flex items-center gap-3 cursor-pointer hover:bg-white/[0.03] transition-all"
@@ -789,13 +813,13 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               })}
             </div>
           ) : isLoadingInitialData ? (
-            <div className="card-premium rounded-2xl p-8 text-center">
+            <div className="card-premium rounded-[10px] p-8 text-center">
               <div className="w-8 h-8 mx-auto mb-3 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm font-semibold text-gray-700 dark:text-white/75">Loading your activity...</p>
               <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Fetching transaction history</p>
             </div>
           ) : (
-            <div className="card-premium rounded-2xl p-8 text-center">
+            <div className="card-premium rounded-[10px] p-8 text-center">
               <div className="text-3xl mb-2 opacity-50">📊</div>
               <p className="text-sm text-gray-600 dark:text-white/55">No recent transactions</p>
               <p className="text-xs text-gray-500 dark:text-white/65 mt-1">Start by sending NIM or making a payment</p>
@@ -806,7 +830,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
       {/* Welcome Message for Non-Connected Users */}
       {!wallet.connected && (
-        <div className="animate-fade-up-delay-1 rounded-[2rem] p-6 sm:p-7 card-premium relative overflow-hidden">
+        <div className="animate-fade-up-delay-1 rounded-[10px] p-6 sm:p-7 card-premium relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,166,35,0.12),transparent_40%)] dark:bg-[radial-gradient(circle_at_top,rgba(245,166,35,0.16),transparent_42%)]" />
           <div className="relative text-center">
             <div className="flex justify-center mb-4">
@@ -852,23 +876,17 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               ))}
             </div>
 
-            <button
-              className="btn-gold w-full rounded-2xl py-3.5 text-sm font-bold flex items-center justify-center gap-2"
-              onClick={handleConnect}
+            <Button
+              variant="gold"
+              size="lg"
+              icon="wallet"
+              fullWidth
+              loading={wallet.loading || connecting}
               disabled={wallet.loading || connecting}
+              onClick={handleConnect}
             >
-              {wallet.loading || connecting ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-background-primary/40 border-t-background-primary rounded-full animate-spin" />
-                  {connecting ? 'Connecting to your wallet...' : 'Connecting...'}
-                </>
-              ) : (
-                <>
-                  <Icon name="wallet" size={16} strokeWidth={2.2} />
-                  Connect Wallet to Start
-                </>
-              )}
-            </button>
+              {connecting ? 'Connecting to your wallet...' : 'Connect Wallet to Start'}
+            </Button>
             <p className="mt-3 text-xs text-gray-500 dark:text-white/45">
               {connecting 
                 ? 'Please wait while we connect to Nimiq Pay...' 
@@ -878,7 +896,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
         </div>
       )}
 
-      <div className="card-premium rounded-[2rem] p-4 sm:p-5">
+      <div className="card-premium rounded-[10px] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-white/45">Community</p>
@@ -886,7 +904,9 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           </div>
           <div className="flex items-center gap-2">
             {SOCIAL_LINKS.map((social) => {
-              const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-2xl border transition-all';
+              const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-lg border transition-all duration-200';
+              const transitionStyle = { transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' };
+              const iconColor = social.href ? '#E9B213' : undefined;
               return social.href ? (
                 <button
                   key={social.label}
@@ -894,10 +914,10 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   onClick={() => openExternalUrl(social.href!)}
                   title={social.label}
                   aria-label={social.label}
-                  className={`${sharedClasses} border-amber-300 dark:border-gold/25 bg-amber-50 dark:bg-gold/10 hover:scale-[1.03] hover:bg-amber-100 dark:hover:bg-gold/15`}
+                  className={`${sharedClasses} border-[#E9B213]/25 bg-[#E9B213]/10 hover:scale-105 hover:bg-[#E9B213]/15`}
+                  style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain" />
+                  <Icon name={social.icon} size={20} className="text-[#E9B213]" />
                 </button>
               ) : (
                 <div
@@ -906,8 +926,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   aria-label={`${social.label} coming soon`}
                   className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={social.icon} alt={social.label} width={22} height={22} className="object-contain grayscale" />
+                  <Icon name={social.icon} size={20} className="text-gray-400 dark:text-white/30" />
                 </div>
               );
             })}
@@ -917,12 +936,12 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
       {/* Referral Modal */}
       {showReferralModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowReferralModal(false)}>
-          <div className="max-w-md w-full flex flex-col rounded-t-[2rem] sm:rounded-[2rem] animate-fade-up bg-white dark:bg-[#0f172a] border border-gray-200/80 dark:border-white/[0.08] shadow-2xl overflow-hidden" style={{ maxHeight: '92vh' }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-overlay-in" onClick={() => setShowReferralModal(false)}>
+          <div className="max-w-md w-full flex flex-col rounded-t-[1.25rem] sm:rounded-[10px] animate-fade-up glass-strong shadow-2xl overflow-hidden" style={{ maxHeight: '88vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-0 sm:hidden"><div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-white/20" /></div>
-            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100 dark:border-white/[0.07] bg-white dark:bg-[#0f172a]">
+            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-200 dark:border-white/[0.08]">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-gold/15 border border-amber-300 dark:border-gold/25 flex items-center justify-center">
                   <Icon name="gift" size={16} className="text-amber-600 dark:text-gold" />
                 </div>
                 <div>
@@ -930,11 +949,12 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   <p className="text-[11px] text-gray-500 dark:text-white/50">Earn NIM for every qualified friend</p>
                 </div>
               </div>
-              <button onClick={() => setShowReferralModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all ml-2">
+              <button onClick={() => setShowReferralModal(false)} className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200 ml-2"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 dark:text-white/50"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4 bg-white dark:bg-[#0f172a]">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: 'Total', value: String(totalReferrals), color: 'text-gray-900 dark:text-white' },
@@ -942,14 +962,14 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   { label: 'Claimable', value: totalClaimableNim.toFixed(2), color: 'text-amber-600 dark:text-gold', sub: 'NIM' },
                   { label: 'Claimed', value: totalClaimedNim.toFixed(2), color: 'text-gray-900 dark:text-white', sub: 'NIM' },
                 ].map(({ label, value, color, sub }) => (
-                  <div key={label} className="rounded-xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.03] p-2.5 text-center">
+                  <div key={label} className="rounded-lg border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.03] p-2.5 text-center">
                     <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-1">{label}</p>
                     <p className={`text-sm font-black tabular-nums ${color} leading-tight`}>{value}</p>
                     {sub && <p className="text-[8px] font-bold text-gray-400 dark:text-white/30 mt-0.5">{sub}</p>}
                   </div>
                 ))}
               </div>
-              <div className="rounded-2xl border border-amber-200 dark:border-gold/20 bg-amber-50/60 dark:bg-gold/[0.06] p-4">
+              <div className="rounded-[10px] border border-amber-200 dark:border-gold/20 bg-amber-50/60 dark:bg-gold/[0.06] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-xs font-semibold text-gray-800 dark:text-white/80">Lifetime Earnings</p>
@@ -960,24 +980,41 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     <p className="text-[10px] font-bold text-amber-500 dark:text-gold/70">NIM</p>
                   </div>
                 </div>
-                <button onClick={handleClaimReferralRewards} disabled={claimingReferralRewards || totalClaimableNim <= 0} className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all ${claimingReferralRewards || totalClaimableNim <= 0 ? 'bg-gray-200 text-gray-400 dark:bg-white/10 dark:text-white/30 cursor-not-allowed' : 'btn-gold'}`}>
-                  {claimingReferralRewards ? 'Claiming…' : totalClaimableNim > 0 ? `Claim ${totalClaimableNim.toFixed(4)} NIM` : 'No claimable rewards yet'}
-                </button>
+                <Button
+                  onClick={handleClaimReferralRewards}
+                  disabled={claimingReferralRewards || totalClaimableNim <= 0}
+                  variant="gold"
+                  size="md"
+                  loading={claimingReferralRewards}
+                  fullWidth
+                >
+                  {totalClaimableNim > 0 ? `Claim ${totalClaimableNim.toFixed(4)} NIM` : 'No claimable rewards yet'}
+                </Button>
                 {referralClaimNotice && <p className="mt-2 text-xs text-center font-medium text-gray-600 dark:text-white/60">{referralClaimNotice}</p>}
               </div>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referral Link</p>
                 <div className="flex gap-2 items-center">
-                  <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5">
+                  <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/[0.08] rounded-lg px-3 py-2.5">
                     <p className="text-[11px] text-gray-700 dark:text-white/70 font-mono truncate">{referralLink || 'Loading…'}</p>
                   </div>
-                  <button onClick={async () => { await navigator.clipboard.writeText(referralLink); setCopyToastVisible(true); setTimeout(() => setCopyToastVisible(false), 2000); }} disabled={!referralLink} className={`flex-shrink-0 px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${copyToastVisible ? 'bg-success/20 text-success border border-success/30' : referralLink ? 'btn-gold' : 'bg-gray-200 text-gray-400 dark:bg-white/10 dark:text-white/30 cursor-not-allowed'}`}>
-                    <Icon name={copyToastVisible ? 'check' : 'copy'} size={12} strokeWidth={2.2} />
+                  <Button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(referralLink);
+                      setCopyToastVisible(true);
+                      setTimeout(() => setCopyToastVisible(false), 2000);
+                    }}
+                    disabled={!referralLink}
+                    variant={copyToastVisible ? 'ghost' : 'gold'}
+                    size="sm"
+                    icon={copyToastVisible ? 'check' : 'copy'}
+                    className={copyToastVisible ? 'bg-[#21BCA5]/20 text-[#21BCA5] border border-[#21BCA5]/30' : ''}
+                  >
                     {copyToastVisible ? 'Copied!' : 'Copy'}
-                  </button>
+                  </Button>
                 </div>
               </div>
-              <div className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.02] p-4">
+              <div className="rounded-[10px] border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-3">How It Works</p>
                 <div className="space-y-2.5">
                   {[
@@ -1000,7 +1037,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                     <p className="text-sm text-gray-500 dark:text-white/50">Loading…</p>
                   </div>
                 ) : referrals.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-6 text-center">
+                  <div className="rounded-[10px] border border-dashed border-gray-200 dark:border-white/[0.08] p-6 text-center">
                     <Icon name="gift" size={24} className="mx-auto text-gray-300 dark:text-white/20 mb-2" />
                     <p className="text-sm text-gray-500 dark:text-white/50">No referrals yet</p>
                     <p className="text-[11px] text-gray-400 dark:text-white/35 mt-0.5">Share your link to start earning!</p>
@@ -1008,7 +1045,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto overscroll-contain">
                     {referrals.map((referral: any) => (
-                      <div key={referral.id} className="rounded-xl border border-gray-200 dark:border-white/[0.07] bg-gray-50 dark:bg-white/[0.02] p-3 flex items-center justify-between gap-3">
+                      <div key={referral.id} className="rounded-lg border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-3 flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-gray-900 dark:text-white font-mono truncate">{referral.referred_wallet.slice(0, 8)}…{referral.referred_wallet.slice(-4)}</p>
                           <div className="flex items-center gap-3 mt-0.5">
@@ -1025,20 +1062,26 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 )}
               </div>
             </div>
-            <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 dark:border-white/[0.07] bg-white dark:bg-[#0f172a]">
-              <button onClick={() => setShowReferralModal(false)} className="w-full btn-gold rounded-2xl py-3 text-sm font-bold">Done</button>
+            <div className="flex-shrink-0 px-5 py-4 border-t border-gray-200 dark:border-white/[0.08]">
+              <Button
+                variant="gold"
+                fullWidth
+                onClick={() => setShowReferralModal(false)}
+              >
+                Done
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Leaderboard Modal */}      {/* Leaderboard Modal */}
+      {/* Leaderboard Modal */}
       {showLeaderboardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowLeaderboardModal(false)}>
-          <div className="max-w-md w-full card-premium rounded-3xl p-6 animate-fade-up" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-sm p-4 animate-overlay-in" onClick={() => setShowLeaderboardModal(false)}>
+          <div className="max-w-md w-full glass-strong rounded-[10px] p-6 animate-fade-up shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
                   <Icon name="trophy" size={18} className="text-white" />
                 </div>
                 <div>
@@ -1048,9 +1091,10 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               </div>
               <button
                 onClick={() => setShowLeaderboardModal(false)}
-                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+                className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}
               >
-                <Icon name="chevron-right" size={14} className="rotate-90 text-gray-500" />
+                <Icon name="close" size={14} className="text-gray-500 dark:text-white/50" />
               </button>
             </div>
 
@@ -1063,7 +1107,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               <div className="space-y-3 mb-6">
                 {/* Top 3 Special Display */}
                 {leaderboard.length > 0 && (
-                  <div className="flex justify-center gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+                  <div className="flex justify-center gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/[0.08]">
                     {[1, 0, 2].map((pos) => {
                       const entry = leaderboard[pos];
                       if (!entry) return null;
@@ -1094,11 +1138,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   {leaderboard.map((entry, index) => (
                     <div
                       key={index}
-                      className={`flex items-center gap-3 p-3 rounded-xl ${
+                      className={`flex items-center gap-3 p-3 rounded-lg ${
                         index === 0 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-500/10 dark:to-yellow-600/5 border-2 border-yellow-200 dark:border-yellow-500/20' :
                         index === 1 ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/5 border-2 border-gray-200 dark:border-gray-500/20' :
                         index === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-500/10 dark:to-orange-600/5 border-2 border-orange-200 dark:border-orange-500/20' :
-                        'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10'
+                        'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.08]'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
@@ -1136,12 +1180,13 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               </div>
             )}
 
-            <button
+            <Button
+              variant="gold"
+              fullWidth
               onClick={() => setShowLeaderboardModal(false)}
-              className="w-full btn-gold rounded-2xl py-3 text-sm font-bold"
             >
               Done
-            </button>
+            </Button>
           </div>
         </div>
       )}

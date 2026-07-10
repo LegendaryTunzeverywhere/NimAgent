@@ -48,8 +48,8 @@ const securityHeaders = [
       // Fonts: local + Google Fonts files
       "font-src 'self' data: https://fonts.gstatic.com",
 
-      // Images: data URIs (QR canvas export) + blob URIs + social CDN icons
-      "img-src 'self' data: blob: https://s.magecdn.com https:",
+      // Images: data URIs (QR canvas export) + blob URIs
+      "img-src 'self' data: blob: https:",
 
       // Fetch/XHR — every API endpoint the frontend calls:
       // - own backend (nimagent.online)

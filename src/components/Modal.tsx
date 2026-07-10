@@ -29,7 +29,7 @@ export default function Modal({
   subtitle,
   children,
   footer,
-  maxWidth = 'max-w-sm',
+  maxWidth = 'max-w-md',
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -75,23 +75,24 @@ export default function Modal({
       aria-modal="true"
       aria-label={title || 'Dialog'}
     >
-      {/* Backdrop */}
+      {/* Backdrop - Nimiq standard */}
       <div
-        className="absolute inset-0 bg-black/70 dark:bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Panel */}
-      <div className={`relative w-full ${maxWidth} bg-white dark:bg-[rgba(20,22,34,0.98)] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl animate-modal-in backdrop-blur-xl`}>
+      {/* Panel - Nimiq glass surface with 10px radius */}
+      <div className={`relative w-full ${maxWidth} glass-strong rounded-[10px] shadow-2xl animate-modal-in`}>
         {(title || subtitle) && (
-          <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 border-b border-gray-200 dark:border-white/[0.06]">
+          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-gray-200 dark:border-white/[0.08]">
             <div>
               {title && <h3 className="text-base font-bold text-gray-900 dark:text-white">{title}</h3>}
-              {subtitle && <p className="text-xs text-gray-600 dark:text-white/65 mt-0.5">{subtitle}</p>}
+              {subtitle && <p className="text-xs text-gray-600 dark:text-white/60 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+              style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}
               aria-label="Close"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,10 +103,10 @@ export default function Modal({
           </div>
         )}
 
-        <div className="px-5 py-4">{children}</div>
+        <div className="px-6 py-5">{children}</div>
 
         {footer && (
-          <div className="px-5 pb-5 pt-1 flex gap-2 justify-end">{footer}</div>
+          <div className="px-6 pb-5 pt-2 flex gap-2 justify-end border-t border-gray-200 dark:border-white/[0.08]">{footer}</div>
         )}
       </div>
     </div>

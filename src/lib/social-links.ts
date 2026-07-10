@@ -1,21 +1,23 @@
+import Icon, { type IconName } from '@/components/Icon';
+
 export interface SocialLink {
   label: string;
   href: string | null;
-  icon: string;
+  icon: IconName;
   description: string;
 }
 
 export const SOCIAL_LINKS: SocialLink[] = [
   {
-    label: 'X',
+    label: 'X (Twitter)',
     href: 'https://x.com/nimiqagent',
-    icon: 'https://s.magecdn.com/social/tc-x.svg',
+    icon: 'x-twitter',
     description: 'Updates, support, and launch posts',
   },
   {
     label: 'Discord',
     href: null,
-    icon: 'https://s.magecdn.com/social/tc-discord.svg',
+    icon: 'discord',
     description: 'Reserved for community chat and support',
   },
 ];

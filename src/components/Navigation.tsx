@@ -16,10 +16,10 @@ export default function Navigation() {
           <Logo size={34} glow />
           <div className="flex flex-col leading-none min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="font-extrabold text-gray-900 dark:text-white text-[17px] tracking-tight">
-                Nim<span className="text-amber-700 dark:text-gold">Agent</span>
+              <span className="font-bold text-gray-900 dark:text-white text-[17px] tracking-tight">
+                Nim<span className="text-[#E9B213]">Agent</span>
               </span>
-              <span className="shrink-0 rounded-full border border-amber-300 dark:border-gold/35 bg-amber-100 dark:bg-gold/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 dark:text-gold shadow-[0_0_0_1px_rgba(245,166,35,0.08)]">
+              <span className="shrink-0 rounded-full border border-[#E9B213]/35 bg-[#E9B213]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#E9B213] shadow-[0_0_0_1px_rgba(233,178,19,0.08)]">
                 Beta
               </span>
             </div>
@@ -31,15 +31,16 @@ export default function Navigation() {
 
         <div className="flex items-center gap-2">
           {wallet.connected && wallet.address && (
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold bg-emerald-50 dark:bg-success/10 text-emerald-700 dark:text-success border border-emerald-200 dark:border-success/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-success inline-block animate-live" />
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold bg-[#21BCA5]/10 text-[#21BCA5] border border-[#21BCA5]/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#21BCA5] inline-block animate-live" />
               <span className="font-mono">{wallet.address.slice(0, 4)}…{wallet.address.slice(-4)}</span>
             </div>
           )}
 
           <button
             onClick={() => setShowSettings(true)}
-            className="glass rounded-full p-2 text-gray-500 dark:text-white/50 hover:text-amber-700 dark:hover:text-gold hover:border-amber-300 dark:hover:border-gold/30 transition-colors"
+            className="glass rounded-full p-2 text-gray-500 dark:text-white/50 hover:text-[#E9B213] hover:border-[#E9B213]/30 transition-all duration-200"
+            style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
             aria-label="Settings"
           >
             <svg

@@ -104,6 +104,9 @@ export default function AuthProvider() {
   useEffect(() => {
     if (!wallet.connected) {
       setHasCheckedSession(false);
+      setAuthStatus('idle');
+      setShowFeedback(false);
+      setErrorMessage('');
     }
   }, [wallet.connected]);
 

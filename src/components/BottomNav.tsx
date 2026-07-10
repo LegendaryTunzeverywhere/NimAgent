@@ -102,6 +102,8 @@ export default function BottomNav() {
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const isChatLocked = tab.id === 'chat' && !wallet.connected;
+          // Home tab uses gold (crypto), Chat tab uses light blue (AI), History uses gold (crypto transactions)
+          const accentColor = tab.id === 'chat' ? '#0582CA' : '#E9B213';
           return (
             <button
               key={tab.id}
@@ -111,21 +113,40 @@ export default function BottomNav() {
               }}
               disabled={isChatLocked}
               className={[
-                'relative flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-all duration-200',
+                'relative flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-all',
                 isActive
-                  ? 'text-amber-700 dark:text-gold'
+                  ? ''
                   : isChatLocked
                     ? 'text-gray-400 dark:text-white/30 cursor-not-allowed'
                     : 'text-gray-500 dark:text-white/55 hover:text-gray-700 dark:hover:text-white/80',
               ].join(' ')}
+              style={isActive ? { 
+                color: accentColor,
+                transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)'
+              } : {
+                transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)'
+              }}
               aria-current={isActive ? 'page' : undefined}
               aria-disabled={isChatLocked || undefined}
               title={isChatLocked ? 'Connect your wallet to open AI Chat' : undefined}
             >
               {isActive && (
-                <span className="absolute inset-0 rounded-xl bg-amber-700/10 dark:bg-gold/10 border border-amber-700/20 dark:border-gold/20" />
+                <span 
+                  className="absolute inset-0 rounded-xl border"
+                  style={{
+                    backgroundColor: `${accentColor}10`,
+                    borderColor: `${accentColor}33`,
+                  }}
+                />
               )}
-              <span className={`relative transition-transform duration-200 ${isActive ? '-translate-y-0.5 scale-110' : ''}`}>
+              <span 
+                className="relative transition-transform"
+                style={{
+                  transitionDuration: '200ms',
+                  transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)',
+                  transform: isActive ? 'translateY(-2px) scale(1.1)' : 'translateY(0) scale(1)',
+                }}
+              >
                 {tab.icon}
               </span>
               <span className="relative text-[10px] font-bold tracking-wide">{tab.label}</span>

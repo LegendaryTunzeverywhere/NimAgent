@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from './Icon';
+import Button from './Button';
 import Modal from './Modal';
 import jsQR from 'jsqr';
 
@@ -497,27 +498,32 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
         <div className="flex gap-2">
           {!isScanning ? (
-            <button
+            <Button
               onClick={startScanning}
               disabled={!!cameraUnavailableReason}
-              className="btn-gold flex-1 py-3 rounded-xl flex items-center justify-center gap-2"
+              variant="gold"
+              size="md"
+              icon="qr-scan"
+              className="flex-1"
             >
-              <Icon name="qr-scan" size={17} strokeWidth={2} />
               {cameraUnavailableReason ? 'Camera Unavailable' : 'Start Scanning'}
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={stopScanning}
-              className="flex-1 py-3 rounded-xl bg-error/15 text-error font-semibold border border-error/20 hover:bg-error/25 transition-colors flex items-center justify-center gap-2"
+              variant="ghost"
+              size="md"
+              className="flex-1 bg-[#D94432]/15 text-[#D94432] border border-[#D94432]/20 hover:bg-[#D94432]/25"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
               Stop Scanning
-            </button>
+            </Button>
           )}
 
           <button
             onClick={() => setManualOpen(true)}
-            className="px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/60 border border-gray-200 dark:border-white/[0.07] font-semibold hover:bg-gray-200 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white/90 transition-colors"
+            className="px-4 py-3 rounded-[13.5px] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/60 border border-gray-200 dark:border-white/[0.07] font-semibold hover:bg-gray-200 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white/90 transition-all"
+            style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)', transitionDuration: '200ms' }}
             title="Enter code manually"
           >
             <Icon name="plus" size={18} strokeWidth={2} />
@@ -540,19 +546,21 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         subtitle="Paste a Nimiq address, payment link, or nimiq: URI"
         footer={
           <>
-            <button
+            <Button
               onClick={() => setManualOpen(false)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+              variant="ghost"
+              size="sm"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleManualSubmit}
               disabled={!manualValue.trim()}
-              className="btn-gold px-4 py-2 rounded-lg text-sm"
+              variant="gold"
+              size="sm"
             >
               Continue
-            </button>
+            </Button>
           </>
         }
       >

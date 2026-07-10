@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import Icon from '@/components/Icon';
+import Button from '@/components/Button';
 
 export default function SignInPage() {
   const wallet = useAppStore(state => state.wallet);
@@ -30,12 +31,12 @@ export default function SignInPage() {
             {/* Glow effect */}
             <div className="absolute inset-0 rounded-3xl opacity-20 dark:opacity-30 animate-lock-pulse"
               style={{
-                background: 'radial-gradient(circle, rgba(245, 166, 35, 0.4) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(233, 178, 19, 0.4) 0%, transparent 70%)',
                 filter: 'blur(24px)'
               }} />
             {/* Lock container */}
             <div className="relative w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-gray-100 dark:bg-[#1F1C3E]">
-              <span style={{ filter: 'drop-shadow(0 2px 8px rgba(245, 166, 35, 0.3))' }}>
+              <span style={{ filter: 'drop-shadow(0 2px 8px rgba(233, 178, 19, 0.3))' }}>
                 <Icon name="lock" size={44} strokeWidth={2.5} 
                   className="text-gray-800 dark:text-white animate-lock-bob" />
               </span>
@@ -52,14 +53,14 @@ export default function SignInPage() {
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">What You'll Unlock</h3>
           <ul className="space-y-3 text-sm text-gray-700 dark:text-white/70">
             {[
-              { icon: 'chat', text: 'AI-powered payment assistant', color: '#2B6BD6' },
-              { icon: 'history', text: 'Transaction history & tracking', color: '#F5A623' },
-              { icon: 'send', text: 'Send NIM with ease', color: '#F5A623' },
-              { icon: 'gift-card', text: 'Buy gift cards & pay bills', color: '#2B6BD6' },
+              { icon: 'chat', text: 'AI-powered payment assistant', color: '#0582CA' },
+              { icon: 'history', text: 'Transaction history & tracking', color: '#E9B213' },
+              { icon: 'send', text: 'Send NIM with ease', color: '#E9B213' },
+              { icon: 'gift-card', text: 'Buy gift cards & pay bills', color: '#0582CA' },
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${item.color}${item.color === '#2B6BD6' ? '20' : '15'}` }}>
+                  style={{ backgroundColor: `${item.color}15`, border: `1px solid ${item.color}25` }}>
                   <span style={{ color: item.color }}>
                     <Icon name={item.icon as any} size={16} strokeWidth={2} />
                   </span>
@@ -73,49 +74,40 @@ export default function SignInPage() {
         <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
           <label className={`group flex items-start gap-3.5 p-5 rounded-2xl cursor-pointer transition-all duration-200 bg-gray-50 dark:bg-[#10121F] ${
               agreedToTerms 
-                ? 'border-[2px] border-[#F5A623]' 
+                ? 'border-[2px] border-[#E9B213]' 
                 : 'border-[2px] border-gray-200 dark:border-white/[0.07]'
-            }`}>
+            }`}
+            style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
             <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
               className="mt-0.5 w-5 h-5 rounded-md border-2 cursor-pointer transition-colors"
               style={{
-                borderColor: agreedToTerms ? '#F5A623' : undefined,
-                backgroundColor: agreedToTerms ? '#F5A623' : 'transparent',
-                accentColor: '#F5A623'
+                borderColor: agreedToTerms ? '#E9B213' : undefined,
+                backgroundColor: agreedToTerms ? '#E9B213' : 'transparent',
+                accentColor: '#E9B213',
+                transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)',
               }} />
             <span className="text-sm text-gray-700 dark:text-white/70 leading-relaxed flex-1">
               I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }}
                 className="font-semibold hover:underline underline-offset-2"
-                style={{ color: '#F5A623' }}>Terms</button>
+                style={{ color: '#E9B213' }}>Terms</button>
               {' '}and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}
                 className="font-semibold hover:underline underline-offset-2"
-                style={{ color: '#F5A623' }}>Privacy Policy</button>
+                style={{ color: '#E9B213' }}>Privacy Policy</button>
             </span>
           </label>
         </div>
         {/* CTA Button */}
         <div className="animate-fade-up space-y-4" style={{ animationDelay: '300ms' }}>
-          <button onClick={handleSignIn} disabled={!agreedToTerms}
-            className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-bold rounded-2xl active:scale-[0.98] transition-all duration-200"
-            style={{
-              backgroundColor: agreedToTerms ? '#F5A623' : 'rgba(245, 166, 35, 0.3)',
-              color: agreedToTerms ? '#0A0C17' : 'rgba(0, 0, 0, 0.4)',
-              cursor: agreedToTerms ? 'pointer' : 'not-allowed',
-              boxShadow: agreedToTerms ? '0 4px 16px rgba(245, 166, 35, 0.3)' : 'none'
-            }}
-            onMouseEnter={(e) => {
-              if (agreedToTerms) {
-                e.currentTarget.style.backgroundColor = '#FBBF4D';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (agreedToTerms) {
-                e.currentTarget.style.backgroundColor = '#F5A623';
-              }
-            }}>
-            <Icon name="unlock" size={22} strokeWidth={2.5} />
-            <span>Sign In Securely</span>
-          </button>
+          <Button
+            onClick={handleSignIn}
+            disabled={!agreedToTerms}
+            variant="gold"
+            size="lg"
+            icon="unlock"
+            fullWidth
+          >
+            Sign In Securely
+          </Button>
           {wallet.address && (
             <div className="text-center space-y-2 pt-2">
               <p className="text-xs text-gray-500 dark:text-white/40 uppercase tracking-widest font-semibold">Connected Wallet</p>
@@ -126,18 +118,19 @@ export default function SignInPage() {
       </div>
       {/* Terms Modal */}
       {showTerms && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/80"
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/70"
           onClick={() => setShowTerms(false)}>
-          <div className="rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in bg-white dark:bg-[#10121F] border border-gray-200 dark:border-white/10"
+          <div className="rounded-[10px] max-w-lg w-full max-h-[80vh] overflow-hidden shadow-2xl animate-modal-in glass-strong"
             onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 bg-white dark:bg-[#10121F] border-b border-gray-200 dark:border-white/[0.07]">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-gray-200 dark:border-white/[0.08]">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
               <button onClick={() => setShowTerms(false)} 
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors bg-gray-100 dark:bg-white/[0.05]">
-                <Icon name="close" size={20} strokeWidth={2} />
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
+                <Icon name="close" size={18} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
               <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h3>
                 <p>By signing in and using NimAgent, you agree to be bound by these Terms and Conditions.</p></section>
@@ -159,32 +152,33 @@ export default function SignInPage() {
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">7. Modifications</h3>
                 <p>We reserve the right to modify these terms at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 px-6 py-5 bg-white dark:bg-[#10121F] border-t border-gray-200 dark:border-white/[0.07]">
-              <button onClick={() => setShowTerms(false)} 
-                className="w-full py-3 rounded-xl font-semibold transition-colors"
-                style={{ backgroundColor: '#F5A623', color: '#0A0C17' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FBBF4D'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F5A623'}>
+            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-gray-200 dark:border-white/[0.08]">
+              <Button
+                onClick={() => setShowTerms(false)}
+                variant="gold"
+                fullWidth
+              >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
       {/* Privacy Policy Modal */}
       {showPrivacy && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/80"
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-overlay-in backdrop-blur-sm bg-black/60 dark:bg-black/70"
           onClick={() => setShowPrivacy(false)}>
-          <div className="rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl animate-modal-in bg-white dark:bg-[#10121F] border border-gray-200 dark:border-white/10"
+          <div className="rounded-[10px] max-w-lg w-full max-h-[80vh] overflow-hidden shadow-2xl animate-modal-in glass-strong"
             onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 bg-white dark:bg-[#10121F] border-b border-gray-200 dark:border-white/[0.07]">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between z-10 glass-strong border-b border-gray-200 dark:border-white/[0.08]">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
               <button onClick={() => setShowPrivacy(false)} 
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors bg-gray-100 dark:bg-white/[0.05]">
-                <Icon name="close" size={20} strokeWidth={2} />
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' }}>
+                <Icon name="close" size={18} strokeWidth={2} />
               </button>
             </div>
-            <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-140px)] space-y-5 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
+            <div className="px-6 py-5 overflow-y-auto max-h-[calc(80vh-160px)] space-y-4 text-sm text-gray-700 dark:text-white/70 leading-relaxed">
               <p className="font-semibold text-gray-900 dark:text-white">Last Updated: {new Date().toLocaleDateString()}</p>
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">1. Data We Collect</h3>
                 <p>We collect minimal data required to provide our services:</p>
@@ -213,14 +207,14 @@ export default function SignInPage() {
               <section><h3 className="font-bold text-base text-gray-900 dark:text-white mb-2">5. Your Rights</h3>
                 <p>You have the right to access, delete, and revoke authentication at any time.</p></section>
             </div>
-            <div className="sticky bottom-0 px-6 py-5 bg-white dark:bg-[#10121F] border-t border-gray-200 dark:border-white/[0.07]">
-              <button onClick={() => setShowPrivacy(false)} 
-                className="w-full py-3 rounded-xl font-semibold transition-colors"
-                style={{ backgroundColor: '#F5A623', color: '#0A0C17' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FBBF4D'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F5A623'}>
+            <div className="sticky bottom-0 px-6 py-4 glass-strong border-t border-gray-200 dark:border-white/[0.08]">
+              <Button
+                onClick={() => setShowPrivacy(false)}
+                variant="gold"
+                fullWidth
+              >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>

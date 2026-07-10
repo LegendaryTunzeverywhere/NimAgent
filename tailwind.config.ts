@@ -11,61 +11,83 @@ const config: Config = {
     extend: {
       colors: {
         background: {
-          primary: '#0A0C17',
-          secondary: '#10121F',
+          primary: '#1F2348',    // Nimiq Blue
+          secondary: '#151833',  // Nimiq Blue Darkened
           tertiary: '#0E0E1A',
         },
-        // Nimiq brand palette — keep the app to these accents only.
+        // Nimiq brand palette from @nimiq/style
+        nimiq: {
+          blue: '#1F2348',
+          'light-blue': '#0582CA',
+          'light-blue-on-dark': '#0CA6FE',
+          gold: '#E9B213',
+          green: '#21BCA5',
+          orange: '#FC8702',
+          red: '#D94432',
+          'red-on-dark': '#FF5C48',
+          purple: '#5F4B8B',
+          pink: '#FA7268',
+          'light-green': '#88B04B',
+          brown: '#795548',
+          gray: '#F4F4F4',
+          'light-gray': '#FAFAFA',
+          white: '#FFFFFF',
+        },
+        // Simplified aliases for the two-accent system
         gold: {
-          DEFAULT: '#F5A623', // NIM-native actions: send, receive, QR, swap, balance
-          bright: '#FBBF4D',
+          DEFAULT: '#E9B213', // Nimiq Gold
+          bright: '#FC8702',  // Orange accent
           dim: '#C9881A',
         },
         brand: {
-          blue: '#2B6BD6',        // Commerce + AI: gift cards, airtime, bills, agent
-          'blue-light': '#5B8FE6',
-          'blue-dim': '#1F4FA0',
-          navy: '#1F1C3E',        // Elevated dark surfaces
+          blue: '#0582CA',         // Light Blue
+          'blue-light': '#0CA6FE', // Light Blue On Dark
+          'blue-dim': '#0071C3',   // Light Blue Darkened
+          navy: '#1F2348',         // Nimiq Blue
         },
-        // Status only — never decorative
-        success: '#34D399',
-        error: '#F87171',
-        // Aliased to the two brand accents so legacy classes stay on-palette
+        // Status colors
+        success: '#21BCA5', // Nimiq Green
+        error: '#D94432',   // Nimiq Red
+        warning: '#E9B213', // Nimiq Gold
+        info: '#0582CA',    // Nimiq Light Blue
+        // Crypto colors
+        bitcoin: '#F7931A',
+        usdc: '#2775CA',
+        usdt: '#009393',
+        // Legacy aliases
         accent: {
-          purple: '#2B6BD6',
-          'purple-light': '#5B8FE6',
+          purple: '#0582CA',
+          'purple-light': '#0CA6FE',
         },
-        warning: '#F5A623',
-        info: '#2B6BD6',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        sans: ['Inter', 'Muli', 'system-ui', 'sans-serif'],
+        mono: ['Fira Mono', 'Space Mono', 'monospace'],
       },
       animation: {
-        'fade-up': 'fadeUp 0.55s ease both',
-        'fade-up-delay-1': 'fadeUp 0.55s 0.08s ease both',
-        'fade-up-delay-2': 'fadeUp 0.55s 0.16s ease both',
-        'fade-up-delay-3': 'fadeUp 0.55s 0.24s ease both',
-        'fade-up-delay-4': 'fadeUp 0.55s 0.32s ease both',
-        'scale-in': 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'pulse-gold': 'pulseGold 2s ease infinite',
-        'shimmer': 'shimmer 3s linear infinite',
+        'fade-up': 'fadeUp 0.4s cubic-bezier(0.25, 0, 0, 1) both',
+        'fade-up-delay-1': 'fadeUp 0.4s 0.08s cubic-bezier(0.25, 0, 0, 1) both',
+        'fade-up-delay-2': 'fadeUp 0.4s 0.16s cubic-bezier(0.25, 0, 0, 1) both',
+        'fade-up-delay-3': 'fadeUp 0.4s 0.24s cubic-bezier(0.25, 0, 0, 1) both',
+        'fade-up-delay-4': 'fadeUp 0.4s 0.32s cubic-bezier(0.25, 0, 0, 1) both',
+        'scale-in': 'scaleIn 0.4s cubic-bezier(0.25, 0, 0, 1) both',
+        'pulse-gold': 'pulseGold 2.5s cubic-bezier(0.25, 0, 0, 1) infinite',
+        'shimmer': 'shimmer 3s cubic-bezier(0.25, 0, 0, 1) infinite',
         'ticker': 'ticker 28s linear infinite',
         'spin-slow': 'spin 3s linear infinite',
       },
       keyframes: {
         fadeUp: {
-          'from': { opacity: '0', transform: 'translateY(18px)' },
+          'from': { opacity: '0', transform: 'translateY(16px)' },
           'to': { opacity: '1', transform: 'translateY(0)' },
         },
         scaleIn: {
-          'from': { opacity: '0', transform: 'scale(0.94)' },
+          'from': { opacity: '0', transform: 'scale(0.92)' },
           'to': { opacity: '1', transform: 'scale(1)' },
         },
         pulseGold: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(245, 166, 35, 0.35)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(245, 166, 35, 0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(233, 178, 19, 0.4)' },
+          '50%': { boxShadow: '0 0 0 10px rgba(233, 178, 19, 0)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-400px 0' },
@@ -78,6 +100,23 @@ const config: Config = {
       },
       backdropBlur: {
         xs: '2px',
+      },
+      spacing: {
+        // Nimiq 8px grid
+        '1': '8px',
+        '2': '16px',
+        '3': '24px',
+        '4': '32px',
+        '5': '40px',
+        '6': '48px',
+        '7': '56px',
+        '8': '64px',
+      },
+      borderRadius: {
+        'nimiq-input': '4px',
+        'nimiq-card': '10px',
+        'nimiq-btn': '13.5px',
+        'nimiq-btn-pill': '500px',
       },
     },
   },

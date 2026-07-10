@@ -566,6 +566,74 @@ export const useAppStore = create<AppState>()(
 );
 
 // ---------------------------------------------------------------------------
+// Session staleness detection and auto-disconnect
+// When app resumes after being closed for a long time, check if auth is stale
+// If stale, force disconnect to ensure fresh connection flow
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  // Track when the app was last active
+  let lastActiveTime = Date.now();
+  const STALE_SESSION_THRESHOLD = 10 * 60 * 1000; // 10 minutes of inactivity
+
+  // Update last active time on user interaction
+  const updateLastActive = () => {
+    lastActiveTime = Date.now();
+  };
+
+  // Listen to user interactions
+  ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+    document.addEventListener(event, updateLastActive, { passive: true });
+  });
+
+  // Check for stale session when app becomes visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const now = Date.now();
+      const timeSinceLastActive = now - lastActiveTime;
+      
+      // If app was inactive for more than threshold, check session validity
+      if (timeSinceLastActive > STALE_SESSION_THRESHOLD) {
+        const state = useAppStore.getState();
+        
+        if (state.wallet.connected && state.wallet.address) {
+          console.log('[Session] App resumed after long inactivity - checking auth validity');
+          
+          // Check if auth cache is still valid
+          const authCacheKey = `nimagent_auth_cache_${state.wallet.address}`;
+          const authCache = localStorage.getItem(authCacheKey);
+          let isAuthValid = false;
+          
+          if (authCache) {
+            try {
+              const cached = JSON.parse(authCache);
+              isAuthValid = cached.authenticated && cached.expiresAt > now;
+            } catch (err) {
+              console.warn('[Session] Failed to parse auth cache');
+            }
+          }
+          
+          // If auth is NOT valid, force disconnect for fresh flow
+          if (!isAuthValid) {
+            console.log('[Session] Auth cache expired - forcing disconnect for fresh connection');
+            useAppStore.getState().disconnectWallet();
+            
+            // Show user-friendly message
+            setTimeout(() => {
+              const message = 'Session expired. Please connect your wallet again.';
+              console.log(`[Session] ${message}`);
+              // Optionally show a toast notification here if you have one
+            }, 500);
+          }
+        }
+      }
+      
+      // Update last active time
+      lastActiveTime = now;
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Global balance polling — runs regardless of which tab is active.
 // HTLCs are dynamic: they can settle at any time while the user is chatting
 // or viewing history. Poll every 30s so the balance stays fresh.
@@ -583,9 +651,17 @@ if (typeof window !== 'undefined') {
   // Poll every 30 seconds
   setInterval(poll, 30_000);
 
-  // Refresh immediately when the app regains focus
+  // Refresh immediately when the app regains focus (unless disconnected by staleness check)
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') poll();
+    if (document.visibilityState === 'visible') {
+      // Small delay to allow staleness check to run first
+      setTimeout(() => {
+        const { wallet } = useAppStore.getState();
+        if (wallet.connected) {
+          poll();
+        }
+      }, 100);
+    }
   });
 }
 

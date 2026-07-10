@@ -450,18 +450,20 @@ export default function ActionCard({ action }: ActionCardProps) {
                 key={social.label}
                 type="button"
                 onClick={() => openExternalUrl(social.href!)}
-                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] px-3 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-brand-blue/10 transition-colors"
+                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] px-3 py-2.5 text-left hover:bg-[#0582CA]/10 hover:border-[#0582CA]/20 transition-all"
+                style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0" />
+                    <div className="w-8 h-8 rounded-lg bg-[#0582CA]/10 border border-[#0582CA]/20 flex items-center justify-center flex-shrink-0">
+                      <Icon name={social.icon} size={16} className="text-[#0582CA]" />
+                    </div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
                       <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-100 dark:bg-brand-blue/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:text-brand-blue-light flex-shrink-0">
+                  <span className="rounded-full bg-[#21BCA5]/10 border border-[#21BCA5]/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#21BCA5] flex-shrink-0">
                     Live
                   </span>
                 </div>
@@ -473,8 +475,9 @@ export default function ActionCard({ action }: ActionCardProps) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 opacity-50">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={social.icon} alt={social.label} width={20} height={20} className="object-contain flex-shrink-0 grayscale" />
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0">
+                      <Icon name={social.icon} size={16} className="text-gray-400 dark:text-white/30" />
+                    </div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">{social.label}</p>
                       <p className="text-[11px] text-gray-500 dark:text-white/55">{social.description}</p>

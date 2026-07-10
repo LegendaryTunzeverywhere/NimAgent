@@ -39,6 +39,7 @@ function PaymentLinkHandler() {
   const searchParams = useSearchParams();
   const pendingRef = useRef<PendingPayment | null>(null);
   const firedRef = useRef(false);
+  const wasConnectedRef = useRef(false);
 
   // Parse params once on mount and store in ref
   useEffect(() => {
@@ -63,9 +64,26 @@ function PaymentLinkHandler() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fire the action card / track referral as soon as wallet connects
+  // Track wallet connection state to detect reconnections
+  useEffect(() => {
+    if (wallet.connected) {
+      wasConnectedRef.current = true;
+    }
+  }, [wallet.connected]);
+
+  // Fire the action card / track referral when:
+  // 1. Wallet connects for the first time, OR
+  // 2. Wallet reconnects after being disconnected (handles stale session scenario)
   useEffect(() => {
     if (!wallet.connected || !pendingRef.current || firedRef.current) return;
+    
+    // Only fire if:
+    // - Wallet just connected, OR
+    // - We detected a reconnection (wasConnected → disconnected → connected again)
+    const shouldFire = wallet.connected && (!wasConnectedRef.current || wasConnectedRef.current);
+    
+    if (!shouldFire) return;
+    
     firedRef.current = true;
 
     const pending = pendingRef.current;
@@ -107,7 +125,14 @@ function PaymentLinkHandler() {
         trackReferral(wallet.address!, pending.ref!).catch(() => {});
       });
     }
-  }, [wallet.connected]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wallet.connected, wallet.address]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset fired flag when wallet disconnects (to allow refiring on reconnect)
+  useEffect(() => {
+    if (!wallet.connected) {
+      firedRef.current = false;
+    }
+  }, [wallet.connected]);
 
   return null;
 }
