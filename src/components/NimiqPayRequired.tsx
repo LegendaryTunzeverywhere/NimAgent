@@ -36,7 +36,7 @@ export default function NimiqPayRequired() {
   const hasParams = currentUrl.includes('?');
 
   return (
-    <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
+    <main className="min-h-screen bg-white dark:bg-[#0F1219] px-5 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
         <div className="w-full rounded-[2rem] border border-[#E9B213]/20 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
 

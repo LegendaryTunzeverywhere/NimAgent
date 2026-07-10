@@ -145,7 +145,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
 
   if (error) {
     return (
-      <div className="bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-6 text-center space-y-3 max-w-sm">
+      <div className="bg-white/80 dark:bg-white/[0.04] border border-[#1F2348]/15 dark:border-white/[0.07] rounded-2xl p-6 text-center space-y-3 max-w-sm">
         <p className="text-red-600 dark:text-red-400 text-sm">Failed to generate QR code</p>
         <button onClick={() => setError(false)}
           className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-white/5 text-[#1F2348] dark:text-white text-sm hover:bg-gray-300 dark:hover:bg-white/10 transition-colors">
@@ -156,16 +156,16 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
   }
 
   return (
-    <div className="glass dark:bg-white/[0.035] border border-gray-200 dark:border-white/[0.07] rounded-2xl p-5 space-y-4 text-center max-w-sm">
+    <div className="glass dark:bg-white/[0.035] border border-[#1F2348]/15 dark:border-white/[0.07] rounded-2xl p-5 space-y-4 text-center max-w-sm">
 
       {/* ── Mode tabs ─────────────────────────────────────────────────────── */}
-      <div className="flex bg-gray-100 dark:bg-white/[0.05] rounded-xl p-1 gap-0.5">
+      <div className="flex bg-white/80 dark:bg-white/[0.05] rounded-xl p-1 gap-0.5">
         {amount && (
           <button onClick={() => setMode('request')}
             className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
               mode === 'request'
                 ? 'bg-amber-500 dark:bg-gold text-white dark:text-background-primary shadow-sm'
-                : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+                : 'text-[#1F2348]/80 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white'
             }`}>
             Request {amount} NIM
           </button>
@@ -173,16 +173,16 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
         <button onClick={() => setMode('nimagent')}
           className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
             mode === 'nimagent'
-              ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
-              : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+              ? 'bg-white dark:bg-white/10 text-[#1F2348] dark:text-white shadow-sm'
+              : 'text-[#1F2348]/80 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white'
           }`}>
           Pay Link
         </button>
         <button onClick={() => setMode('address')}
           className={`flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
             mode === 'address'
-              ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
-              : 'text-gray-600 dark:text-white/55 hover:text-gray-900 dark:hover:text-white'
+              ? 'bg-white dark:bg-white/10 text-[#1F2348] dark:text-white shadow-sm'
+              : 'text-[#1F2348]/80 dark:text-white/55 hover:text-[#1F2348] dark:hover:text-white'
           }`}>
           Address
         </button>
@@ -190,7 +190,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
 
       {/* ── Payment request summary ───────────────────────────────────────── */}
       {mode === 'request' && amount && (
-        <div className="flex items-center justify-between px-3 py-2.5 bg-[#E9B213]/20 dark:bg-gold/10 border border-amber-300 dark:border-gold/25 rounded-xl">
+        <div className="flex items-center justify-between px-3 py-2.5 bg-[#E9B213]/20 dark:bg-gold/10 border border-[#E9B213]/30 dark:border-gold/25 rounded-xl">
           <div className="text-left">
             <p className="text-[10px] font-medium text-[#E9B213] dark:text-gold/70 uppercase tracking-wider">Requesting</p>
             <p className="text-lg font-bold text-[#E9B213] dark:text-gold font-mono leading-tight">{amount} NIM</p>
@@ -204,7 +204,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
 
       {/* ── QR canvas ─────────────────────────────────────────────────────── */}
       <div className="flex justify-center">
-        <div className="p-3 bg-white rounded-xl border border-gray-200 dark:border-white/[0.08] shadow-sm">
+        <div className="p-3 bg-white rounded-xl border border-[#1F2348]/15 dark:border-white/[0.08] shadow-sm">
           <canvas ref={canvasRef} className="block" />
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
         <p className="text-[10px] text-[#1F2348]/60 dark:text-white/50 uppercase tracking-wider font-medium">{displayLabel}</p>
         <div
           onClick={handleCopyQr}
-          className="text-[11px] text-[#1F2348] dark:text-white/70 font-mono break-all px-3 py-2 bg-gray-50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-white/[0.06] cursor-pointer hover:bg-gray-100 dark:hover:bg-black/30 transition-colors select-all"
+          className="text-[11px] text-[#1F2348] dark:text-white/70 font-mono break-all px-3 py-2 bg-white/60 dark:bg-black/20 rounded-lg border border-[#1F2348]/15 dark:border-white/[0.06] cursor-pointer hover:bg-white/80 dark:hover:bg-black/30 transition-colors select-all"
           title="Click to copy"
         >
           {qrData.length > 80 ? `${qrData.slice(0, 42)}…${qrData.slice(-20)}` : qrData}
@@ -223,12 +223,12 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
 
       {/* ── Info note ─────────────────────────────────────────────────────── */}
       {mode === 'request' && (
-        <div className="text-[11px] text-[#E9B213] dark:text-gold/75 bg-[#E9B213]/20 dark:bg-gold/8 border border-amber-300 dark:border-gold/20 rounded-xl px-3 py-2.5 text-left leading-relaxed">
+        <div className="text-[11px] text-[#E9B213] dark:text-gold/75 bg-[#E9B213]/20 dark:bg-gold/8 border border-[#E9B213]/30 dark:border-gold/20 rounded-xl px-3 py-2.5 text-left leading-relaxed">
           <strong className="font-semibold">Share this QR or link.</strong> When someone scans it or taps the link, NimAgent opens with a pre-filled payment of <strong>{amount} NIM</strong> to your wallet — they just confirm.
         </div>
       )}
       {mode === 'nimagent' && (
-        <div className="text-[11px] text-gray-600 dark:text-white/55 bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] rounded-xl px-3 py-2.5 text-left leading-relaxed">
+        <div className="text-[11px] text-[#1F2348]/80 dark:text-white/55 bg-white/80 dark:bg-white/[0.04] border border-[#1F2348]/15 dark:border-white/[0.06] rounded-xl px-3 py-2.5 text-left leading-relaxed">
           Opens NimAgent with your address pre-filled. The sender chooses the amount.
         </div>
       )}
@@ -236,12 +236,12 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
       {/* ── Action buttons ─────────────────────────────────────────────────── */}
       <div className="flex gap-2">
         <button onClick={handleDownload}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-gray-100 dark:bg-white/[0.06] text-[#1F2348] dark:text-white/75 border border-gray-200 dark:border-white/[0.08] hover:bg-gray-200 dark:hover:bg-white/[0.10] transition-colors">
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-white/80 dark:bg-white/[0.06] text-[#1F2348] dark:text-white/75 border border-[#1F2348]/15 dark:border-white/[0.08] hover:bg-white/90 dark:hover:bg-white/[0.10] transition-colors">
           <Icon name="download" size={14} strokeWidth={2} /> {canShare ? 'Share' : 'Save'}
         </button>
         {(mode === 'request' || mode === 'nimagent') && (
           <button onClick={handleCopyLink}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-[#E9B213]/30 dark:border-gold/25 hover:bg-[#E9B213]/20 dark:hover:bg-gold/20 transition-colors">
             {linkCopied
               ? <><Icon name="check" size={14} strokeWidth={2.5} /> Copied!</>
               : <><Icon name="copy"  size={14} strokeWidth={2}   /> Copy Link</>
@@ -250,7 +250,7 @@ export default function QRCodeDisplay({ address, amount, message }: QRCodeDispla
         )}
         {mode === 'address' && (
           <button onClick={handleCopyQr}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-amber-300 dark:border-gold/25 hover:bg-amber-200 dark:hover:bg-gold/20 transition-colors">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-[#E9B213]/30 dark:border-gold/25 hover:bg-[#E9B213]/20 dark:hover:bg-gold/20 transition-colors">
             {copied
               ? <><Icon name="check" size={14} strokeWidth={2.5} /> Copied!</>
               : <><Icon name="copy"  size={14} strokeWidth={2}   /> Copy Address</>

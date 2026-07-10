@@ -29,12 +29,12 @@ export default function LoadingSpinner({
     lg: 'w-10 h-10 border-3',
   };
 
-  // Color mappings - using Nimiq brand colors with better visibility
+  // Color mappings - using Nimiq brand colors with proper visibility
   const colorMap = {
-    gold: 'border-[#E9B213]/20 dark:border-[#E9B213]/30 border-t-[#E9B213]',
-    blue: 'border-[#0582CA]/20 dark:border-[#0582CA]/30 border-t-[#0582CA]',
-    white: 'border-white/30 border-t-white',
-    current: 'border-current/30 border-t-current',
+    gold: 'border-[#E9B213]/25 dark:border-[#E9B213]/35 border-t-[#E9B213]',
+    blue: 'border-[#0582CA]/25 dark:border-[#0582CA]/35 border-t-[#0582CA]',
+    white: 'border-white/35 border-t-white',
+    current: 'border-current/35 border-t-current',
   };
 
   return (

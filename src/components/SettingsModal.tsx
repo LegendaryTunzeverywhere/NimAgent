@@ -42,7 +42,7 @@ export default function SettingsModal({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       theme === 'dark'
                         ? 'bg-[#E9B213] dark:bg-gold text-white'
-                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-gray-200 dark:hover:bg-white/10'
+                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-white/90 dark:hover:bg-white/10'
                     }`}
                   >
                     Dark
@@ -52,7 +52,7 @@ export default function SettingsModal({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       theme === 'light'
                         ? 'bg-[#E9B213] dark:bg-gold text-white'
-                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-gray-200 dark:hover:bg-white/10'
+                        : 'bg-white/80 dark:bg-white/5 text-[#1F2348]/70 dark:text-white/70/65 hover:bg-white/90 dark:hover:bg-white/10'
                     }`}
                   >
                     Light
@@ -90,7 +90,7 @@ export default function SettingsModal({
                     window.location.reload();
                   }
                 }}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.06] hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors group"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.06] hover:bg-white/80 dark:hover:bg-white/[0.05] transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-brand-blue/10 flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-brand-blue/20 transition-colors">
@@ -101,7 +101,7 @@ export default function SettingsModal({
                     <p className="text-xs text-[#1F2348]/60 dark:text-white/60/55 mt-0.5">Clear cache and reload</p>
                   </div>
                 </div>
-                <Icon name="chevron-right" size={16} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60/50 group-hover:text-gray-600 dark:group-hover:text-white/50 transition-colors" />
+                <Icon name="chevron-right" size={16} strokeWidth={2} className="text-[#1F2348]/60 dark:text-white/60/50 group-hover:text-[#1F2348]/80 dark:group-hover:text-white/50 transition-colors" />
               </button>
             </div>
           </div>

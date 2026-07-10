@@ -419,8 +419,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 text-gold mb-2">
             <Icon name="qr-scan" size={22} />
           </div>
-          <h3 className="text-gray-900 dark:text-white font-semibold">QR Code Scanner</h3>
-          <p className="text-gray-600 dark:text-white/50 text-sm mt-0.5">
+          <h3 className="text-[#1F2348] dark:text-white font-semibold">QR Code Scanner</h3>
+          <p className="text-[#1F2348]/80 dark:text-white/50 text-sm mt-0.5">
             {isScanning ? 'Point your camera at a QR code' : 'Scan Nimiq addresses or payment requests'}
           </p>
         </div>
@@ -522,7 +522,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
           <button
             onClick={() => setManualOpen(true)}
-            className="px-4 py-3 rounded-[13.5px] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-white/60 border border-gray-200 dark:border-white/[0.07] font-semibold hover:bg-gray-200 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white/90 transition-all"
+            className="px-4 py-3 rounded-[13.5px] bg-white/80 dark:bg-white/[0.04] text-[#1F2348]/80 dark:text-white/60 border border-[#1F2348]/15 dark:border-white/[0.07] font-semibold hover:bg-white/90 dark:hover:bg-white/[0.08] hover:text-[#1F2348] dark:hover:text-white/90 transition-all"
             style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)', transitionDuration: '200ms' }}
             title="Enter code manually"
           >
@@ -573,7 +573,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           }}
           rows={3}
           placeholder="NQ.. address, https://nimagent.online/pay/..., or nimiq:..."
-          className="w-full px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-mono placeholder-gray-500 dark:placeholder-white/25 outline-none focus:border-amber-500 dark:focus:border-gold/50 resize-none break-all"
+          className="w-full px-3 py-2.5 rounded-xl bg-white/80 dark:bg-white/[0.04] border border-[#1F2348]/15 dark:border-white/[0.08] text-[#1F2348] dark:text-white text-sm font-mono placeholder-[#1F2348]/40 dark:placeholder-white/25 outline-none focus:border-[#E9B213] dark:focus:border-gold/50 resize-none break-all"
         />
         <p className="text-[#1F2348]/60 dark:text-white/30 text-[11px] mt-2">Press ⌘/Ctrl + Enter to submit</p>
       </Modal>

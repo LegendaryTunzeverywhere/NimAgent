@@ -595,7 +595,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           <div className="flex gap-3">
             <Button
               variant="blue"
-              size="md"
+              size="sm"
               icon="chat"
               className="flex-1"
               onClick={() => setActiveTab('chat')}
@@ -604,7 +604,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             </Button>
             <Button
               variant="secondary"
-              size="md"
+              size="sm"
               icon="history"
               className="flex-1"
               onClick={() => setActiveTab('history')}
