@@ -69,18 +69,31 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * When `window.nimiqPay` host hint is present we know we're in the WebView —
  * use a longer timeout (4 s) to tolerate slower Android devices where the
  * provider can take a while to become ready.
- * Without the hint we use shorter probes to avoid stalling a normal browser.
+ * Without the hint we use shorter probes to avoid stalling a normal browser,
+ * BUT if payment/referral params are present (?to= or ?ref=) we extend the
+ * timeout slightly to account for potential deep-link routing delays.
  */
 export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (!detection) {
     detection = (async () => {
+      // Check if this is a payment or referral link
+      const hasPaymentParams = typeof window !== 'undefined' && 
+        (() => {
+          const params = new URLSearchParams(window.location.search);
+          return params.has('to') || params.has('ref');
+        })();
+
       const attempts = hasNimiqPayHostHint()
         // Inside Nimiq Pay WebView: be generous — the user is definitely here,
         // the provider just needs time to initialise.
         ? [{ wait: 0, timeout }, { wait: 500, timeout }]
-        // Outside Nimiq Pay (normal browser): fail fast to show the redirect UI.
-        : [{ wait: 0, timeout: 900 }, { wait: 300, timeout: 1200 }, { wait: 700, timeout: 1800 }];
+        // Outside Nimiq Pay (normal browser): fail fast to show the redirect UI
+        // BUT give payment/referral links a bit more grace in case deep-link
+        // routing takes time before window.nimiqPay becomes available
+        : hasPaymentParams
+          ? [{ wait: 0, timeout: 1500 }, { wait: 500, timeout: 2000 }, { wait: 1000, timeout: 2500 }]
+          : [{ wait: 0, timeout: 900 }, { wait: 300, timeout: 1200 }, { wait: 700, timeout: 1800 }];
 
       for (const attempt of attempts) {
         if (attempt.wait) await delay(attempt.wait);

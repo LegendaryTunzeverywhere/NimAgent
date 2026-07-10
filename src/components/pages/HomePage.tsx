@@ -108,6 +108,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
   const [referralClaimNotice, setReferralClaimNotice] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(false);
+  const [referralTrackingStatus, setReferralTrackingStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const refreshReferralData = useCallback(async (options?: { requireWalletSession?: boolean }) => {
     if (!wallet.address) return;
@@ -351,9 +352,19 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             
             if (refCode) {
               try {
-                await trackReferral(wallet.address!, refCode);
+                const result = await trackReferral(wallet.address!, refCode);
+                if (result.success) {
+                  setReferralTrackingStatus('success');
+                  // Auto-hide success message after 5 seconds
+                  setTimeout(() => setReferralTrackingStatus('idle'), 5000);
+                } else {
+                  setReferralTrackingStatus('error');
+                  // Auto-hide error message after 7 seconds
+                  setTimeout(() => setReferralTrackingStatus('idle'), 7000);
+                }
               } catch (error) {
-                // Silent failure
+                setReferralTrackingStatus('error');
+                setTimeout(() => setReferralTrackingStatus('idle'), 7000);
               }
             }
             
@@ -1211,7 +1222,36 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
           </div>
           <div>
             <p className="text-sm font-semibold">Referral Link Copied!</p>
-            <p className="text-xs text-[#1F2348]/50 dark:text-white/65 dark:text-gray-600">Share it with friends to earn rewards</p>
+            <p className="text-xs text-[#1F2348]/50 dark:text-white/65">Share it with friends to earn rewards</p>
+          </div>
+        </div>
+      )}
+
+      {/* Referral Tracking Toast */}
+      {referralTrackingStatus === 'success' && (
+        <div className="fixed bottom-24 left-4 right-4 z-50 animate-fade-up">
+          <div className="max-w-md mx-auto rounded-xl border border-green-300/80 dark:border-green-500/30 bg-green-50 dark:bg-green-900/20 shadow-lg px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-green-500/20 dark:bg-green-500/15 flex items-center justify-center flex-shrink-0">
+              <Icon name="check" size={16} className="text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-green-900 dark:text-green-100">Referral Tracked!</p>
+              <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">You've been added to the referrer's network</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {referralTrackingStatus === 'error' && (
+        <div className="fixed bottom-24 left-4 right-4 z-50 animate-fade-up">
+          <div className="max-w-md mx-auto rounded-xl border border-red-300/80 dark:border-error/30 bg-red-50 dark:bg-red-900/20 shadow-lg px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-500/20 dark:bg-error/15 flex items-center justify-center flex-shrink-0">
+              <Icon name="close" size={16} className="text-red-600 dark:text-error" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-red-900 dark:text-red-100">Referral Not Tracked</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">This link may have expired or already been used</p>
+            </div>
           </div>
         </div>
       )}
