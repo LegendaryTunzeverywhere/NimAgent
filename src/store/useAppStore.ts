@@ -56,11 +56,6 @@ export const useAppStore = create<AppState>()(
           return;
         }
 
-        // Reset detection cache to allow fresh probe on manual retry
-        // This ensures a failed connection attempt can be retried cleanly
-        const { _resetDetectionCache } = await import('@/lib/wallet/detect');
-        _resetDetectionCache();
-
         set((state) => ({
           wallet: { ...state.wallet, loading: true, error: null },
         }));
@@ -95,6 +90,12 @@ export const useAppStore = create<AppState>()(
           get().loadOrCreateSession();
         } catch (error: any) {
           clearTimeout(loadingTimeout);
+          
+          // Reset detection cache so the NEXT manual retry gets a fresh probe —
+          // but only after a real failure, not on every connect attempt.
+          const { _resetDetectionCache } = await import('@/lib/wallet/detect');
+          _resetDetectionCache();
+          
           let errorMessage = 'Failed to connect wallet';
           if (error?.message?.includes('only inside the Nimiq Pay app')) {
             errorMessage = 'Open NimAgent inside the Nimiq Pay app to continue.';
