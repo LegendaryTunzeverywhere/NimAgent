@@ -44,15 +44,9 @@ rounded:
   button: "13.5px" # Nimiq button radius
   pill: "500px"    # Nimiq pill radius
 spacing:
-  # Nimiq 8px grid system (1rem = 8px)
-  1: "8px"
-  2: "16px"
-  3: "24px"
-  4: "32px"
-  5: "40px"
-  6: "48px"
-  7: "56px"
-  8: "64px"
+  # Standard Tailwind spacing scale (4px based)
+  # Use Tailwind defaults: p-4, m-6, gap-8, etc.
+  # For Nimiq-specific spacing, use arbitrary values like p-[32px]
 easing:
   nimiq: "cubic-bezier(0.25, 0, 0, 1)"
 duration:
@@ -144,13 +138,13 @@ Nimiq's official type stack: **Inter + Muli** for UI, **Fira Mono** for technica
 - **Monospace:** Fira Mono, 'Courier New', monospace
 
 ### Type Scale (Fixed, not fluid—product UI standard)
-Based on Nimiq's 8px grid (1rem = 8px):
-- **h1:** 3rem (24px) / 700 weight / -0.02em letter-spacing
-- **h2:** 2.5rem (20px) / 700 weight / -0.02em letter-spacing
-- **h3:** 2rem (16px) / 700 weight / -0.02em letter-spacing
-- **Body:** 2rem (16px) / 400 weight / 1.6 line-height
-- **Small:** 1.75rem (14px) / 500 weight / labels, secondary text
-- **Tiny:** 1.5rem (12px) / 600 weight / captions, metadata
+Using standard font sizing:
+- **h1:** 1.5rem (24px) / 700 weight / -0.02em letter-spacing
+- **h2:** 1.25rem (20px) / 700 weight / -0.02em letter-spacing
+- **h3:** 1rem (16px) / 700 weight / -0.02em letter-spacing
+- **Body:** 1rem (16px) / 400 weight / 1.6 line-height
+- **Small:** 0.875rem (14px) / 500 weight / labels, secondary text
+- **Tiny:** 0.75rem (12px) / 600 weight / captions, metadata
 
 ### Scale Ratio
 1.125 between steps (tighter than brand surfaces—product UI standard). Keeps visual hierarchy without excessive contrast noise.
@@ -198,8 +192,8 @@ Every component has **all interaction states:** default, hover, focus, active, d
 
 ### Buttons
 **Radius:** 13.5px (Nimiq standard button radius)
-**Padding:** 12px vertical / 24px horizontal (3rem horizontal on 8px grid)
-**Font:** 700 weight, 16px
+**Padding:** 12px vertical / 24px horizontal
+**Font:** 700 weight, 16px (1rem)
 **Transition:** `200ms cubic-bezier(0.25, 0, 0, 1)` (Nimiq easing)
 
 **Gold Button (crypto actions):**
@@ -218,7 +212,7 @@ Every component has **all interaction states:** default, hover, focus, active, d
 
 ### Cards
 **Radius:** 10px (Nimiq card radius)
-**Padding:** 24px (3rem on 8px grid)
+**Padding:** 24px
 **Background:** Glass surface (see Elevation section)
 **Border:** 1px subtle (see glass effect colors)
 **Hover:** `translateY(-1px)` + deeper shadow (interactive cards only)
@@ -238,9 +232,43 @@ Every component has **all interaction states:** default, hover, focus, active, d
 **Nimiq Icons:** When available, use official Nimiq icon sprite from `@nimiq/style`
 
 ### Loading States
+
+**LoadingSpinner Component (Nimiq UI Kit Standard):**
+- **Based on:** Official Nimiq UI Kit loading spinner design
+- **Primary Color:** Nimiq Gold (`#E9B213`) - default for crypto operations
+- **Alternative Colors:** Blue (`#0582CA`) for commerce, white for dark surfaces, current color for inline
+- **Animation:** 0.8s rotation with Nimiq easing `cubic-bezier(0.25, 0, 0, 1)`
+- **Sizes:**
+  - `sm`: 16px (w-4 h-4) with 2px border - for inline, buttons, small loading areas
+  - `md`: 24px (w-6 h-6) with 2.5px border - default size for content areas
+  - `lg`: 40px (w-10 h-10) with 3px border - for page-level loading states
+
+**Usage Patterns:**
+- **InlineSpinner:** Small spinner that inherits text color, used inside buttons during loading state
+- **PageLoading:** Full loading state with spinner + message + optional submessage for page-level loads
+- **Referral/Modal Loading:** Medium spinner with accompanying text for section-specific loading
+
 **Skeletons** for content placeholders (not spinners mid-screen)
 **Shimmer animation:** `1.8s cubic-bezier(0.25, 0, 0, 1)` with gold accent gradient
 **Reduced motion:** Instant opacity fade, no shimmer
+
+**Examples:**
+```tsx
+// Button loading (automatic via Button component)
+<Button loading={isLoading}>Submit</Button>
+
+// Inline small spinner
+<LoadingSpinner size="sm" color="gold" />
+
+// Page loading with message
+<PageLoading message="Loading your activity..." submessage="Fetching transaction history" />
+
+// Custom loading area
+<div className="flex items-center gap-2">
+  <LoadingSpinner size="md" />
+  <span>Loading...</span>
+</div>
+```
 
 ### Empty States
 **Never:** "No data" or "Nothing here"

@@ -140,16 +140,23 @@ function PaymentLinkHandler() {
 // ---------------------------------------------------------------------------
 // Loading skeleton shown while detecting Nimiq Pay
 // ---------------------------------------------------------------------------
+import LoadingSpinner from '@/components/LoadingSpinner';
+
 function LoadingSkeleton() {
   return (
     <ThemeProvider>
-      <main className="min-h-screen bg-white dark:bg-background-primary px-5 py-8">
+      <main className="min-h-screen bg-white dark:bg-[#0F1219] px-5 py-8">
         <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
-          <div className="w-full rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-6">
-            <div className="h-3 w-24 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse" />
-            <div className="mt-4 h-8 w-56 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse" />
-            <div className="mt-3 h-16 rounded-2xl bg-gray-100 dark:bg-white/[0.05] animate-pulse" />
-            <div className="mt-5 h-12 rounded-2xl bg-amber-100 dark:bg-gold/10 animate-pulse" />
+          <div className="w-full rounded-[2rem] border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] p-8">
+            <div className="flex flex-col items-center justify-center py-8">
+              <LoadingSpinner size="lg" />
+              <p className="mt-4 text-sm font-semibold text-gray-700 dark:text-white/75">
+                Connecting to Nimiq Pay...
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-white/55">
+                Please wait while we detect your environment
+              </p>
+            </div>
           </div>
         </div>
       </main>

@@ -4,7 +4,7 @@ import Logo from '@/components/Logo';
 
 export default function MaintenancePage() {
   return (
-    <main className="min-h-screen bg-white dark:bg-background-primary flex items-center justify-center px-5 py-8">
+    <main className="min-h-screen bg-white dark:bg-[#0F1219] flex items-center justify-center px-5 py-8">
       <div className="mx-auto max-w-md w-full">
         <div className="rounded-[2rem] border border-amber-200/80 dark:border-gold/20 bg-white/90 dark:bg-white/[0.03] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] text-center">
 

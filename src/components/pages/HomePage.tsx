@@ -10,6 +10,7 @@ import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 
 import Button from '@/components/Button';
+import LoadingSpinner, { PageLoading } from '@/components/LoadingSpinner';
 
 interface QuickAction {
   icon: IconName;
@@ -593,7 +594,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
 
           <div className="flex gap-3">
             <Button
-              variant="gold"
+              variant="blue"
               size="md"
               icon="chat"
               className="flex-1"
@@ -813,10 +814,11 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
               })}
             </div>
           ) : isLoadingInitialData ? (
-            <div className="card-premium rounded-[10px] p-8 text-center">
-              <div className="w-8 h-8 mx-auto mb-3 border-2 border-amber-500 dark:border-gold/70 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm font-semibold text-gray-700 dark:text-white/75">Loading your activity...</p>
-              <p className="text-xs text-gray-500 dark:text-white/55 mt-1">Fetching transaction history</p>
+            <div className="card-premium rounded-[10px] p-8">
+              <PageLoading 
+                message="Loading your activity..." 
+                submessage="Fetching transaction history"
+              />
             </div>
           ) : (
             <div className="card-premium rounded-[10px] p-8 text-center">
@@ -906,7 +908,20 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             {SOCIAL_LINKS.map((social) => {
               const sharedClasses = 'flex h-11 w-11 items-center justify-center rounded-lg border transition-all duration-200';
               const transitionStyle = { transitionTimingFunction: 'cubic-bezier(0.25, 0, 0, 1)' };
-              const iconColor = social.href ? '#E9B213' : undefined;
+              
+              // X (Twitter) uses gray/white, Discord uses Discord purple
+              const getIconColor = () => {
+                if (social.icon === 'x-twitter') return 'text-gray-900 dark:text-white';
+                if (social.icon === 'discord') return 'text-[#5865F2]';
+                return 'text-gray-400 dark:text-white/30';
+              };
+              
+              const getBgColor = () => {
+                if (social.icon === 'x-twitter') return 'border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-white/10 hover:scale-105 hover:bg-gray-200 dark:hover:bg-white/20';
+                if (social.icon === 'discord') return 'border-[#5865F2]/25 bg-[#5865F2]/10 hover:scale-105 hover:bg-[#5865F2]/20';
+                return 'border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40';
+              };
+              
               return social.href ? (
                 <button
                   key={social.label}
@@ -914,19 +929,19 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                   onClick={() => openExternalUrl(social.href!)}
                   title={social.label}
                   aria-label={social.label}
-                  className={`${sharedClasses} border-[#E9B213]/25 bg-[#E9B213]/10 hover:scale-105 hover:bg-[#E9B213]/15`}
+                  className={`${sharedClasses} ${getBgColor()}`}
                   style={{ transition: 'all 200ms cubic-bezier(0.25, 0, 0, 1)' }}
                 >
-                  <Icon name={social.icon} size={20} className="text-[#E9B213]" />
+                  <Icon name={social.icon} size={20} className={getIconColor()} />
                 </button>
               ) : (
                 <div
                   key={social.label}
                   title={`${social.label} coming soon`}
                   aria-label={`${social.label} coming soon`}
-                  className={`${sharedClasses} border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] opacity-40`}
+                  className={`${sharedClasses} ${getBgColor()}`}
                 >
-                  <Icon name={social.icon} size={20} className="text-gray-400 dark:text-white/30" />
+                  <Icon name={social.icon} size={20} className={getIconColor()} />
                 </div>
               );
             })}
@@ -1033,7 +1048,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-white/45 mb-2">Your Referrals</p>
                 {loadingReferral ? (
                   <div className="flex items-center justify-center gap-2 py-6">
-                    <div className="w-5 h-5 border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
+                    <LoadingSpinner size="sm" />
                     <p className="text-sm text-gray-500 dark:text-white/50">Loading…</p>
                   </div>
                 ) : referrals.length === 0 ? (
@@ -1099,10 +1114,7 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
             </div>
 
             {loadingLeaderboard ? (
-              <div className="text-center py-10">
-                <div className="w-10 h-10 mx-auto mb-3 border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
-                <p className="text-sm text-gray-600 dark:text-white/60">Loading leaderboard...</p>
-              </div>
+              <PageLoading message="Loading leaderboard..." />
             ) : leaderboard.length > 0 ? (
               <div className="space-y-3 mb-6">
                 {/* Top 3 Special Display */}

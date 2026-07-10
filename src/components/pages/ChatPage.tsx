@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import ActionCard from '@/components/ActionCard';
 import Icon, { type IconName } from '@/components/Icon';
 import Modal from '@/components/Modal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { openExternalUrl } from '@/lib/external-links';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
@@ -334,7 +335,7 @@ export default function ChatPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-x-0 max-w-2xl mx-auto w-full flex flex-col bg-white dark:bg-background-primary"
+      className="fixed inset-x-0 max-w-2xl mx-auto w-full flex flex-col bg-white dark:bg-[#0F1219]"
       style={{
         top: '60px',
         bottom: keyboardOpen ? '0px' : '80px',
@@ -343,7 +344,7 @@ export default function ChatPage() {
     >
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-white/5 bg-white dark:bg-background-primary z-10">
+      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#0F1219] z-10">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-blue-600 dark:bg-brand-blue flex items-center justify-center">
             <Icon name="robot" size={14} strokeWidth={2.2} className="text-white" />
@@ -398,7 +399,7 @@ export default function ChatPage() {
 
       {/* ── Sessions panel ──────────────────────────────────────────────────── */}
       {showSessions && (
-        <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 bg-white dark:bg-[#16182a] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden animate-modal-in">
+        <div className="absolute top-[52px] left-0 right-0 mx-4 mt-1 z-30 glass-strong rounded-2xl shadow-xl overflow-hidden animate-modal-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">
             <span className="text-sm font-bold text-gray-900 dark:text-white">Chat Sessions</span>
             <button onClick={() => setShowSessions(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 dark:text-white/55 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
@@ -408,7 +409,7 @@ export default function ChatPage() {
           <div className="max-h-60 overflow-y-auto p-2 space-y-1">
             {loadingSessions ? (
               <div className="flex items-center justify-center py-8 gap-2">
-                <div className="w-5 h-5 border-2 border-gray-300 dark:border-gold/30 border-t-gray-600 dark:border-t-gold rounded-full animate-spin" />
+                <LoadingSpinner size="sm" />
                 <span className="text-xs text-gray-500 dark:text-white/55">Loading...</span>
               </div>
             ) : sessions.length ? sessions.map(s => (
@@ -734,7 +735,7 @@ export default function ChatPage() {
             </button>
             <button onClick={confirmDelete} disabled={deleting}
               className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 dark:bg-error text-white hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1.5">
-              {deleting ? <><span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Deleting…</> : <><Icon name="delete" size={14} strokeWidth={2.2} /> Delete</>}
+              {deleting ? <><LoadingSpinner size="sm" color="white" /> Deleting…</> : <><Icon name="delete" size={14} strokeWidth={2.2} /> Delete</>}
             </button>
           </>
         }

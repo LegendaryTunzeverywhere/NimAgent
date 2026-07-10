@@ -10,6 +10,7 @@
 
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 import Icon, { IconName } from './Icon';
+import { InlineSpinner } from './LoadingSpinner';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'gold' | 'blue' | 'secondary' | 'ghost';
@@ -107,9 +108,7 @@ export default function Button({
       disabled={isDisabled}
       {...props}
     >
-      {loading && (
-        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-      )}
+      {loading && <InlineSpinner />}
       {!loading && icon && iconPosition === 'left' && (
         <Icon name={icon} size={iconSizes[size]} strokeWidth={2} />
       )}

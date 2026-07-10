@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { retrieveGiftCardCode, getWalletRequestHeaders } from '@/lib/api-client';
 import { openExternalUrl } from '@/lib/external-links';
 import Icon, { type IconName } from '@/components/Icon';
+import { PageLoading } from '@/components/LoadingSpinner';
 
 interface Transaction {
   id: string;
@@ -66,11 +67,11 @@ const TRANSACTION_ICONS: Record<string, IconName> = {
 };
 
 const TRANSACTION_COLORS: Record<string, string> = {
-  send: '#F87171',
-  receive: '#34D399',
-  'gift-card': '#2B6BD6',
-  airtime: '#2B6BD6',
-  bill: '#2B6BD6',
+  send: '#D94432',      // Nimiq Red for outgoing
+  receive: '#21BCA5',   // Nimiq Green for incoming
+  'gift-card': '#0582CA', // Nimiq Light Blue for commerce
+  airtime: '#0582CA',   // Nimiq Light Blue for commerce
+  bill: '#0582CA',      // Nimiq Light Blue for commerce
 };
 
 export default function HistoryPage() {
@@ -605,9 +606,8 @@ export default function HistoryPage() {
       {wallet.connected ? (
         <>
           {loading ? (
-            <div className="card-premium rounded-2xl p-8 text-center">
-              <div className="w-10 h-10 mx-auto mb-3 border-2 border-amber-300 dark:border-gold/30 border-t-amber-600 dark:border-t-gold rounded-full animate-spin" />
-              <p className="text-sm text-gray-600 dark:text-white/60">Loading transactions...</p>
+            <div className="card-premium rounded-2xl p-8">
+              <PageLoading message="Loading transactions..." />
             </div>
           ) : filteredTransactions.length > 0 ? (
             <div className="space-y-2.5">
@@ -647,10 +647,11 @@ export default function HistoryPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p
-                        className="text-sm font-bold"
-                        style={{ 
-                          color: tx.type === 'receive' ? '#34D399' : 'inherit' 
-                        }}
+                        className={`text-sm font-bold ${
+                          tx.type === 'receive' 
+                            ? 'text-[#21BCA5]' // Nimiq Green for received
+                            : 'text-[#D94432]'  // Nimiq Red for sent/outgoing
+                        }`}
                       >
                         {formatAmount(tx.amount_luna, tx.type)}
                       </p>
