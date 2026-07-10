@@ -354,16 +354,16 @@ export default function ChatPage() {
 
         <div className="flex items-center gap-1.5">
           {/* History / New */}
-          <div className="flex items-center rounded-full border border-[#1F2348]/20 dark:border-white/12 overflow-hidden bg-white/80 dark:bg-white/[0.05]">
+          <div className="flex items-center rounded-full border border-[#1F2348]/20 dark:border-white/20 overflow-hidden bg-white/80 dark:bg-white/[0.08]">
             <button
               onClick={() => { showSessions ? setShowSessions(false) : (fetchSessions(), setShowSessions(true)); }}
               disabled={!wallet.connected}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/70 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/75 hover:bg-[#1F2348]/[0.05] dark:hover:bg-white/[0.15] hover:text-[#1F2348] dark:hover:text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Icon name="history" size={12} strokeWidth={2.2} />
               <span className="hidden sm:inline">History</span>
             </button>
-            <div className="w-px h-4 bg-gray-200 dark:bg-white/12" />
+            <div className="w-px h-4 bg-gray-200 dark:bg-white/20" />
             <button
               onClick={async () => {
                 setShowSessions(false);
@@ -371,7 +371,7 @@ export default function ChatPage() {
                 if (useAppStore.getState().messages.length > 0) clearMessages();
                 await addMessage({ role: 'ai', content: "Hi, I'm your NimAgent. Just ask in plain language what you'd like to do." });
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/70 hover:bg-[#1F2348]/[0.02] dark:hover:bg-white/[0.12] hover:text-gray-900 dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-[#1F2348] dark:text-white/75 hover:bg-[#1F2348]/[0.05] dark:hover:bg-white/[0.15] hover:text-[#1F2348] dark:hover:text-white hover:scale-105 active:scale-95 transition-all"
               title="New chat"
             >
               <Icon name="plus" size={12} strokeWidth={2.5} />
@@ -389,7 +389,7 @@ export default function ChatPage() {
 
           <button
             onClick={() => setShowOnboarding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] border border-[#E9B213]/30 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/30 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-[#E9B213]/10 dark:bg-gold/15 text-[#E9B213] dark:text-gold border border-[#E9B213]/30 dark:border-gold/30 hover:bg-amber-200 dark:hover:bg-gold/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>
@@ -616,7 +616,7 @@ export default function ChatPage() {
             ? 'bg-red-50 dark:bg-error/8 border-red-300 dark:border-error/30'
             : wallet.connected && wallet.authCompleted === 0
             ? 'bg-[#E9B213]/10 dark:bg-gold/8 border-[#E9B213]/30 dark:border-gold/30'
-            : 'bg-white/60 dark:bg-white/[0.04] border-[#1F2348]/10 dark:border-white/[0.08] focus-within:border-amber-400 dark:focus-within:border-gold/40 focus-within:bg-white dark:focus-within:bg-white/[0.06]'
+            : 'bg-white/60 dark:bg-white/[0.08] border-[#1F2348]/10 dark:border-white/[0.12] focus-within:border-amber-400 dark:focus-within:border-gold/40 focus-within:bg-white dark:focus-within:bg-white/[0.10]'
         }`}>
           {/* Mic button */}
           <button
@@ -625,7 +625,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
               isListening
                 ? 'bg-red-500 dark:bg-error text-white'
-                : 'text-[#1F2348]/60 dark:text-white/50 hover:text-gray-600 dark:hover:text-white/70 hover:bg-white dark:hover:bg-white/[0.06]'
+                : 'text-[#1F2348]/60 dark:text-white/60 hover:text-[#1F2348] dark:hover:text-white/80 hover:bg-white dark:hover:bg-white/[0.10]'
             } disabled:opacity-40`}
             title={
               wallet.connected && wallet.authCompleted === 0
@@ -656,7 +656,7 @@ export default function ChatPage() {
                 ? 'Listening…'
                 : 'Ask me anything…'
             }
-            className="flex-1 bg-transparent text-[14px] text-[#1F2348] dark:text-white placeholder-gray-400 dark:placeholder-white/45 outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-[14px] text-[#1F2348] dark:text-white placeholder-gray-400 dark:placeholder-white/65 outline-none disabled:cursor-not-allowed"
           />
 
           {/* Word count (only when near limit) */}
@@ -673,7 +673,7 @@ export default function ChatPage() {
             className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 disabled:opacity-40 ${
               input.trim() && !isOverLimit && !(wallet.connected && wallet.authCompleted === 0)
                 ? 'bg-[#E9B213] text-white dark:text-background-primary shadow-sm shadow-amber-500/25'
-                : 'bg-white/80 dark:bg-white/[0.05] text-[#1F2348]/50 dark:text-white/50'
+                : 'bg-white/80 dark:bg-white/[0.08] text-[#1F2348]/50 dark:text-white/60'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

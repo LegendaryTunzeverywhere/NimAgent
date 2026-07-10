@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
-import Icon from './Icon';
 
 interface ModalProps {
   open: boolean;
