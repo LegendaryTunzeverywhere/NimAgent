@@ -169,7 +169,18 @@ function LoadingSkeleton() {
 // ---------------------------------------------------------------------------
 export default function Home() {
   const { activeTab, wallet, setActiveTab, fetchBalance, connectWallet } = useAppStore();
-  const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
+  
+  // OPTIMIZATION: Read persisted wallet.connected synchronously on mount
+  // If already connected (returning user), skip detection entirely and go straight to app
+  const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>(() => {
+    if (typeof window === 'undefined') return 'checking';
+    // Read from persisted storage synchronously
+    const persistedConnected = useAppStore.getState().wallet.connected;
+    // If wallet is connected (valid session from before), skip detection
+    // A disconnected external browser could never produce connected: true
+    return persistedConnected ? 'inside' : 'checking';
+  });
+  
   const [connecting, setConnecting] = useState(false);
   const [consensusEstablished, setConsensusEstablished] = useState(true);
   const [hasAttemptedAutoConnect, setHasAttemptedAutoConnect] = useState(false);
@@ -189,13 +200,17 @@ export default function Home() {
   }, [activeTab, wallet.connected, setActiveTab]);
 
   // Detect whether we're inside Nimiq Pay
+  // SKIP DETECTION for returning users (wallet.connected already true from persisted storage)
   useEffect(() => {
+    // If miniAppStatus is already 'inside' (returning user), skip detection
+    if (miniAppStatus === 'inside') return;
+    
     let cancelled = false;
     isInsideNimiqPay()
       .then((inside) => { if (!cancelled) setMiniAppStatus(inside ? 'inside' : 'outside'); })
       .catch(() => { if (!cancelled) setMiniAppStatus('outside'); });
     return () => { cancelled = true; };
-  }, []);
+  }, [miniAppStatus]);
 
   // Poll Nimiq Pay consensus — used to show syncing toast on all tabs
   useEffect(() => {
@@ -240,6 +255,7 @@ export default function Home() {
     const state = useAppStore.getState();
 
     if (state.wallet.connected) {
+      // Returning user with valid session — fetch balance immediately
       // Skip address validation on page refresh/reload to avoid triggering
       // unnecessary wallet connection prompts. The persisted address is already
       // valid from the initial connection. Only validate if we detect the user
@@ -247,8 +263,8 @@ export default function Home() {
       if (hasValidatedAddressRef.current) return;
       hasValidatedAddressRef.current = true;
       
-      // Just fetch the balance with the persisted address — don't call
-      // getUserAddress() since that triggers listAccounts() which may prompt.
+      // Fetch balance immediately for returning users so payment actions can render instantly
+      console.log('[App] Returning user detected - fetching balance immediately');
       useAppStore.getState().fetchBalance();
       return;
     }

@@ -561,6 +561,7 @@ export const useAppStore = create<AppState>()(
         wallet: {
           address: state.wallet.address,
           connected: state.wallet.connected,
+          authCompleted: state.wallet.authCompleted, // Persist auth state for instant resume
         },
         transactions: state.transactions,
         messages: state.messages, // Persist messages to keep action card states
