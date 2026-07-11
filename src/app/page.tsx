@@ -253,6 +253,8 @@ export default function Home() {
             ...state.wallet,
             connected: false,
             address: null,
+            authCompleted: 0,     // Reset auth flags to force fresh validation
+            authChecked: false,   // AuthProvider will recheck server session
           },
         }));
         // Also reset miniAppStatus to trigger detection
