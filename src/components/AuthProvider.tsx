@@ -113,11 +113,10 @@ export default function AuthProvider() {
           console.log('[Auth] No valid session found');
           localStorage.removeItem(authCacheKey);
           
-          // Mark auth check as complete but DON'T disconnect
-          // This allows fresh wallet connections to proceed to sign-in page
-          // Only the session staleness detector will auto-disconnect after inactivity
+          // Mark auth check as complete and RESET authCompleted to force SignInPage
+          // This ensures users with expired/invalid sessions see the sign-in UI
           useAppStore.setState((state) => ({
-            wallet: { ...state.wallet, authChecked: true }
+            wallet: { ...state.wallet, authChecked: true, authCompleted: 0 }
           }));
         }
       })
