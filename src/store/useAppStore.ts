@@ -558,6 +558,23 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'nimagent-storage',
+      version: 2, // bump this any time the persisted wallet shape changes
+      migrate: (persistedState: any, version: number) => {
+        // If the persisted state predates the current schema, don't trust
+        // partial/stale wallet data — reset just the wallet slice to force
+        // a clean reconnect, but keep transactions/messages/theme intact.
+        if (version < 2) {
+          return {
+            ...persistedState,
+            wallet: {
+              address: null,
+              connected: false,
+              authCompleted: 0,
+            },
+          };
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         wallet: {
           address: state.wallet.address,
