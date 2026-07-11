@@ -61,11 +61,16 @@ function createProxyHeaders(request: NextRequest) {
  * Helper to copy headers from backend response to Next.js response
  */
 function copyResponseHeaders(backendResponse: Response, nextResponse: NextResponse) {
-  // Forward set-cookie headers
-  const setCookieHeaders = backendResponse.headers.get('set-cookie');
-  if (setCookieHeaders) {
-    // Handle multiple set-cookie headers
-    const cookies = backendResponse.headers.getSetCookie();
+  // Don't gate on .get('set-cookie') — it's unreliable for this specific
+  // header when there are multiple Set-Cookie values. Call getSetCookie()
+  // directly and check its length instead.
+  const cookies = backendResponse.headers.getSetCookie();
+  
+  // Diagnostic logging to confirm the bug
+  // console.log('[BFF] set-cookie via .get():', backendResponse.headers.get('set-cookie')); commented out <-
+  // console.log('[BFF] set-cookie via getSetCookie():', cookies); <-
+  
+  if (cookies.length > 0) {
     cookies.forEach(cookie => {
       nextResponse.headers.append('set-cookie', cookie);
     });
