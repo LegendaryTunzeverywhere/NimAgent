@@ -231,6 +231,39 @@ export default function Home() {
     }
   }, [activeTab, wallet.connected, setActiveTab]);
 
+  // Detect true cold starts vs in-app refreshes
+  // sessionStorage doesn't survive app close, so its absence = real cold start
+  useEffect(() => {
+    const hasLiveSession = sessionStorage.getItem('nimagent_live_session');
+    if (!hasLiveSession) {
+      // True cold start: either the very first visit, or the app was fully
+      // closed and just relaunched. sessionStorage doesn't survive a real
+      // close, so its absence here is a reliable signal — regardless of
+      // what wallet.connected says in localStorage, don't trust it as a
+      // live connection. The mini-app provider bridge is tied to the
+      // previous session and does not carry over.
+      sessionStorage.setItem('nimagent_live_session', '1');
+      
+      // Force a fresh connect by clearing the persisted wallet state
+      // This ensures we go through the normal connection flow
+      if (useAppStore.getState().wallet.connected) {
+        console.log('[App] Cold start detected - clearing stale wallet state');
+        useAppStore.setState((state) => ({
+          wallet: {
+            ...state.wallet,
+            connected: false,
+            address: null,
+          },
+        }));
+        // Also reset miniAppStatus to trigger detection
+        setMiniAppStatus('checking');
+      }
+    }
+    // else: this is just an in-app refresh/navigation within the same
+    // still-open session — safe to trust the existing persisted
+    // wallet.connected fast path as-is.
+  }, []);
+
   // Prewarm wallet provider as early as possible to speed up first connect
   useEffect(() => {
     import('@/lib/wallet').then(({ prewarmHub }) => {
