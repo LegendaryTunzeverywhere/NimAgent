@@ -120,26 +120,26 @@ function PaymentLinkHandler() {
             locked: hasAmount,
           },
         });
-        // Clear pending action after firing
-        setPendingLinkAction(null);
       }, 300);
     }
 
     if (pending.type === 'referral' && pending.ref && wallet.address) {
       // Track the referral silently, then let the normal home page load
       import('@/lib/api-client').then(({ trackReferral }) => {
-        trackReferral(wallet.address!, pending.ref!)
-          .then(() => {
-            // Clear pending action after tracking
-            setPendingLinkAction(null);
-          })
-          .catch(() => {
-            // Still clear on error
-            setPendingLinkAction(null);
-          });
+        trackReferral(wallet.address!, pending.ref!).catch(() => {});
       });
     }
   }, [wallet.connected, wallet.address, setPendingLinkAction]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear pending action only after authentication completes
+  // This keeps the contextual copy visible on SignInPage (authCompleted stays 0)
+  // and only clears it once sign-in finishes — right as ChatPage appears with the action card
+  useEffect(() => {
+    const pendingLinkAction = useAppStore.getState().pendingLinkAction;
+    if (wallet.authCompleted > 0 && pendingLinkAction) {
+      setPendingLinkAction(null);
+    }
+  }, [wallet.authCompleted, setPendingLinkAction]);
 
   // Reset fired flag when wallet disconnects (to allow refiring on reconnect)
   useEffect(() => {
@@ -311,15 +311,9 @@ export default function Home() {
       return;
     }
 
-    // Auto-connect for new users — only once per page load
-    // This provides seamless onboarding without requiring manual button clicks
-    if (hasAttemptedAutoConnect) return;
-    
+    // Mark as attempted to prevent repeated checks
     setHasAttemptedAutoConnect(true);
-    setConnecting(true);
-    connectWallet()
-      .finally(() => setConnecting(false));
-  }, [miniAppStatus, hasAttemptedAutoConnect, connectWallet]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [miniAppStatus, hasAttemptedAutoConnect]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show maintenance page — checked AFTER all hooks
   if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
