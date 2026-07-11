@@ -50,8 +50,9 @@ export const useAppStore = create<AppState>()(
 
       setPendingLinkAction: (action) => set({ pendingLinkAction: action }),
 
-      connectWallet: async () => {
+      connectWallet: async (options?: { isRetry?: boolean }) => {
         const state = get();
+        const isRetry = options?.isRetry || false;
         
         // Guard against concurrent connect calls (synchronous check before any async operations)
         if (state.wallet.loading || state.wallet.connected) {
@@ -94,8 +95,32 @@ export const useAppStore = create<AppState>()(
         } catch (error: any) {
           clearTimeout(loadingTimeout);
           
-          // Reset detection cache so the NEXT manual retry gets a fresh probe —
-          // but only after a real failure, not on every connect attempt.
+          // Check if this looks like a timing/cold-start failure
+          const isLikelyColdStartError = (err: any) => {
+            const msg = err?.message?.toLowerCase() || '';
+            // Timeout, unavailable, or provider init failures suggest cold start
+            return msg.includes('timeout') || 
+                   msg.includes('unavailable') || 
+                   msg.includes('failed to initialize') ||
+                   msg.includes('provider not ready');
+          };
+          
+          // If this looks like a cold-start failure (not a real rejection),
+          // automatically retry once after a short delay, silently, before
+          // surfacing an error to the user
+          if (isLikelyColdStartError(error) && !isRetry) {
+            console.log('[Wallet] Cold start detected - retrying after 1.5s delay...');
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Reset detection cache before retry to allow fresh probe
+            const { _resetDetectionCache } = await import('@/lib/wallet/detect');
+            _resetDetectionCache();
+            
+            // Recursive retry (one time only)
+            return get().connectWallet({ isRetry: true });
+          }
+          
+          // Reset detection cache for manual retry
           const { _resetDetectionCache } = await import('@/lib/wallet/detect');
           _resetDetectionCache();
           

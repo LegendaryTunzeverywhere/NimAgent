@@ -67,8 +67,9 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * Memoized so we only probe once per session.
  *
  * When `window.nimiqPay` host hint is present we know we're in the WebView —
- * use a longer timeout (4 s) to tolerate slower Android devices where the
- * provider can take a while to become ready.
+ * use a longer timeout (8s total) to tolerate slower Android devices where the
+ * provider can take a while to become ready. Real-world testing shows 4s isn't
+ * consistently enough, and waiting 6-8s once is better than needing manual refresh.
  * Without the hint we use shorter probes to avoid stalling a normal browser,
  * BUT if payment/referral params are present (?to= or ?ref=) we extend the
  * timeout slightly to account for potential deep-link routing delays.
@@ -78,7 +79,7 @@ export async function getNimiqProvider(timeout = 2500): Promise<NimiqProvider | 
  * - Negative results (false) are cached for only 5 seconds to allow manual retries
  *   (e.g., user taps "Connect Wallet" again after a failed attempt)
  */
-export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
+export function isInsideNimiqPay(timeout = 5000): Promise<boolean> {
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (!detection) {
     detection = (async () => {
@@ -91,8 +92,8 @@ export function isInsideNimiqPay(timeout = 4000): Promise<boolean> {
 
       const attempts = hasNimiqPayHostHint()
         // Inside Nimiq Pay WebView: be generous — the user is definitely here,
-        // the provider just needs time to initialise.
-        ? [{ wait: 0, timeout }, { wait: 500, timeout }]
+        // the provider just needs time to initialise. Use 3 attempts totaling ~8s.
+        ? [{ wait: 0, timeout }, { wait: 500, timeout }, { wait: 1000, timeout }]
         // Outside Nimiq Pay (normal browser): fail fast to show the redirect UI
         // BUT give payment/referral links a bit more grace in case deep-link
         // routing takes time before window.nimiqPay becomes available

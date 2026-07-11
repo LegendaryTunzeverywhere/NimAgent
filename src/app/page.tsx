@@ -231,6 +231,13 @@ export default function Home() {
     }
   }, [activeTab, wallet.connected, setActiveTab]);
 
+  // Prewarm wallet provider as early as possible to speed up first connect
+  useEffect(() => {
+    import('@/lib/wallet').then(({ prewarmHub }) => {
+      prewarmHub();
+    });
+  }, []);
+
   // Detect whether we're inside Nimiq Pay
   // SKIP DETECTION for returning users (wallet.connected already true from persisted storage)
   useEffect(() => {
