@@ -38,6 +38,7 @@ export const useAppStore = create<AppState>()(
       theme: 'dark',
       aiLoading: false,
       aiStatus: null,
+      pendingLinkAction: null,
 
       setActiveTab: (tab) => {
         set({ activeTab: tab });
@@ -46,6 +47,8 @@ export const useAppStore = create<AppState>()(
       setTheme: (theme) => set({ theme }),
 
       setAiStatus: (status) => set({ aiStatus: status }),
+
+      setPendingLinkAction: (action) => set({ pendingLinkAction: action }),
 
       connectWallet: async () => {
         const state = get();

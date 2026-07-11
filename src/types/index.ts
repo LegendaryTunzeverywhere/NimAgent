@@ -116,9 +116,17 @@ export interface AppState {
   theme: 'dark' | 'light';
   aiLoading: boolean;
   aiStatus: string | null;
+  pendingLinkAction: {
+    type: 'payment' | 'referral';
+    to?: string;
+    amount?: string | null;
+    message?: string | null;
+    ref?: string;
+  } | null;
   setActiveTab: (tab: 'home' | 'chat' | 'history') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   setAiStatus: (status: string | null) => void;
+  setPendingLinkAction: (action: AppState['pendingLinkAction']) => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   notifyAuthComplete: () => void;

@@ -7,9 +7,33 @@ import Button from '@/components/Button';
 
 export default function SignInPage() {
   const wallet = useAppStore(state => state.wallet);
+  const pendingLinkAction = useAppStore(state => state.pendingLinkAction);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Contextual copy based on pending action
+  let heroTitle = 'Secure Sign-In';
+  let heroDescription = 'One signature unlocks your full NimAgent experience for 24 hours';
+  
+  if (pendingLinkAction) {
+    if (pendingLinkAction.type === 'payment') {
+      const amount = pendingLinkAction.amount;
+      const to = pendingLinkAction.to;
+      const shortAddress = to ? `${to.slice(0, 8)}...${to.slice(-6)}` : '';
+      const hasAmount = amount && parseFloat(amount) > 0;
+      
+      heroTitle = 'Complete Your Payment Request';
+      heroDescription = hasAmount && to
+        ? `Sign in to send ${amount} NIM to ${shortAddress}`
+        : to
+        ? `Sign in to send NIM to ${shortAddress}`
+        : 'Sign in to complete your payment';
+    } else if (pendingLinkAction.type === 'referral') {
+      heroTitle = 'Activate Your Referral';
+      heroDescription = 'Sign in to claim your referral rewards and start using NimAgent';
+    }
+  }
 
   const handleSignIn = () => {
     if (!agreedToTerms) {
@@ -43,8 +67,8 @@ export default function SignInPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-4xl font-black text-[#1F2348] dark:text-white tracking-tight leading-none">Secure Sign-In</h1>
-            <p className="text-base text-[#1F2348]/80 dark:text-white/70 max-w-sm mx-auto leading-relaxed">One signature unlocks your full NimAgent experience for 24 hours</p>
+            <h1 className="text-4xl font-black text-[#1F2348] dark:text-white tracking-tight leading-none">{heroTitle}</h1>
+            <p className="text-base text-[#1F2348]/80 dark:text-white/70 max-w-sm mx-auto leading-relaxed">{heroDescription}</p>
           </div>
         </div>
         {/* What You'll Unlock */}

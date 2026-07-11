@@ -31,17 +31,17 @@ interface PendingPayment {
 // ---------------------------------------------------------------------------
 // PaymentLinkHandler
 // Parses ?to=&amount=&message= and ?ref= from the URL.
-// Stores params in a ref on mount, fires the appropriate action as soon as
-// wallet.connected becomes true — regardless of connect timing.
+// Stores params in global state so any screen can see it (SignInPage, LoadingSkeleton).
+// Fires the appropriate action as soon as wallet.connected becomes true.
 // ---------------------------------------------------------------------------
 function PaymentLinkHandler() {
-  const { setActiveTab, addMessage, wallet } = useAppStore();
+  const { setActiveTab, addMessage, wallet, setPendingLinkAction } = useAppStore();
   const searchParams = useSearchParams();
   const pendingRef = useRef<PendingPayment | null>(null);
   const firedRef = useRef(false);
   const wasConnectedRef = useRef(false);
 
-  // Parse params once on mount and store in ref
+  // Parse params once on mount and store in both ref and global state
   useEffect(() => {
     const to      = searchParams.get('to');
     const amount  = searchParams.get('amount');
@@ -58,9 +58,13 @@ function PaymentLinkHandler() {
     }
 
     if (to) {
-      pendingRef.current = { type: 'payment', to, amount, message };
+      const action = { type: 'payment' as const, to, amount, message };
+      pendingRef.current = action;
+      setPendingLinkAction(action);
     } else if (ref) {
-      pendingRef.current = { type: 'referral', ref };
+      const action = { type: 'referral' as const, ref };
+      pendingRef.current = action;
+      setPendingLinkAction(action);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -116,16 +120,26 @@ function PaymentLinkHandler() {
             locked: hasAmount,
           },
         });
+        // Clear pending action after firing
+        setPendingLinkAction(null);
       }, 300);
     }
 
     if (pending.type === 'referral' && pending.ref && wallet.address) {
       // Track the referral silently, then let the normal home page load
       import('@/lib/api-client').then(({ trackReferral }) => {
-        trackReferral(wallet.address!, pending.ref!).catch(() => {});
+        trackReferral(wallet.address!, pending.ref!)
+          .then(() => {
+            // Clear pending action after tracking
+            setPendingLinkAction(null);
+          })
+          .catch(() => {
+            // Still clear on error
+            setPendingLinkAction(null);
+          });
       });
     }
-  }, [wallet.connected, wallet.address]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wallet.connected, wallet.address, setPendingLinkAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset fired flag when wallet disconnects (to allow refiring on reconnect)
   useEffect(() => {
@@ -143,6 +157,24 @@ function PaymentLinkHandler() {
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 function LoadingSkeleton() {
+  const pendingLinkAction = useAppStore(state => state.pendingLinkAction);
+  
+  // Contextual copy based on pending action
+  let title = 'Connecting to Nimiq Pay...';
+  let subtitle = 'Please wait while we detect your environment';
+  
+  if (pendingLinkAction) {
+    if (pendingLinkAction.type === 'payment') {
+      const amount = pendingLinkAction.amount;
+      const hasAmount = amount && parseFloat(amount) > 0;
+      title = hasAmount ? `Preparing your ${amount} NIM payment request...` : 'Preparing your payment request...';
+      subtitle = 'Setting up your secure payment connection';
+    } else if (pendingLinkAction.type === 'referral') {
+      title = 'Activating your referral...';
+      subtitle = 'Setting up your account connection';
+    }
+  }
+  
   return (
     <ThemeProvider>
       <main className="min-h-screen bg-[#FAFAFA] dark:bg-[#0F1219] px-5 py-8">
@@ -151,10 +183,10 @@ function LoadingSkeleton() {
             <div className="flex flex-col items-center justify-center py-8">
               <LoadingSpinner size="lg" type="loading" />
               <p className="mt-4 text-sm font-semibold text-[#1F2348] dark:text-white/75">
-                Connecting to Nimiq Pay...
+                {title}
               </p>
               <p className="mt-1 text-xs text-[#1F2348]/60 dark:text-white/55">
-                Please wait while we detect your environment
+                {subtitle}
               </p>
             </div>
           </div>
