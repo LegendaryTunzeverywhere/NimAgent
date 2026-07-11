@@ -127,7 +127,7 @@ export interface AppState {
   setTheme: (theme: 'dark' | 'light') => void;
   setAiStatus: (status: string | null) => void;
   setPendingLinkAction: (action: AppState['pendingLinkAction']) => void;
-  connectWallet: () => Promise<void>;
+  connectWallet: (options?: { isRetry?: boolean }) => Promise<void>;
   disconnectWallet: () => void;
   notifyAuthComplete: () => void;
   fetchBalance: () => Promise<void>;
