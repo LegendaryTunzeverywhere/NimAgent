@@ -54,9 +54,8 @@ export const useAppStore = create<AppState>()(
         const state = get();
         const isRetry = options?.isRetry || false;
         
-        // Guard against concurrent connect calls (synchronous check before any async operations)
+        // Guard against concurrent connect calls
         if (state.wallet.loading || state.wallet.connected) {
-          console.log('[Wallet] Connection already in progress or wallet already connected - skipping');
           return;
         }
 
@@ -105,18 +104,14 @@ export const useAppStore = create<AppState>()(
                    msg.includes('provider not ready');
           };
           
-          // If this looks like a cold-start failure (not a real rejection),
-          // automatically retry once after a short delay, silently, before
-          // surfacing an error to the user
+          // Automatically retry once on cold-start failures
           if (isLikelyColdStartError(error) && !isRetry) {
-            console.log('[Wallet] Cold start detected - retrying after 1.5s delay...');
             await new Promise(r => setTimeout(r, 1500));
             
-            // Reset detection cache before retry to allow fresh probe
+            // Reset detection cache before retry
             const { _resetDetectionCache } = await import('@/lib/wallet/detect');
             _resetDetectionCache();
             
-            // Recursive retry (one time only)
             return get().connectWallet({ isRetry: true });
           }
           
@@ -146,16 +141,6 @@ export const useAppStore = create<AppState>()(
       },
 
       disconnectWallet: () => {
-        const currentAddress = get().wallet.address;
-        
-        // Clear session authentication flags on disconnect
-        if (currentAddress) {
-          const authCacheKey = `nimagent_auth_cache_${currentAddress}`;
-          const sessionAuthKey = `nimagent_session_authenticated_${currentAddress}`;
-          localStorage.removeItem(authCacheKey);
-          sessionStorage.removeItem(sessionAuthKey);
-        }
-        
         set({
           wallet: {
             address: null,
@@ -586,107 +571,30 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'nimagent-storage',
-      version: 2, // bump this any time the persisted wallet shape changes
+      version: 3, // Bump version: removed wallet persistence
       migrate: (persistedState: any, version: number) => {
-        // If the persisted state predates the current schema, don't trust
-        // partial/stale wallet data — reset just the wallet slice to force
-        // a clean reconnect, but keep transactions/messages/theme intact.
-        if (version < 2) {
-          return {
-            ...persistedState,
-            wallet: {
-              address: null,
-              connected: false,
-              authCompleted: 0,
-            },
-          };
-        }
-        return persistedState;
+        // Always start fresh - no wallet state persisted
+        return {
+          ...persistedState,
+          wallet: {
+            address: null,
+            connected: false,
+            authCompleted: 0,
+            authChecked: false,
+          },
+        };
       },
       partialize: (state) => ({
-        wallet: {
-          address: state.wallet.address,
-          connected: state.wallet.connected,
-          authCompleted: state.wallet.authCompleted, // Persist auth state for instant resume
-        },
+        // Don't persist wallet state - fresh sign-in on every app open
         transactions: state.transactions,
-        messages: state.messages, // Persist messages to keep action card states
+        messages: state.messages,
         currentSessionId: state.currentSessionId,
-        activeTab: state.activeTab, // Persist active tab
-        theme: state.theme, // Persist theme preference
+        activeTab: state.activeTab,
+        theme: state.theme,
       }),
     }
   )
 );
-
-// ---------------------------------------------------------------------------
-// Session staleness detection and auto-disconnect
-// When app resumes after being closed for a long time, check if auth is stale
-// If stale, force disconnect to ensure fresh connection flow
-// ---------------------------------------------------------------------------
-if (typeof window !== 'undefined') {
-  // Track when the app was last active
-  let lastActiveTime = Date.now();
-  const STALE_SESSION_THRESHOLD = 10 * 60 * 1000; // 10 minutes of inactivity
-
-  // Update last active time on user interaction
-  const updateLastActive = () => {
-    lastActiveTime = Date.now();
-  };
-
-  // Listen to user interactions
-  ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-    document.addEventListener(event, updateLastActive, { passive: true });
-  });
-
-  // Check for stale session when app becomes visible
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      const now = Date.now();
-      const timeSinceLastActive = now - lastActiveTime;
-      
-      // If app was inactive for more than threshold, check session validity
-      if (timeSinceLastActive > STALE_SESSION_THRESHOLD) {
-        const state = useAppStore.getState();
-        
-        if (state.wallet.connected && state.wallet.address) {
-          console.log('[Session] App resumed after long inactivity - checking auth validity');
-          
-          // Check if auth cache is still valid
-          const authCacheKey = `nimagent_auth_cache_${state.wallet.address}`;
-          const authCache = localStorage.getItem(authCacheKey);
-          let isAuthValid = false;
-          
-          if (authCache) {
-            try {
-              const cached = JSON.parse(authCache);
-              isAuthValid = cached.authenticated && cached.expiresAt > now;
-            } catch (err) {
-              console.warn('[Session] Failed to parse auth cache');
-            }
-          }
-          
-          // If auth is NOT valid, force disconnect for fresh flow
-          if (!isAuthValid) {
-            console.log('[Session] Auth cache expired - forcing disconnect for fresh connection');
-            useAppStore.getState().disconnectWallet();
-            
-            // Show user-friendly message
-            setTimeout(() => {
-              const message = 'Session expired. Please connect your wallet again.';
-              console.log(`[Session] ${message}`);
-              // Optionally show a toast notification here if you have one
-            }, 500);
-          }
-        }
-      }
-      
-      // Update last active time
-      lastActiveTime = now;
-    }
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Global balance polling — runs regardless of which tab is active.
 // HTLCs are dynamic: they can settle at any time while the user is chatting
@@ -731,11 +639,8 @@ if (typeof window !== 'undefined') {
     const entries = getRetryableEntries();
     
     for (const entry of entries) {
-      console.log(`[PendingSyncQueue] Retrying ${entry.kind} for tx ${entry.txHash.slice(0, 8)}... (attempt ${entry.attempts + 1})`);
-      
       try {
         if (entry.kind === 'send') {
-          // Type assertion: payload contains the recordTransaction params
           await recordTransaction(entry.payload as {
             type: string;
             fromAddress?: string;
@@ -745,9 +650,7 @@ if (typeof window !== 'undefined') {
             status?: string;
           });
           removePendingSync(entry.id);
-          console.log(`[PendingSyncQueue] Successfully synced send transaction ${entry.txHash.slice(0, 8)}...`);
         } else if (entry.kind === 'order') {
-          // Type assertion: payload contains the createOrder params
           await createOrder(entry.payload as {
             type: string;
             txHash: string;
@@ -757,10 +660,8 @@ if (typeof window !== 'undefined') {
             quoteId?: string;
           });
           removePendingSync(entry.id);
-          console.log(`[PendingSyncQueue] Successfully synced order ${entry.txHash.slice(0, 8)}...`);
         }
       } catch (err) {
-        console.error(`[PendingSyncQueue] Retry failed for ${entry.kind} ${entry.txHash.slice(0, 8)}...:`, err);
         updatePendingSyncAttempt(entry.id);
       }
     }

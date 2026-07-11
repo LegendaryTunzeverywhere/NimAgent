@@ -202,20 +202,11 @@ function LoadingSkeleton() {
 export default function Home() {
   const { activeTab, wallet, setActiveTab, fetchBalance, connectWallet } = useAppStore();
   
-  // OPTIMIZATION: Read persisted wallet.connected synchronously on mount
-  // If already connected (returning user), skip detection entirely and go straight to app
-  const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>(() => {
-    if (typeof window === 'undefined') return 'checking';
-    // Read from persisted storage synchronously
-    const persistedConnected = useAppStore.getState().wallet.connected;
-    // If wallet is connected (valid session from before), skip detection
-    // A disconnected external browser could never produce connected: true
-    return persistedConnected ? 'inside' : 'checking';
-  });
+  // Always start with 'checking' - no wallet persistence
+  const [miniAppStatus, setMiniAppStatus] = useState<'checking' | 'inside' | 'outside'>('checking');
   
   const [connecting, setConnecting] = useState(false);
   const [consensusEstablished, setConsensusEstablished] = useState(true);
-  const [hasAttemptedAutoConnect, setHasAttemptedAutoConnect] = useState(false);
   const hasValidatedAddressRef = useRef(false);
   // Compute once — safe on SSR (window may not exist), stable across renders
   const [hasPaymentParams] = useState(() => {
@@ -231,41 +222,6 @@ export default function Home() {
     }
   }, [activeTab, wallet.connected, setActiveTab]);
 
-  // Detect true cold starts vs in-app refreshes
-  // sessionStorage doesn't survive app close, so its absence = real cold start
-  useEffect(() => {
-    const hasLiveSession = sessionStorage.getItem('nimagent_live_session');
-    if (!hasLiveSession) {
-      // True cold start: either the very first visit, or the app was fully
-      // closed and just relaunched. sessionStorage doesn't survive a real
-      // close, so its absence here is a reliable signal — regardless of
-      // what wallet.connected says in localStorage, don't trust it as a
-      // live connection. The mini-app provider bridge is tied to the
-      // previous session and does not carry over.
-      sessionStorage.setItem('nimagent_live_session', '1');
-      
-      // Force a fresh connect by clearing the persisted wallet state
-      // This ensures we go through the normal connection flow
-      if (useAppStore.getState().wallet.connected) {
-        console.log('[App] Cold start detected - clearing stale wallet state');
-        useAppStore.setState((state) => ({
-          wallet: {
-            ...state.wallet,
-            connected: false,
-            address: null,
-            authCompleted: 0,     // Reset auth flags to force fresh validation
-            authChecked: false,   // AuthProvider will recheck server session
-          },
-        }));
-        // Also reset miniAppStatus to trigger detection
-        setMiniAppStatus('checking');
-      }
-    }
-    // else: this is just an in-app refresh/navigation within the same
-    // still-open session — safe to trust the existing persisted
-    // wallet.connected fast path as-is.
-  }, []);
-
   // Prewarm wallet provider as early as possible to speed up first connect
   useEffect(() => {
     import('@/lib/wallet').then(({ prewarmHub }) => {
@@ -274,16 +230,10 @@ export default function Home() {
   }, []);
 
   // Detect whether we're inside Nimiq Pay
-  // SKIP DETECTION for returning users (wallet.connected already true from persisted storage)
   useEffect(() => {
-    // If miniAppStatus is already 'inside' (returning user), skip detection
-    if (miniAppStatus === 'inside') return;
-    
     let cancelled = false;
     isInsideNimiqPay()
       .then((inside) => { 
-        // RACE CONDITION FIX: Once wallet.connected is true, ignore detection results
-        // Don't let a late/racy 'outside' result override a successful connection
         if (!cancelled && !useAppStore.getState().wallet.connected) {
           setMiniAppStatus(inside ? 'inside' : 'outside');
         }
@@ -294,7 +244,7 @@ export default function Home() {
         }
       });
     return () => { cancelled = true; };
-  }, [miniAppStatus]);
+  }, []);
 
   // Poll Nimiq Pay consensus — used to show syncing toast on all tabs
   useEffect(() => {
@@ -312,14 +262,10 @@ export default function Home() {
   }, [wallet.connected]);
 
   // Handle app resume (when returning from background)
-  // Mobile apps often suspend JavaScript execution when minimized
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && wallet.connected) {
-        console.log('[App] Resumed from background - refreshing state');
-        // Fetch fresh balance
         fetchBalance();
-        // Ensure consensus state is current
         import('@/lib/wallet').then(({ getNimiqNetworkState }) => {
           getNimiqNetworkState()
             .then(state => setConsensusEstablished(state.consensusEstablished))
@@ -332,31 +278,6 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [wallet.connected, fetchBalance]);
 
-  // Once confirmed inside Nimiq Pay — ONE place that handles all startup logic.
-  useEffect(() => {
-    if (miniAppStatus !== 'inside') return;
-
-    const state = useAppStore.getState();
-
-    if (state.wallet.connected) {
-      // Returning user with valid session — fetch balance immediately
-      // Skip address validation on page refresh/reload to avoid triggering
-      // unnecessary wallet connection prompts. The persisted address is already
-      // valid from the initial connection. Only validate if we detect the user
-      // is actively switching accounts (which would trigger a new connection flow).
-      if (hasValidatedAddressRef.current) return;
-      hasValidatedAddressRef.current = true;
-      
-      // Fetch balance immediately for returning users so payment actions can render instantly
-      console.log('[App] Returning user detected - fetching balance immediately');
-      useAppStore.getState().fetchBalance();
-      return;
-    }
-
-    // Mark as attempted to prevent repeated checks
-    setHasAttemptedAutoConnect(true);
-  }, [miniAppStatus, hasAttemptedAutoConnect]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Show maintenance page — checked AFTER all hooks
   if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
     return (
@@ -366,11 +287,14 @@ export default function Home() {
     );
   }
 
-  // GATE ORDER: wallet.connected ALWAYS wins over miniAppStatus
-  // Trust the persisted session — wallet.connected can only be true if the user
-  // was genuinely inside Nimiq Pay before. Never let a later/racy 'outside'
-  // detection result override this. Proceed straight into the authenticated app shell.
+  // Simple gate: wallet.connected means user has connected and signed in
   if (wallet.connected) {
+    // Fetch balance once on first render after connection
+    if (!hasValidatedAddressRef.current && wallet.address) {
+      hasValidatedAddressRef.current = true;
+      fetchBalance();
+    }
+
     return (
       <ThemeProvider>
         <main className="min-h-screen flex flex-col overflow-hidden">

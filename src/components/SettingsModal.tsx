@@ -70,24 +70,37 @@ export default function SettingsModal({
             </h3>
             <div className="space-y-3">
               <button
-                onClick={() => {
-                  // Clear all caches
+                onClick={async () => {
                   if (typeof window !== 'undefined') {
-                    // Clear localStorage
-                    localStorage.clear();
-                    
-                    // Clear sessionStorage
-                    sessionStorage.clear();
-                    
-                    // Clear service worker caches if available
-                    if ('caches' in window) {
-                      caches.keys().then(names => {
-                        names.forEach(name => caches.delete(name));
-                      });
+                    try {
+                      console.log('[Settings] Clearing all caches and reloading...');
+                      
+                      // Clear all localStorage
+                      localStorage.clear();
+                      
+                      // Clear all sessionStorage  
+                      sessionStorage.clear();
+                      
+                      // Clear service worker caches if available
+                      if ('caches' in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map(name => caches.delete(name)));
+                      }
+                      
+                      // Use location.replace for a clean navigation without history
+                      // This prevents any state from being preserved
+                      window.location.replace(window.location.origin + window.location.pathname);
+                    } catch (error) {
+                      console.error('[Settings] Cache clear failed:', error);
+                      // Fallback: clear what we can and reload
+                      try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                      } catch (e) {
+                        console.error('[Settings] Storage clear failed:', e);
+                      }
+                      window.location.reload();
                     }
-                    
-                    // Reload the page
-                    window.location.reload();
                   }
                 }}
                 className="w-full flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.03] border border-[#1F2348]/10 dark:border-white/[0.06] hover:bg-white/80 dark:hover:bg-white/[0.05] transition-colors group"
