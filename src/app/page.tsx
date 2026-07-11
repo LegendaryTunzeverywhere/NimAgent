@@ -279,23 +279,15 @@ export default function Home() {
       return;
     }
 
-    // Auto-connect ONLY once per page load, and only if payment params exist.
-    // This prevents auto-reconnecting when user manually disconnects.
-    // If user disconnects and refreshes, wallet won't auto-connect unless there's a payment link.
+    // Auto-connect for new users — only once per page load
+    // This provides seamless onboarding without requiring manual button clicks
     if (hasAttemptedAutoConnect) return;
     
-    // Only auto-connect if payment link is present (to=... or ref=... params)
-    // For normal app usage, user must connect manually via button
-    if (hasPaymentParams) {
-      setHasAttemptedAutoConnect(true);
-      setConnecting(true);
-      connectWallet()
-        .finally(() => setConnecting(false));
-    } else {
-      // Mark as attempted so we don't keep checking
-      setHasAttemptedAutoConnect(true);
-    }
-  }, [miniAppStatus, hasAttemptedAutoConnect, hasPaymentParams, connectWallet]); // eslint-disable-line react-hooks/exhaustive-deps
+    setHasAttemptedAutoConnect(true);
+    setConnecting(true);
+    connectWallet()
+      .finally(() => setConnecting(false));
+  }, [miniAppStatus, hasAttemptedAutoConnect, connectWallet]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show maintenance page — checked AFTER all hooks
   if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true') {
