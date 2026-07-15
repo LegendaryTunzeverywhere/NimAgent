@@ -433,8 +433,8 @@ SOFTWARE.
 ## 🎯 Roadmap
 
 ### Completed ✅
-- [x] Wallet integration (Hub + Mini App)
-- [x] AI chat agent with typing indicator
+- [x] Wallet integration (Mini App)
+- [x] AI chat agent
 - [x] Voice input
 - [x] Gift cards
 - [x] Airtime top-ups
@@ -445,15 +445,17 @@ SOFTWARE.
 - [x] Quick actions from homepage
 - [x] Dark/light theme
 - [x] AI loading state management
+- [x] Transaction notifications
+- [x] Refund portal
+
 
 ### In Progress 🚧
-- [ ] Crypto swap interface
-- [ ] Transaction notifications
-- [ ] Spending analytics
-- [ ] Refund portal
+- [ ] Multi-language support
+
 
 ### Planned 📋
-- [ ] Multi-language support
+- [ ] Spending analytics
+- [ ] Crypto swap interface
 - [ ] Mobile app (React Native)
 - [ ] Bill splitting feature
 - [ ] Recurring payments
