@@ -60,6 +60,9 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
   const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState<any[]>([]);
   
+  // Check if payment method is locked (AI explicitly chose one)
+  const isPaymentMethodLocked = !!action.paymentMethod;
+  
   // Pre-validation state — done BEFORE the user clicks Pay so the wallet
   // popup isn't blocked by a network request inside the click handler.
   const isOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
@@ -87,6 +90,12 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Fetch available payment methods (Phase 3: Cryptorefills)
   useEffect(() => {
     if (isOrder && !success && !failed) {
+      // If AI explicitly set paymentMethod, don't show selector (use that method only)
+      if (isPaymentMethodLocked) {
+        setShowPaymentMethodSelector(false);
+        return;
+      }
+      
       // Check if crypto payments are available
       import('@/lib/api-client').then(({ getPaymentMethods }) => {
         getPaymentMethods()
@@ -104,7 +113,7 @@ export default function ActionCard({ action }: ActionCardProps) {
           });
       });
     }
-  }, [isOrder, success, failed]);
+  }, [isOrder, success, failed, isPaymentMethodLocked]);
   
   // Find the index of this message in the messages array
   const messageIndex = messages.findIndex(msg => msg.action === action);
@@ -1513,6 +1522,23 @@ export default function ActionCard({ action }: ActionCardProps) {
               ? `Quote expiring soon! Click "Refresh" to update the price.`
               : `NIM price updated. Amount changed from ${lastKnownAmount?.toFixed(2) || '?'} to ${amount} NIM.`}
           </p>
+        </div>
+      )}
+
+      {/* Locked Payment Method Message */}
+      {isPaymentMethodLocked && isOrder && !success && !failed && (
+        <div className="flex items-start gap-2 rounded-lg bg-blue-100 dark:bg-blue-500/10 border border-blue-300 dark:border-blue-500/30 p-3">
+          <span className="text-blue-600 dark:text-blue-400 mt-0.5">ℹ️</span>
+          <div>
+            <p className="text-blue-900 dark:text-blue-100 text-xs font-semibold mb-1">
+              Payment Method: {paymentMethod === 'usdt-polygon' ? 'USDT on Polygon' : 'NIM'}
+            </p>
+            <p className="text-blue-700 dark:text-blue-300 text-[11px] leading-relaxed">
+              {paymentMethod === 'usdt-polygon' 
+                ? 'This order will be paid with USDT on the Polygon network.' 
+                : 'This order will be paid with NIM from your Nimiq wallet.'}
+            </p>
+          </div>
         </div>
       )}
 
