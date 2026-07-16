@@ -60,6 +60,10 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
   const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState<any[]>([]);
   
+  // Browse catalog hooks (must be declared before any conditional returns)
+  const [catalogLoading, setCatalogLoading] = useState(!action.catalogData);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  
   // Check if payment method is locked (AI explicitly chose one)
   const isPaymentMethodLocked = !!action.paymentMethod;
   
@@ -295,6 +299,33 @@ export default function ActionCard({ action }: ActionCardProps) {
     }
   }, [wallet.address, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load catalog data for browse-catalog action type
+  useEffect(() => {
+    if (action.type === 'browse-catalog' && !action.catalogData && action.countryCode) {
+      setCatalogLoading(true);
+      fetch('/api/catalog/browse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ countryCode: action.countryCode }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            setCatalogError(data.error);
+          } else {
+            action.catalogData = data;
+            updateActionState(messageIndex, { catalogData: data });
+          }
+        })
+        .catch((err) => {
+          setCatalogError(err.message);
+        })
+        .finally(() => {
+          setCatalogLoading(false);
+        });
+    }
+  }, [action.type, action.countryCode, action.catalogData, messageIndex, updateActionState]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Handle Referral Link
   if (action.type === 'referral') {
     const referralLink = action.referralLink || '';
@@ -466,6 +497,152 @@ export default function ActionCard({ action }: ActionCardProps) {
   // Handle Balance display
   if (action.type === 'balance') {
     return <BalanceDisplay walletAddress={wallet.address || ''} />;
+  }
+
+  // Handle Browse Catalog - show products by country
+  if (action.type === 'browse-catalog') {
+    return (
+      <div className="glass dark:bg-white/[0.035] border-2 border-[#1F2348]/10 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-700 dark:text-purple-400">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-[#1F2348] dark:text-white">
+              {action.catalogData ? action.catalogData.country.name : action.countryCode}
+            </p>
+            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 font-mono uppercase">
+              CRYPTOREFILLS CATALOG
+            </p>
+          </div>
+        </div>
+
+        {catalogLoading ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="w-8 h-8 border-2 border-purple-300 dark:border-purple-800 border-t-purple-700 dark:border-t-purple-400 rounded-full animate-spin mb-3" />
+            <p className="text-sm text-[#1F2348]/70 dark:text-white/70">Loading products...</p>
+          </div>
+        ) : catalogError ? (
+          <div className="text-center py-6">
+            <p className="text-sm text-red-600 dark:text-red-400 mb-2">{catalogError}</p>
+          </div>
+        ) : action.catalogData ? (
+          <div className="space-y-3">
+            <div className="bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10 rounded-xl p-3">
+              <p className="text-xs font-semibold text-[#1F2348] dark:text-white mb-2">
+                Available Products
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {action.catalogData.productTypes.map((type) => {
+                  const typeLabels: Record<string, { label: string; emoji: string }> = {
+                    giftcard: { label: 'Gift Cards', emoji: '🎁' },
+                    physical: { label: 'Physical Cards', emoji: '📦' },
+                    airtime: { label: 'Airtime', emoji: '📱' },
+                    data: { label: 'Data', emoji: '📶' },
+                    esim: { label: 'eSIM', emoji: '🌐' },
+                    bills: { label: 'Bills', emoji: '💳' },
+                  };
+                  const info = typeLabels[type] || { label: type, emoji: '•' };
+                  const count = action.catalogData!.summary.byType[type] || 0;
+
+                  return (
+                    <div
+                      key={type}
+                      className="px-2.5 py-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700/30"
+                    >
+                      <span className="text-xs font-semibold text-purple-800 dark:text-purple-300">
+                        {info.emoji} {info.label} ({count})
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Gift Cards */}
+            {action.catalogData.brands.giftcard && action.catalogData.brands.giftcard.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-[#1F2348] dark:text-white">
+                  🎁 Gift Cards ({action.catalogData.brands.giftcard.length})
+                </p>
+                <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                  {action.catalogData.brands.giftcard.slice(0, 20).map((brand, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[#1F2348] dark:text-white truncate">
+                          {brand.name}
+                        </p>
+                        {(brand.min || brand.max) && (
+                          <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60">
+                            {brand.min} - {brand.max}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {action.catalogData.brands.giftcard.length > 20 && (
+                    <p className="text-[10px] text-center text-[#1F2348]/60 dark:text-white/60 pt-1">
+                      + {action.catalogData.brands.giftcard.length - 20} more brands
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Other product types (airtime, data, esim, bills) */}
+            {['airtime', 'data', 'esim', 'bills'].map((productType) => {
+              const brands = action.catalogData!.brands[productType as keyof typeof action.catalogData.brands];
+              if (!brands || brands.length === 0) return null;
+
+              const typeInfo: Record<string, { label: string; emoji: string }> = {
+                airtime: { label: 'Airtime Top-ups', emoji: '📱' },
+                data: { label: 'Data Bundles', emoji: '📶' },
+                esim: { label: 'eSIM Packages', emoji: '🌐' },
+                bills: { label: 'Bill Payments', emoji: '💳' },
+              };
+              const info = typeInfo[productType] || { label: productType, emoji: '•' };
+
+              return (
+                <div key={productType} className="space-y-2">
+                  <p className="text-xs font-semibold text-[#1F2348] dark:text-white">
+                    {info.emoji} {info.label} ({brands.length})
+                  </p>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {brands.slice(0, 10).map((brand, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10"
+                      >
+                        <p className="text-sm font-medium text-[#1F2348] dark:text-white truncate">
+                          {brand.name}
+                        </p>
+                      </div>
+                    ))}
+                    {brands.length > 10 && (
+                      <p className="text-[10px] text-center text-[#1F2348]/60 dark:text-white/60 pt-1">
+                        + {brands.length - 10} more
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="pt-2 border-t border-[#1F2348]/10 dark:border-white/10">
+              <p className="text-[11px] text-[#1F2348]/70 dark:text-white/70 leading-relaxed">
+                💡 To purchase, tell me which product you want (e.g., "I want Amazon gift card")
+              </p>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   if (action.type === 'support') {

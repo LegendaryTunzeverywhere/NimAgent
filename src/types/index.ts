@@ -32,7 +32,7 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard' | 'browse-catalog';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
@@ -47,6 +47,7 @@ export interface ActionCard {
   product?: string;
   productId?: string;
   country?: string;        // ISO country code — used by gift-card, airtime, bill validation
+  countryCode?: string;    // For browse-catalog action
   phone?: string;
   operator?: string;
   operatorId?: string;
@@ -97,6 +98,23 @@ export interface ActionCard {
   qualifiedReferralCount?: number;
   // Leaderboard fields
   leaderboard?: Array<{ wallet_address: string; total_qualified?: number; total_referrals?: number; rank?: number }>;
+  // Browse catalog fields
+  catalogData?: {
+    country: { code: string; name: string };
+    productTypes: string[];
+    brands: {
+      giftcard?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+      physical?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+      airtime?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+      data?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+      esim?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+      bills?: Array<{ name: string; family: string; brandId: string; category?: string; min?: string; max?: string; logoUrl?: string }>;
+    };
+    summary: {
+      totalBrands: number;
+      byType: Record<string, number>;
+    };
+  };
 }
 
 export interface QuickAction {
