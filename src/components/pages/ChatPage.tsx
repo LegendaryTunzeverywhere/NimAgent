@@ -1027,7 +1027,7 @@ export default function ChatPage() {
                 role: 'ai',
                 content: `🔍 **Wallet Connection Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${
                   report.step === 'success' 
-                    ? `✅ **Connected successfully** in ${report.elapsedMs}ms\n\nAccount: ${report.firstAccount}\n\n**Next:** The problem is later in the flow (network switch or transfer). Let me know and I'll add more debug tools.` 
+                    ? `✅ **Connected successfully** in ${report.elapsedMs}ms\n\nAccount: ${report.firstAccount}\n\n**Next:** Run test #3 to check network switching.` 
                     : report.errorMessage?.includes('TIMEOUT')
                       ? `⏱️ **TIMEOUT** - Request hung for 10 seconds\n\n**Root cause:** Nimiq Pay's EVM provider bridge has an issue. The \`eth_requestAccounts\` call never completes.\n\n**Action:** Report this to the Nimiq Pay development team - it's not a bug in your app code.`
                       : `❌ **Failed:** ${report.errorMessage}\n\n**Error code:** ${report.errorCode}\n\n**Action:** Share this error with me and I can suggest a fix.`
@@ -1041,6 +1041,112 @@ export default function ChatPage() {
             </p>
             <p className="text-xs text-amber-600 dark:text-amber-400/75">
               Call eth_requestAccounts with 10s timeout. May show popup.
+            </p>
+          </button>
+          
+          <button
+            onClick={async () => {
+              if (typeof (window as any).ethereum === 'undefined') {
+                addMessage({
+                  role: 'ai',
+                  content: `❌ **Cannot test network switch**\n\nwindow.ethereum does not exist. Run test #1 first.`,
+                });
+                setShowDebugPanel(false);
+                return;
+              }
+              
+              addMessage({
+                role: 'ai',
+                content: `⏳ **Testing network switching...**\n\nChecking current chain, then switching to Polygon if needed. This may take up to 18 seconds.`,
+              });
+              setShowDebugPanel(false);
+              
+              const report: any = { steps: [] };
+              
+              // Step 1: check current chain
+              try {
+                const t0 = Date.now();
+                const chainId = await Promise.race([
+                  (window as any).ethereum.request({ method: 'eth_chainId' }),
+                  new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT 8s')), 8000))
+                ]);
+                report.steps.push({ 
+                  step: 'eth_chainId', 
+                  result: chainId, 
+                  elapsedMs: Date.now() - t0, 
+                  isPolygon: chainId === '0x89',
+                  chainName: chainId === '0x89' ? 'Polygon' : chainId === '0x1' ? 'Ethereum' : `Unknown (${chainId})`
+                });
+              } catch (err: any) {
+                report.steps.push({ 
+                  step: 'eth_chainId', 
+                  error: err?.message, 
+                  code: err?.code 
+                });
+                addMessage({
+                  role: 'ai',
+                  content: `🔍 **Network Switch Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n❌ **Failed at step 1:** Cannot check current chain.\n\n**Action:** Share this error - the provider can't even tell us what network it's on.`,
+                });
+                return;
+              }
+              
+              // Step 2: switch if not on Polygon
+              if (report.steps[0].result !== '0x89') {
+                try {
+                  const t1 = Date.now();
+                  await Promise.race([
+                    (window as any).ethereum.request({
+                      method: 'wallet_switchEthereumChain',
+                      params: [{ chainId: '0x89' }],
+                    }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT 10s - switch never resolved')), 10000))
+                  ]);
+                  report.steps.push({ 
+                    step: 'wallet_switchEthereumChain', 
+                    success: true, 
+                    elapsedMs: Date.now() - t1 
+                  });
+                } catch (err: any) {
+                  report.steps.push({ 
+                    step: 'wallet_switchEthereumChain', 
+                    error: err?.message, 
+                    code: err?.code,
+                    note: err?.code === 4902 ? 'Chain not added - would need wallet_addEthereumChain fallback' : undefined
+                  });
+                }
+              } else {
+                report.steps.push({ 
+                  step: 'wallet_switchEthereumChain', 
+                  skipped: 'already on Polygon' 
+                });
+              }
+              
+              // Analyze results
+              let analysis = '';
+              if (report.steps[0].isPolygon && report.steps[1].skipped) {
+                analysis = `✅ **Already on Polygon!** No switch needed.\n\n**Next:** The problem must be in the actual USDT transfer (\`eth_sendTransaction\`). Let me know and I'll add a test for that.`;
+              } else if (report.steps[1].success) {
+                analysis = `✅ **Switch successful!** Took ${report.steps[1].elapsedMs}ms.\n\n**Next:** The problem must be in the actual USDT transfer. Let me know and I'll add a test for that.`;
+              } else if (report.steps[1].error?.includes('TIMEOUT')) {
+                analysis = `⏱️ **TIMEOUT** - Switch request hung for 10 seconds.\n\n**Root cause:** Network switch popup never appeared or provider didn't respond.\n\n**Action:** Report to Nimiq Pay team - \`wallet_switchEthereumChain\` hangs.`;
+              } else if (report.steps[1].code === 4902) {
+                analysis = `⚠️ **Chain not added** - Error code 4902.\n\n**Expected:** The app should auto-fallback to \`wallet_addEthereumChain\` (check \`src/lib/wallet/evm.ts\` - fallback logic exists).\n\n**Action:** The fallback might not be triggering. Let me check the code.`;
+              } else if (report.steps[1].error) {
+                analysis = `❌ **Failed:** ${report.steps[1].error}\n\n**Error code:** ${report.steps[1].code}\n\n**Action:** Share this error for diagnosis.`;
+              }
+              
+              addMessage({
+                role: 'ai',
+                content: `🔍 **Network Switch Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${analysis}`,
+              });
+            }}
+            className="w-full py-3 px-4 rounded-xl text-left bg-purple-100 dark:bg-purple-500/15 border border-purple-300 dark:border-purple-500/30 hover:bg-purple-200 dark:hover:bg-purple-500/25 transition-colors"
+          >
+            <p className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-1">
+              3️⃣ Test Network Switching
+            </p>
+            <p className="text-xs text-purple-600 dark:text-purple-400/75">
+              Check current chain, then switch to Polygon if needed.
             </p>
           </button>
           
