@@ -880,7 +880,9 @@ export default function ActionCard({ action }: ActionCardProps) {
               content: '🔗 Connecting to Ethereum wallet...',
             });
 
+            console.log('[USDT Payment] Attempting to connect Ethereum wallet...');
             await connectEthereum();
+            console.log('[USDT Payment] Ethereum wallet connected successfully');
 
             // Step 3: Switch to Polygon network
             addMessage({
@@ -888,9 +890,14 @@ export default function ActionCard({ action }: ActionCardProps) {
               content: '🔄 Switching to Polygon network...',
             });
 
+            console.log('[USDT Payment] Checking if on Polygon network...');
             const onPolygon = await isOnPolygon();
+            console.log('[USDT Payment] On Polygon:', onPolygon);
+            
             if (!onPolygon) {
+              console.log('[USDT Payment] Switching to Polygon network...');
               await switchToPolygon();
+              console.log('[USDT Payment] Switched to Polygon successfully');
             }
 
             // CRYPTOREFILLS BEST PRACTICE: Wallet opens with pre-populated transaction
@@ -900,7 +907,9 @@ export default function ActionCard({ action }: ActionCardProps) {
               content: `💎 Opening Nimiq Pay with your payment...\n\n**Review carefully:**\n• Verify amount is **exactly ${paymentAmount} USDT**\n• Verify network is **Polygon**\n• Approve the transaction\n\nThe payment details are pre-filled to prevent errors.`,
             });
 
+            console.log('[USDT Payment] Calling sendUSDT with:', { paymentAddress, paymentAmount });
             const txHash = await sendUSDT(paymentAddress, paymentAmount);
+            console.log('[USDT Payment] Transaction sent, hash:', txHash);
 
             // Step 5: Verify payment on-chain + fulfill order
             addMessage({

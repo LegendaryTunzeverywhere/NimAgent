@@ -195,6 +195,24 @@ export default function ChatPage() {
     setInput('');
     try {
       const lower = msg.toLowerCase().trim();
+      
+      // DEBUG: EVM diagnostic trigger (temporary - remove after testing)
+      if (lower === 'debug evm') {
+        const report = {
+          hasEthereum: typeof window.ethereum !== 'undefined',
+          hasNimiqPay: typeof window.nimiqPay !== 'undefined',
+          ethereumKeys: typeof window.ethereum !== 'undefined' ? Object.keys(window.ethereum).slice(0, 10) : [],
+          isMetaMask: (window.ethereum as any)?.isMetaMask ?? null,
+          ethereumIsConnected: typeof window.ethereum !== 'undefined' ? (window.ethereum as any)?.isConnected?.() ?? null : null,
+          nimiqPayKeys: typeof window.nimiqPay !== 'undefined' ? Object.keys(window.nimiqPay).slice(0, 10) : [],
+        };
+        addMessage({
+          role: 'ai',
+          content: `🔍 **EVM Debug Report**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${report.hasEthereum ? '✅ window.ethereum exists' : '❌ window.ethereum NOT found'}\n${report.hasNimiqPay ? '✅ window.nimiqPay exists' : '❌ window.nimiqPay NOT found'}`,
+        });
+        return;
+      }
+      
       if (/^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lower)) {
         addMessage({ role: 'user', content: msg });
         addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { type: 'qr-scan' } });
