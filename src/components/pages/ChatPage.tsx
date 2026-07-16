@@ -195,9 +195,11 @@ export default function ChatPage() {
     setInput('');
     try {
       const lower = msg.toLowerCase().trim();
+      console.log('[ChatPage] Message received:', msg, '| lowercase:', lower);
       
       // DEBUG: EVM diagnostic trigger (temporary - remove after testing)
       if (lower === 'debug evm') {
+        console.log('[ChatPage] Debug EVM trigger activated');
         const report = {
           hasEthereum: typeof window.ethereum !== 'undefined',
           hasNimiqPay: typeof window.nimiqPay !== 'undefined',
@@ -214,7 +216,8 @@ export default function ChatPage() {
       }
       
       // DEBUG: EVM connection test (temporary - remove after testing)
-      if (msg.trim() === 'debug evm connect') {
+      if (lower === 'debug evm connect') {
+        console.log('[ChatPage] Debug EVM Connect trigger activated');
         const report: any = { step: 'starting', startTime: Date.now() };
         
         if (typeof (window as any).ethereum === 'undefined') {
