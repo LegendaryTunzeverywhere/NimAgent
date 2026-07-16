@@ -1543,7 +1543,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       )}
 
       {/* Payment Method Selector (Phase 3: Cryptorefills) */}
-      {showPaymentMethodSelector && isOrder && !success && !failed && (
+      {showPaymentMethodSelector && !isPaymentMethodLocked && isOrder && !success && !failed && (
         <div className="space-y-2">
           <label className="text-[#1F2348]/70 dark:text-white/70 text-xs font-medium">Payment Method</label>
           <div className="grid grid-cols-2 gap-2">
