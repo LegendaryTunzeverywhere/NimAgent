@@ -52,13 +52,14 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
 
       // Fetch/XHR — every API endpoint the frontend calls:
-      // - own backend (nimagent.online)
+      // - own backend (nimagent.online + localhost for dev)
       // - CoinGecko price feed (direct fallback in balance.ts)
       // - Exchange rate API (currency conversion)
       // - Nimiq RPC nodes (balance lookups)
       // - Nimiq Watch REST API (balance fallback)
       // - Nimiq Pay mini-app SDK WebSocket
-      "connect-src 'self' https://nimagent.online https://api.coingecko.com https://api.exchangerate-api.com https://rpc.nimiqwatch.com https://api.nimiq.watch wss://*.nimiq.com https://*.nimiq.com",
+      // - Polygon RPC for USDT verification
+      "connect-src 'self' http://localhost:3000 http://localhost:3001 https://nimagent.online https://api.coingecko.com https://api.exchangerate-api.com https://rpc.nimiqwatch.com https://api.nimiq.watch wss://*.nimiq.com https://*.nimiq.com https://polygon-rpc.com https://polygonscan.com",
 
       // Camera stream for QR scanner
       "media-src 'self'",

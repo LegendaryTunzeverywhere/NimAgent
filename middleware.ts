@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://api.coingecko.com https://api.coinmarketcap.com https://api.coinranking.com https://api.nimiq.watch https://rpc.nimiq.watch https://nimiq.watch https://api.nimiq.com https://rpc.nimiq.com https://nimiq.com https://*.nimiq.com wss://*.nimiq.com",
+    "connect-src 'self' http://localhost:3000 http://localhost:3001 https://api.coingecko.com https://api.coinmarketcap.com https://api.coinranking.com https://api.nimiq.watch https://rpc.nimiq.watch https://nimiq.watch https://api.nimiq.com https://rpc.nimiq.com https://nimiq.com https://*.nimiq.com wss://*.nimiq.com https://polygon-rpc.com https://polygonscan.com",
     "img-src 'self' data: https:",
     "media-src 'self' blob:",
   ].join('; ');

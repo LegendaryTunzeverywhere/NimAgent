@@ -53,6 +53,20 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   
+  // Payment method selection (Phase 3: Cryptorefills integration)
+  const [paymentMethod, setPaymentMethod] = useState<'nim' | 'usdt-polygon'>(
+    action.paymentMethod || 'nim'
+  );
+  const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
+  const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState<any[]>([]);
+  
+  // Pre-validation state — done BEFORE the user clicks Pay so the wallet
+  // popup isn't blocked by a network request inside the click handler.
+  const isOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
+  // Lock immediately for orders (server-priced), AND for payment requests where
+  // the receiver has specified a fixed amount the sender must not change.
+  const isPaymentRequest = action.type === 'send' && !!action.locked && !!action.amountLuna;
+  
   // Leaderboard effect
   useEffect(() => {
     if (action.type === 'leaderboard') {
@@ -70,15 +84,31 @@ export default function ActionCard({ action }: ActionCardProps) {
     }
   }, [action.type]);
   
+  // Fetch available payment methods (Phase 3: Cryptorefills)
+  useEffect(() => {
+    if (isOrder && !success && !failed) {
+      // Check if crypto payments are available
+      import('@/lib/api-client').then(({ getPaymentMethods }) => {
+        getPaymentMethods()
+          .then((methods) => {
+            if (methods && methods.length > 0) {
+              setPaymentMethodsAvailable(methods);
+              // Only show selector if USDT-Polygon is available
+              const hasUSDT = methods.some(m => m.currency === 'USDT' && m.network === 'Polygon');
+              setShowPaymentMethodSelector(hasUSDT);
+            }
+          })
+          .catch(() => {
+            // Crypto payments not available, use NIM only
+            setShowPaymentMethodSelector(false);
+          });
+      });
+    }
+  }, [isOrder, success, failed]);
+  
   // Find the index of this message in the messages array
   const messageIndex = messages.findIndex(msg => msg.action === action);
 
-  // Pre-validation state — done BEFORE the user clicks Pay so the wallet
-  // popup isn't blocked by a network request inside the click handler.
-  const isOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
-  // Lock immediately for orders (server-priced), AND for payment requests where
-  // the receiver has specified a fixed amount the sender must not change.
-  const isPaymentRequest = action.type === 'send' && !!action.locked && !!action.amountLuna;
   const [prevalidationError, setPrevalidationError] = useState<string | null>(null);
   const [amountLocked, setAmountLocked] = useState(isOrder || isPaymentRequest);
   const [quoteId, setQuoteId] = useState<string | null>(null);
@@ -803,6 +833,171 @@ export default function ActionCard({ action }: ActionCardProps) {
         }, 1500);
 
       } else if (action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill') {
+        // PHASE 4: USDT Payment Flow (NEW)
+        if (paymentMethod === 'usdt-polygon') {
+          // If pre-validation already flagged a problem, stop
+          if (prevalidationError) {
+            addMessage({
+              role: 'ai',
+              content: `Cannot process this order: ${prevalidationError}\n\nPlease try with different details.`,
+            });
+            setLoading(false);
+            return;
+          }
+
+          try {
+            // Import EVM helper functions
+            const { connectEthereum, switchToPolygon, sendUSDT, isOnPolygon } = await import('@/lib/wallet/evm');
+            const { createCryptoOrder, confirmCryptoPayment } = await import('@/lib/api-client');
+
+            // CRYPTOREFILLS BEST PRACTICE: Create order FIRST
+            // This allows us to show exact details before wallet interaction
+            addMessage({
+              role: 'ai',
+              content: '🔄 Creating your order with Cryptorefills...',
+            });
+
+            const orderResult = await createCryptoOrder({
+              type: action.type,
+              details: { ...action, recipientEmail: email || undefined },
+              walletAddress: wallet.address,
+            });
+
+            const { orderId, paymentAddress, paymentAmount, paymentCurrency, network } = orderResult;
+
+            // Lock the amount input to prevent user error
+            setAmountLocked(true);
+
+            // CRYPTOREFILLS BEST PRACTICE: Display exact payment details
+            addMessage({
+              role: 'ai',
+              content: `✅ Order created!\n\n**Payment Details:**\n• Amount: **${paymentAmount} ${paymentCurrency}**\n• Network: **${network}**\n• Recipient: \`${paymentAddress.slice(0, 10)}...${paymentAddress.slice(-8)}\`\n\n⚠️ **Important:** The transaction will be pre-filled with the exact amount and network. Please review and approve it in your wallet.\n\n**Do not modify the amount or network** - this will cause your order to fail.`,
+            });
+
+            // Step 2: Connect Ethereum wallet
+            addMessage({
+              role: 'ai',
+              content: '🔗 Connecting to Ethereum wallet...',
+            });
+
+            await connectEthereum();
+
+            // Step 3: Switch to Polygon network
+            addMessage({
+              role: 'ai',
+              content: '🔄 Switching to Polygon network...',
+            });
+
+            const onPolygon = await isOnPolygon();
+            if (!onPolygon) {
+              await switchToPolygon();
+            }
+
+            // CRYPTOREFILLS BEST PRACTICE: Wallet opens with pre-populated transaction
+            // The sendUSDT() function automatically populates recipient, token contract, and exact amount
+            addMessage({
+              role: 'ai',
+              content: `💎 Opening Nimiq Pay with your payment...\n\n**Review carefully:**\n• Verify amount is **exactly ${paymentAmount} USDT**\n• Verify network is **Polygon**\n• Approve the transaction\n\nThe payment details are pre-filled to prevent errors.`,
+            });
+
+            const txHash = await sendUSDT(paymentAddress, paymentAmount);
+
+            // Step 5: Verify payment on-chain + fulfill order
+            addMessage({
+              role: 'ai',
+              content: `✅ USDT payment sent!\n\nVerifying on Polygon blockchain and fulfilling your order...\n\nTX: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
+            });
+
+            const result = await confirmCryptoPayment(orderId, txHash, wallet.address);
+
+            // Step 6: Display success + fulfillment data
+            setSuccess(true);
+            setTxHash(txHash);
+            setAmountLocked(true);
+
+            // Update action in store
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                completed: true,
+                txHash: txHash,
+              });
+            }
+
+            // Format fulfillment message based on order type
+            let fulfillmentMsg = '🎉 Order completed successfully!\n\n';
+
+            if (result.result?.code) {
+              fulfillmentMsg += `Gift Card Code: ${result.result.code}\n`;
+            }
+            if (result.result?.pin) {
+              fulfillmentMsg += `PIN: ${result.result.pin}\n`;
+            }
+            if (result.result?.serialNumber) {
+              fulfillmentMsg += `Serial: ${result.result.serialNumber}\n`;
+            }
+            if (result.result?.instructions) {
+              fulfillmentMsg += `\nInstructions:\n${result.result.instructions}\n`;
+            }
+
+            fulfillmentMsg += `\nPolygon TX: https://polygonscan.com/tx/${txHash}`;
+
+            addMessage({
+              role: 'ai',
+              content: fulfillmentMsg,
+            });
+
+            // Refresh balance
+            await fetchBalance?.();
+
+            setLoading(false);
+            return; // Don't continue to NIM flow
+
+          } catch (err: any) {
+            console.error('[USDT Payment] Error:', err);
+
+            // Handle user rejection
+            if (err.code === 4001 || err.message?.includes('rejected') || err.message?.includes('denied')) {
+              addMessage({
+                role: 'ai',
+                content: '❌ Payment cancelled. You can try again when ready.',
+              });
+              setLoading(false);
+              return;
+            }
+
+            // Handle wrong network
+            if (err.message?.includes('wrong network') || err.message?.includes('switch to Polygon')) {
+              addMessage({
+                role: 'ai',
+                content: '❌ Please switch to Polygon network in your wallet and try again.',
+              });
+              setLoading(false);
+              return;
+            }
+
+            // Handle insufficient balance
+            if (err.message?.includes('insufficient') || err.message?.includes('balance')) {
+              addMessage({
+                role: 'ai',
+                content: '❌ Insufficient USDT balance. Please add USDT to your wallet and try again.',
+              });
+              setLoading(false);
+              return;
+            }
+
+            // CRYPTOREFILLS BEST PRACTICE: Direct to support for payment issues
+            // Generic error with Cryptorefills support link
+            addMessage({
+              role: 'ai',
+              content: `❌ USDT payment failed: ${err.message || 'Unknown error'}\n\n**Need help?**\nIf you believe the payment was sent but the order didn't complete, please contact Cryptorefills support:\n\n🔗 [Cryptorefills Support](https://www.cryptorefills.com/contact)\n\nProvide your order details and they can help resolve payment issues.`,
+            });
+            setFailed(true);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // EXISTING NIM FLOW (unchanged)
         // If pre-validation already flagged a problem, stop before the popup.
         if (prevalidationError) {
           addMessage({
@@ -1312,6 +1507,118 @@ export default function ActionCard({ action }: ActionCardProps) {
         </div>
       )}
 
+      {/* Payment Method Selector (Phase 3: Cryptorefills) */}
+      {showPaymentMethodSelector && isOrder && !success && !failed && (
+        <div className="space-y-2">
+          <label className="text-[#1F2348]/70 dark:text-white/70 text-xs font-medium">Payment Method</label>
+          <div className="grid grid-cols-2 gap-2">
+            {/* NIM Payment Option */}
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('nim')}
+              className={`relative p-3 rounded-xl border-2 transition-all text-left ${
+                paymentMethod === 'nim'
+                  ? 'border-[#E9B213] dark:border-gold bg-[#E9B213]/10 dark:bg-gold/10'
+                  : 'border-[#1F2348]/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-[#1F2348]/20 dark:hover:border-white/20'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 rounded-full bg-[#E9B213]/20 dark:bg-gold/20 flex items-center justify-center">
+                    <span className="text-xs font-bold text-[#E9B213] dark:text-gold">₿</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#1F2348] dark:text-white">NIM</span>
+                </div>
+                {paymentMethod === 'nim' && (
+                  <svg className="w-4 h-4 text-[#E9B213] dark:text-gold" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60 leading-tight">
+                Pay with Nimiq Pay
+              </p>
+            </button>
+
+            {/* USDT-Polygon Payment Option */}
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('usdt-polygon')}
+              className={`relative p-3 rounded-xl border-2 transition-all text-left ${
+                paymentMethod === 'usdt-polygon'
+                  ? 'border-[#26A17B] bg-[#26A17B]/10'
+                  : 'border-[#1F2348]/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-[#1F2348]/20 dark:hover:border-white/20'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 rounded-full bg-[#26A17B]/20 flex items-center justify-center">
+                    <span className="text-xs font-bold text-[#26A17B]">$</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#1F2348] dark:text-white">USDT</span>
+                </div>
+                {paymentMethod === 'usdt-polygon' && (
+                  <svg className="w-4 h-4 text-[#26A17B]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60 leading-tight">
+                Polygon network
+              </p>
+            </button>
+          </div>
+          
+          {/* Payment Method Info */}
+          {paymentMethod === 'usdt-polygon' && (
+            <div className="space-y-2">
+              {/* Info about Nimiq Pay EVM support */}
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 p-3">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+                  </svg>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-100">
+                      💎 Pay with USDT inside Nimiq Pay
+                    </p>
+                    <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
+                      Nimiq Pay supports Ethereum tokens! You'll approve the USDT transfer directly in the app, just like you do with NIM payments — no external wallet needed.
+                    </p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Polygon network • Fast confirmation
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* CRYPTOREFILLS BEST PRACTICE: Warning about not changing amount/network */}
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 p-3">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                      ⚠️ Important Payment Instructions
+                    </p>
+                    <ul className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed space-y-1 list-disc list-inside">
+                      <li><strong>Do not change the payment amount</strong> - it's calculated exactly</li>
+                      <li><strong>Do not change the network</strong> - must be Polygon</li>
+                      <li><strong>Review carefully</strong> before approving in your wallet</li>
+                      <li>The transaction will be pre-filled with correct details</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pre-validation warning (orders only) */}
       {prevalidationError && !success && (
         <div className="flex items-start gap-2 rounded-lg bg-error/10 border border-error/20 p-2.5">
@@ -1336,7 +1643,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >
-        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : 'Confirm & Pay'}
+        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : paymentMethod === 'usdt-polygon' ? 'Confirm & Pay with USDT' : 'Confirm & Pay'}
       </button>
       {action.type === 'bill' && !billAccountConfirmed && !success && !failed && (
         <p className="text-xs text-[#E9B213] dark:text-gold/80 text-center">

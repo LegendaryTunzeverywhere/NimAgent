@@ -116,6 +116,15 @@ nimagent-next/
 - ✅ **Gift Cards** - Amazon, Steam, iTunes, Netflix, etc. (150+ countries)
 - ✅ **Airtime Top-ups** - Global mobile top-up service
 - ✅ **Bill Payments** - Electricity, internet, TV, water, and more
+- ✅ **USDT Payments** - Pay with USDT on Polygon inside Nimiq Pay
+
+### Payment Methods
+- 💎 **NIM** - Pay with Nimiq cryptocurrency via Nimiq Hub/Mini App
+- 💲 **USDT (Polygon)** - Pay with USDT stablecoin inside Nimiq Pay
+  - Uses window.ethereum (EIP-1193) provider
+  - No external wallet needed - approve in Nimiq Pay directly
+  - Fast confirmation on Polygon network
+  - Powered by Cryptorefills API
 
 ### Technical Features
 - ✅ **Real-time Price** - Live NIM price from CoinGecko
@@ -162,6 +171,10 @@ GEMINI_API_KEYS=your_gemini_api_key
 RELOADLY_CLIENT_ID=your_client_id
 RELOADLY_CLIENT_SECRET=your_client_secret
 RELOADLY_SANDBOX=true
+
+# Cryptorefills (USDT Payments)
+CRYPTOREFILLS_PARTNER_ID=your_partner_id  # Get from https://www.cryptorefills.com/en/account
+POLYGON_RPC_URL=https://polygon-rpc.com   # Or use Alchemy/Infura
 
 # Service Wallet
 SERVICE_WALLET_ADDRESS=NQ07...
@@ -217,28 +230,58 @@ This creates:
 ### Buy Gift Card
 1. Chat: "Buy $25 Amazon gift card"
 2. AI validates product
-3. Enter email (optional)
-4. Confirm and pay
-5. Receive gift card code
+3. **Choose payment method**: NIM or USDT-Polygon
+4. Enter email (optional)
+5. Confirm and pay
+6. Receive gift card code
+
+### Pay with USDT (New!)
+1. Chat: "Buy $50 Steam gift card"
+2. AI creates action card
+3. Select **"USDT" payment method** (Polygon network)
+4. Click "Confirm & Pay with USDT"
+5. Nimiq Pay opens → approve USDT transfer
+6. Payment verified on-chain → gift card code delivered
+
+**How it works**:
+- Nimiq Pay supports Ethereum tokens via window.ethereum
+- You approve USDT transfer inside Nimiq Pay (just like NIM)
+- No external wallet needed
+- Transaction verified on Polygon blockchain
+- Fast confirmation (~30 seconds)
 
 ---
 
 ## 🧪 Testing
 
 ### Manual Testing Checklist
+
+#### Core Features
 - [ ] Wallet connect/disconnect
 - [ ] Balance display
 - [ ] Send NIM transaction
 - [ ] AI chat responses
 - [ ] Voice input (Chrome/Edge/Safari)
-- [ ] Gift card purchase (sandbox)
-- [ ] Airtime top-up (sandbox)
-- [ ] Bill payment (sandbox)
 - [ ] QR code generation and scanning
 - [ ] Transaction history
 - [ ] Saved contacts management
 - [ ] Quick actions from homepage
 - [ ] Theme toggle
+
+#### NIM Payments (Reloadly)
+- [ ] Gift card purchase (sandbox)
+- [ ] Airtime top-up (sandbox)
+- [ ] Bill payment (sandbox)
+
+#### USDT Payments (Cryptorefills) ✅ Phase 4 Complete
+- [ ] Select USDT payment method
+- [ ] Connect Ethereum wallet
+- [ ] Switch to Polygon network
+- [ ] Approve USDT transfer in Nimiq Pay
+- [ ] Receive gift card code after payment
+- [ ] Error handling (user rejection, wrong network, insufficient balance)
+
+**Note**: Use `test-usdt-payment.html` for comprehensive USDT testing. See `TESTING_INSTRUCTIONS.md` for details.
 - [ ] AI typing indicator
 
 ### Browser Compatibility

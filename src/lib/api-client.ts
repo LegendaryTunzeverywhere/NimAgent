@@ -966,3 +966,108 @@ export async function logout(): Promise<void> {
 }
 
 
+
+
+// ============================================================================
+// CRYPTOREFILLS CRYPTO PAYMENT API (USDT on Polygon via window.ethereum)
+// ============================================================================
+
+/**
+ * Payment method availability - checks if USDT/Polygon is configured
+ * This is a simple check, not the old external-wallet payment methods list.
+ */
+export async function getPaymentMethods(): Promise<Array<{ id: string; name: string; network: string; currency: string }>> {
+  const res = await fetch(`${API_URL}/orders/payment-methods`, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch payment methods');
+  }
+  
+  const result = await res.json();
+  return result.paymentMethods || [];
+}
+
+/**
+ * Create a Cryptorefills order - returns payment details (address + amount)
+ * User will then pay USDT via window.ethereum inside Nimiq Pay, get txHash,
+ * and call confirmCryptoPayment() with that txHash.
+ * 
+ * MIRRORS NIM FLOW PATTERN:
+ * 1. Create order first (get payment details)
+ * 2. User approves USDT send in Nimiq Pay
+ * 3. Call confirmCryptoPayment(orderId, txHash)
+ * 4. Backend verifies on-chain, then fulfills
+ */
+export async function createCryptoOrder(data: {
+  type: string;
+  details: any;
+  walletAddress: string;
+}): Promise<{
+  success: boolean;
+  orderId: string;
+  cryptorefillsOrderId: string;
+  paymentAddress: string;
+  paymentAmount: string; // in USDT (6 decimals)
+  paymentCurrency: string; // "USDT"
+  network: string; // "Polygon"
+  message?: string;
+  error?: string;
+}> {
+  const res = await fetch(`${API_URL}/orders/crypto/create`, {
+    method: 'POST',
+    headers: await getHeaders('POST', data.walletAddress),
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+
+  const body = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(body?.error || body?.message || `Crypto order creation failed (${res.status})`);
+  }
+
+  return body;
+}
+
+/**
+ * Confirm USDT payment with txHash - backend verifies on-chain then fulfills
+ * 
+ * THIS IS THE KEY DIFFERENCE FROM OLD APPROACH:
+ * We pay FIRST (get txHash from window.ethereum), then confirm with backend.
+ * Backend verifies the Polygon USDT transfer on-chain before fulfilling.
+ * 
+ * @param orderId - Internal order ID from createCryptoOrder()
+ * @param txHash - Polygon transaction hash from window.ethereum eth_sendTransaction
+ * @param walletAddress - User's Nimiq wallet address (for session auth)
+ * @returns Fulfillment result (gift card code, airtime confirmation, etc.)
+ */
+export async function confirmCryptoPayment(
+  orderId: string,
+  txHash: string,
+  walletAddress: string
+): Promise<{
+  success: boolean;
+  orderId: string;
+  status: string;
+  result?: any; // fulfillment data (code, pin, etc.)
+  message?: string;
+  error?: string;
+}> {
+  const res = await fetch(`${API_URL}/orders/crypto/paid`, {
+    method: 'POST',
+    headers: await getHeaders('POST', walletAddress),
+    credentials: 'include',
+    body: JSON.stringify({ orderId, txHash, walletAddress }),
+  });
+
+  const body = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(body?.error || body?.message || `Payment confirmation failed (${res.status})`);
+  }
+
+  return body;
+}

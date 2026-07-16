@@ -79,8 +79,18 @@ export interface ActionCard {
     reference?: string;
     deliveredAmount?: number;
     deliveredAmountCurrency?: string;
+    // Cryptorefills-specific fields (crypto payment flow)
+    cryptorefillsOrderId?: string;      // Cryptorefills order ID
+    paymentAddress?: string;            // Crypto wallet address to send payment to
+    paymentAmount?: string;             // Required crypto amount
+    paymentCurrency?: string;           // Crypto currency (e.g., "USDT")
+    network?: string;                   // Blockchain network (e.g., "Polygon")
+    expiresAt?: string;                 // Payment window expiration
+    instructions?: string;              // Redemption instructions
     [key: string]: any;
   };
+  // Payment method selection (for orders that support multiple payment types)
+  paymentMethod?: 'nim' | 'usdt-polygon';  // Selected payment method
   // Referral fields
   referralLink?: string;
   referralCount?: number;

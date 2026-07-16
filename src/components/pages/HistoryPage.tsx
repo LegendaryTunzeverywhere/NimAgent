@@ -333,8 +333,14 @@ export default function HistoryPage() {
     return 'Transaction';
   };
 
-  const openExplorer = (txHash: string) => {
-    openExternalUrl(`https://nimiq.watch/#${txHash}`);
+  const openExplorer = (txHash: string, isPolygon: boolean = false) => {
+    if (isPolygon) {
+      // Polygon tx - open PolygonScan
+      openExternalUrl(`https://polygonscan.com/tx/${txHash}`);
+    } else {
+      // Nimiq tx - open Nimiq Watch
+      openExternalUrl(`https://nimiq.watch/#${txHash}`);
+    }
   };
 
   // Calculate stats
@@ -636,6 +642,20 @@ export default function HistoryPage() {
                         <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 font-semibold bg-success/12 text-success">
                           <Icon name="check" size={9} strokeWidth={3} /> {tx.status}
                         </span>
+                        {/* Payment Method Badge (Priority 1 fix) */}
+                        {(tx.type === 'gift-card' || tx.type === 'airtime' || tx.type === 'bill') && tx.tx_hash && (
+                          <>
+                            {tx.tx_hash.startsWith('0x') ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-emerald-500/12 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                                💎 USDT
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-[#E9B213]/12 text-[#E9B213] border border-[#E9B213]/20">
+                                ⭐ NIM
+                              </span>
+                            )}
+                          </>
+                        )}
                         {tx.cashback && (
                           <span className="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 font-semibold bg-[#E9B213]/10 text-[#E9B213] border border-[#E9B213]/20">
                             +{tx.cashback.amount_nim < 0.01
@@ -929,11 +949,13 @@ export default function HistoryPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openExplorer(tx.tx_hash!);
+                              const isPolygon = tx.tx_hash!.startsWith('0x');
+                              openExplorer(tx.tx_hash!, isPolygon);
                             }}
                             className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-[#E9B213]/20 dark:bg-gold/10 text-[#E9B213] dark:text-gold border border-amber-300 dark:border-gold/20 hover:bg-[#E9B213]/20 dark:hover:bg-gold/20 transition-colors flex items-center justify-center gap-1.5"
                           >
-                            <Icon name="explorer" size={13} strokeWidth={2} /> View on Explorer
+                            <Icon name="explorer" size={13} strokeWidth={2} /> 
+                            {tx.tx_hash!.startsWith('0x') ? 'View on PolygonScan' : 'View on Explorer'}
                           </button>
                         </>
                       )}
