@@ -213,6 +213,54 @@ export default function ChatPage() {
         return;
       }
       
+      // DEBUG: EVM connection test (temporary - remove after testing)
+      if (msg.trim() === 'debug evm connect') {
+        const report: any = { step: 'starting', startTime: Date.now() };
+        
+        if (typeof (window as any).ethereum === 'undefined') {
+          addMessage({
+            role: 'ai',
+            content: `❌ **Cannot test connection**\n\nwindow.ethereum does not exist. Run "debug evm" first to check availability.`,
+          });
+          return;
+        }
+        
+        try {
+          report.step = 'calling eth_requestAccounts';
+          const accountsPromise = (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+          
+          // Race against a timeout so we know if it's hanging vs actually failing
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('TIMEOUT after 10s - request never resolved or rejected')), 10000)
+          );
+          
+          const accounts = await Promise.race([accountsPromise, timeoutPromise]);
+          report.step = 'success';
+          report.accounts = accounts;
+          report.accountCount = (accounts as any)?.length ?? 0;
+          report.firstAccount = (accounts as any)?.[0] ?? null;
+          report.elapsedMs = Date.now() - report.startTime;
+        } catch (err: any) {
+          report.step = 'failed';
+          report.errorMessage = err?.message;
+          report.errorCode = err?.code;
+          report.errorName = err?.name;
+          report.elapsedMs = Date.now() - report.startTime;
+        }
+        
+        addMessage({
+          role: 'ai',
+          content: `🔍 **EVM Connection Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${
+            report.step === 'success' 
+              ? `✅ Connected successfully in ${report.elapsedMs}ms\nAccount: ${report.firstAccount}` 
+              : report.errorMessage?.includes('TIMEOUT')
+                ? `⏱️ **TIMEOUT** - Request hung for 10 seconds\nThis is likely a Nimiq Pay provider bridge issue.`
+                : `❌ Failed: ${report.errorMessage}\nCode: ${report.errorCode}`
+          }`,
+        });
+        return;
+      }
+      
       if (/^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lower)) {
         addMessage({ role: 'user', content: msg });
         addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { type: 'qr-scan' } });
