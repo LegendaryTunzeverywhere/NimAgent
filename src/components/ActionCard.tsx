@@ -60,6 +60,12 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
   const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState<any[]>([]);
   
+  // USDT price quote state (for payment method switching)
+  const [usdtQuoteLoading, setUsdtQuoteLoading] = useState(false);
+  const [usdtQuoteError, setUsdtQuoteError] = useState<string | null>(null);
+  const nimAmountRef = useRef<string>(amount); // Store original NIM amount
+  const [cryptoAmount, setCryptoAmount] = useState<string | null>(null); // Store USDT amount
+  
   // Browse catalog hooks (must be declared before any conditional returns)
   const [catalogLoading, setCatalogLoading] = useState(!action.catalogData);
   const [catalogError, setCatalogError] = useState<string | null>(null);
@@ -325,6 +331,49 @@ export default function ActionCard({ action }: ActionCardProps) {
         });
     }
   }, [action.type, action.countryCode, action.catalogData, messageIndex, updateActionState]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch USDT price quote when payment method changes to usdt-polygon
+  useEffect(() => {
+    // Only for orders (not send actions)
+    if (!isOrder || success || failed) return;
+    
+    // Store NIM amount when first mounting or switching FROM USDT back to NIM
+    if (paymentMethod === 'nim' && !nimAmountRef.current && amount) {
+      nimAmountRef.current = amount;
+    }
+    
+    // Fetch USDT quote when switching to USDT
+    if (paymentMethod === 'usdt-polygon') {
+      setUsdtQuoteLoading(true);
+      setUsdtQuoteError(null);
+      
+      import('@/lib/api-client').then(({ getCryptoPriceQuote }) => {
+        getCryptoPriceQuote(action.type, action, wallet.address || '')
+          .then((quote) => {
+            if (quote.valid) {
+              setCryptoAmount(quote.cryptoAmount);
+              setAmount(quote.cryptoAmount);
+              setUsdtQuoteError(null);
+            } else {
+              setUsdtQuoteError(quote.error || 'Failed to get USDT price');
+            }
+          })
+          .catch((err) => {
+            setUsdtQuoteError(err.message || 'Failed to fetch USDT price');
+          })
+          .finally(() => {
+            setUsdtQuoteLoading(false);
+          });
+      });
+    } else if (paymentMethod === 'nim') {
+      // Switching back to NIM - restore original NIM amount
+      if (nimAmountRef.current) {
+        setAmount(nimAmountRef.current);
+      }
+      setCryptoAmount(null);
+      setUsdtQuoteError(null);
+    }
+  }, [paymentMethod, isOrder, success, failed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle Referral Link
   if (action.type === 'referral') {
@@ -1669,21 +1718,45 @@ export default function ActionCard({ action }: ActionCardProps) {
             </button>
           )}
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 dark:bg-white/5 border-2 ${failed ? 'border-red-500 dark:border-error/50' : 'border-[#1F2348]/10 dark:border-white/10'} ${amountLocked ? 'opacity-75' : 'focus-within:border-amber-500 dark:focus-within:border-gold/50 focus-within:ring-2 focus-within:ring-amber-500/20 dark:focus-within:ring-gold/20'}`}>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            disabled={loading || success || failed || amountLocked}
-            readOnly={amountLocked}
-            className="flex-1 bg-transparent text-[#1F2348] dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/60"
-          />
-          <span className="text-[#1F2348] dark:text-white/65 text-sm font-bold">NIM</span>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 dark:bg-white/5 border-2 ${
+          usdtQuoteError ? 'border-red-500 dark:border-error/50' :
+          failed ? 'border-red-500 dark:border-error/50' : 
+          'border-[#1F2348]/10 dark:border-white/10'
+        } ${amountLocked ? 'opacity-75' : 'focus-within:border-amber-500 dark:focus-within:border-gold/50 focus-within:ring-2 focus-within:ring-amber-500/20 dark:focus-within:ring-gold/20'}`}>
+          {usdtQuoteLoading ? (
+            <div className="flex-1 flex items-center gap-2 text-[#1F2348]/60 dark:text-white/60 text-sm">
+              <div className="w-4 h-4 border-2 border-[#1F2348]/20 dark:border-white/20 border-t-[#1F2348] dark:border-t-white rounded-full animate-spin" />
+              <span>Fetching USDT price...</span>
+            </div>
+          ) : (
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              disabled={loading || success || failed || amountLocked || usdtQuoteLoading}
+              readOnly={amountLocked}
+              className="flex-1 bg-transparent text-[#1F2348] dark:text-white text-sm outline-none disabled:cursor-not-allowed placeholder-gray-500 dark:placeholder-white/60"
+            />
+          )}
+          <span className="text-[#1F2348] dark:text-white/65 text-sm font-bold">
+            {paymentMethod === 'usdt-polygon' ? 'USDT' : 'NIM'}
+          </span>
         </div>
-        {isOrder && !success && quoteExpiry && timeRemaining > 0 && (
+        
+        {/* USDT Quote Error */}
+        {usdtQuoteError && paymentMethod === 'usdt-polygon' && !success && (
+          <div className="flex items-start gap-2 rounded-lg bg-red-100 dark:bg-error/10 border border-red-300 dark:border-error/30 p-2.5">
+            <span className="text-red-600 dark:text-error mt-0.5">⚠️</span>
+            <p className="text-red-700 dark:text-error text-xs leading-relaxed">
+              {usdtQuoteError}
+            </p>
+          </div>
+        )}
+        
+        {isOrder && !success && quoteExpiry && timeRemaining > 0 && !usdtQuoteError && (
           <p className={`text-xs ${timeRemaining <= 10 ? 'text-orange-600 dark:text-warning animate-pulse font-semibold' : 'text-[#1F2348]/70 dark:text-white/70'} text-right`}>
             Quote expires in {timeRemaining}s
           </p>
@@ -1739,7 +1812,9 @@ export default function ActionCard({ action }: ActionCardProps) {
                   <div className="w-5 h-5 rounded-full bg-[#E9B213]/20 dark:bg-gold/20 flex items-center justify-center">
                     <span className="text-xs font-bold text-[#E9B213] dark:text-gold">₿</span>
                   </div>
-                  <span className="text-sm font-semibold text-[#1F2348] dark:text-white">NIM</span>
+                  <span className="text-sm font-semibold text-[#1F2348] dark:text-white">
+                    {paymentMethod === 'usdt-polygon' ? 'USDT' : 'NIM'}
+                  </span>
                 </div>
                 {paymentMethod === 'nim' && (
                   <svg className="w-4 h-4 text-[#E9B213] dark:text-gold" fill="currentColor" viewBox="0 0 20 20">
@@ -1846,7 +1921,7 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Button */}
       <button
         onClick={executeAction}
-        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError || (action.type === 'bill' && !billAccountConfirmed)}
+        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError || (action.type === 'bill' && !billAccountConfirmed) || usdtQuoteLoading || !!usdtQuoteError}
         className={`w-full py-3 rounded-xl font-semibold transition-all ${
           success
             ? 'bg-success/10 text-success cursor-default border border-success/20'
@@ -1855,7 +1930,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >
-        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : paymentMethod === 'usdt-polygon' ? 'Confirm & Pay with USDT' : 'Confirm & Pay'}
+        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : usdtQuoteLoading ? 'Fetching USDT price...' : paymentMethod === 'usdt-polygon' ? 'Confirm & Pay with USDT' : 'Confirm & Pay'}
       </button>
       {action.type === 'bill' && !billAccountConfirmed && !success && !failed && (
         <p className="text-xs text-[#E9B213] dark:text-gold/80 text-center">

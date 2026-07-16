@@ -1071,3 +1071,41 @@ export async function confirmCryptoPayment(
 
   return body;
 }
+
+/**
+ * Get USDT price quote for a Cryptorefills order
+ * 
+ * Mirrors the shape used by createCryptoOrder for consistency.
+ * Call this when user switches payment method to USDT to get the crypto amount.
+ * 
+ * @param type - Order type (gift-card, airtime, etc.)
+ * @param details - Order details (brand, amount, countryCode)
+ * @param walletAddress - User's wallet address
+ * @returns Price quote with crypto amount in USDT
+ */
+export async function getCryptoPriceQuote(
+  type: string,
+  details: any,
+  walletAddress: string
+): Promise<{
+  valid: boolean;
+  cryptoAmount: string;
+  cryptoCurrency: string;
+  network: string;
+  error?: string;
+}> {
+  const res = await fetch(`${API_URL}/orders/crypto/validate`, {
+    method: 'POST',
+    headers: await getHeaders('POST', walletAddress),
+    credentials: 'include',
+    body: JSON.stringify({ type, details, walletAddress }),
+  });
+
+  const body = await res.json().catch(() => ({ valid: false, error: 'Failed to parse response' }));
+
+  if (!res.ok) {
+    throw new Error(body?.error || `Price quote failed (${res.status})`);
+  }
+
+  return body;
+}
