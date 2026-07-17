@@ -140,60 +140,91 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [lastKnownAmount, setLastKnownAmount] = useState<number | null>(null);
   const [billAccountConfirmed, setBillAccountConfirmed] = useState(action.type !== 'bill');
 
-  // Refresh quote function
-  const refreshQuote = async () => {
+  // Unified quote refresh function - respects payment method
+  const refreshCurrentQuote = async () => {
     if (!isOrder || success || failed || loading) return;
     
     setRefreshing(true);
     setPriceChanged(false);
     
     try {
-      const validation = await validateOrder({
-        type: action.type,
-        details: action,
-        walletAddress: wallet.address || undefined,
-      });
-      
-      if (validation.valid && typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
-        const oldAmountLuna = action.amountLuna || 0;
-        const newAmountLuna = validation.amountLuna;
-        const oldAmount = parseFloat(amount) || 0;
-        const newAmount = newAmountLuna / 100000;
+      if (paymentMethod === 'usdt-polygon') {
+        // USDT quote refresh
+        const { getCryptoPriceQuote } = await import('@/lib/api-client');
+        const quote = await getCryptoPriceQuote(action.type, action, wallet.address || '');
         
-        // Update IDs
-        if (validation.productId) action.productId = validation.productId;
-        if (validation.operatorId) action.operatorId = validation.operatorId;
-        if (validation.billerId) action.billerId = validation.billerId;
-        if (validation.quoteId) setQuoteId(validation.quoteId);
-        
-        // Check if price changed significantly (>2%)
-        if (oldAmountLuna > 0 && Math.abs((newAmount - oldAmount) / oldAmount) > 0.02) {
-          setPriceChanged(true);
+        if (quote.valid && quote.cryptoAmount) {
+          const oldAmount = parseFloat(amount) || 0;
+          const newAmount = parseFloat(quote.cryptoAmount);
+          
+          // Check if price changed significantly (>2%)
+          if (oldAmount > 0 && Math.abs((newAmount - oldAmount) / oldAmount) > 0.02) {
+            setPriceChanged(true);
+          }
+          
+          setCryptoAmount(quote.cryptoAmount);
+          setAmount(quote.cryptoAmount);
+          setUsdtQuoteError(null);
+          
+          // Set expiry (default 60 seconds)
+          setQuoteExpiry(Date.now() + 60000);
+        } else {
+          setUsdtQuoteError(quote.error || 'Failed to get USDT price');
         }
+      } else {
+        // NIM quote refresh
+        const validation = await validateOrder({
+          type: action.type,
+          details: action,
+          walletAddress: wallet.address || undefined,
+        });
         
-        // Update amount
-        action.amountLuna = newAmountLuna;
-        setAmount(newAmount.toFixed(2));
-        setLastKnownAmount(newAmount);
-        
-        // Set expiry if provided (default 60 seconds)
-        const expiryTime = validation.expiresAt 
-          ? new Date(validation.expiresAt).getTime()
-          : Date.now() + 60000;
-        setQuoteExpiry(expiryTime);
-        
-        setPrevalidationError(null);
-      } else if (!validation.valid) {
-        setPrevalidationError(validation.error || 'Quote validation failed');
+        if (validation.valid && typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
+          const oldAmountLuna = action.amountLuna || 0;
+          const newAmountLuna = validation.amountLuna;
+          const oldAmount = parseFloat(amount) || 0;
+          const newAmount = newAmountLuna / 100000;
+          
+          // Update IDs
+          if (validation.productId) action.productId = validation.productId;
+          if (validation.operatorId) action.operatorId = validation.operatorId;
+          if (validation.billerId) action.billerId = validation.billerId;
+          if (validation.quoteId) setQuoteId(validation.quoteId);
+          
+          // Check if price changed significantly (>2%)
+          if (oldAmountLuna > 0 && Math.abs((newAmount - oldAmount) / oldAmount) > 0.02) {
+            setPriceChanged(true);
+          }
+          
+          // Update amount
+          action.amountLuna = newAmountLuna;
+          setAmount(newAmount.toFixed(2));
+          setLastKnownAmount(newAmount);
+          
+          // Set expiry if provided (default 60 seconds)
+          const expiryTime = validation.expiresAt 
+            ? new Date(validation.expiresAt).getTime()
+            : Date.now() + 60000;
+          setQuoteExpiry(expiryTime);
+          
+          setPrevalidationError(null);
+        } else if (!validation.valid) {
+          setPrevalidationError(validation.error || 'Quote validation failed');
+        }
       }
     } catch (err) {
       // Silent failure
+      console.error('[ActionCard] Quote refresh failed:', err);
     } finally {
       setRefreshing(false);
     }
   };
 
+  // Legacy refreshQuote - now just calls refreshCurrentQuote
+  const refreshQuote = refreshCurrentQuote;
+
   // Countdown timer for quote expiry
+  // Auto-refreshes using refreshCurrentQuote which respects payment method
   useEffect(() => {
     if (!isOrder || !quoteExpiry || success || failed || loading) return;
     
@@ -201,9 +232,9 @@ export default function ActionCard({ action }: ActionCardProps) {
       const remaining = Math.max(0, Math.floor((quoteExpiry - Date.now()) / 1000));
       setTimeRemaining(remaining);
       
-      // Auto-refresh when quote expires
+      // Auto-refresh when quote expires (uses unified refreshCurrentQuote)
       if (remaining === 0) {
-        refreshQuote();
+        refreshCurrentQuote();
       }
       
       // Warn user when less than 10 seconds
@@ -213,7 +244,7 @@ export default function ActionCard({ action }: ActionCardProps) {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [quoteExpiry, success, failed, loading, isOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quoteExpiry, success, failed, loading, isOrder, paymentMethod]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warm up the Hub and pre-validate orders as soon as the card mounts.
   // This keeps the eventual checkout() call inside the user's click gesture
@@ -241,6 +272,14 @@ export default function ActionCard({ action }: ActionCardProps) {
 
     if (isOrder) {
       let cancelled = false;
+      
+      // Only validate NIM orders at mount if payment method is NIM
+      // For USDT, let the USDT-quote effect handle it
+      if (paymentMethod === 'usdt-polygon') {
+        // Skip NIM validation, USDT effect will handle quote
+        return () => { cancelled = true; };
+      }
+      
       validateOrder({ type: action.type, details: action, walletAddress: wallet.address || undefined })
         .then((validation) => {
           if (cancelled) return;
@@ -251,8 +290,11 @@ export default function ActionCard({ action }: ActionCardProps) {
             if (validation.quoteId) setQuoteId(validation.quoteId);
             if (typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
               action.amountLuna = validation.amountLuna;
-              setAmount((validation.amountLuna / 100000).toFixed(2));
-              setLastKnownAmount(validation.amountLuna / 100000);
+              // Only set amount if payment method is NIM
+              if (paymentMethod === 'nim') {
+                setAmount((validation.amountLuna / 100000).toFixed(2));
+                setLastKnownAmount(validation.amountLuna / 100000);
+              }
               
               const expiryTime = validation.expiresAt 
                 ? new Date(validation.expiresAt).getTime()
@@ -272,7 +314,8 @@ export default function ActionCard({ action }: ActionCardProps) {
           } else {
             // Surface the validated amount even on "amount not supported" so the
             // user sees a sane figure rather than a blank/wrong one.
-            if (typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
+            // But only for NIM payment method
+            if (paymentMethod === 'nim' && typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
               setAmount((validation.amountLuna / 100000).toFixed(2));
             }
             setPrevalidationError(validation.error || 'This order could not be validated.');
