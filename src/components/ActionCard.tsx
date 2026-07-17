@@ -311,7 +311,11 @@ export default function ActionCard({ action }: ActionCardProps) {
       setCatalogLoading(true);
       fetch('/api/catalog/browse', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-client-platform': 'nimiq-pay-miniapp',
+          'x-wallet-kind': 'miniapp',
+        },
         body: JSON.stringify({ countryCode: action.countryCode }),
       })
         .then((res) => res.json())
