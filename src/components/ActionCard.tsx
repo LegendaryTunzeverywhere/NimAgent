@@ -142,7 +142,8 @@ export default function ActionCard({ action }: ActionCardProps) {
 
   // Unified quote refresh function - respects payment method
   const refreshCurrentQuote = async () => {
-    if (!isOrder || success || failed || loading) return;
+    // Skip refresh for locked actions - they already have final validated amounts
+    if (!isOrder || success || failed || loading || amountLocked) return;
     
     setRefreshing(true);
     setPriceChanged(false);
@@ -225,8 +226,9 @@ export default function ActionCard({ action }: ActionCardProps) {
 
   // Countdown timer for quote expiry
   // Auto-refreshes using refreshCurrentQuote which respects payment method
+  // SKIP for locked actions - they don't need quote refresh
   useEffect(() => {
-    if (!isOrder || !quoteExpiry || success || failed || loading) return;
+    if (!isOrder || !quoteExpiry || success || failed || loading || amountLocked) return;
     
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((quoteExpiry - Date.now()) / 1000));
@@ -244,7 +246,7 @@ export default function ActionCard({ action }: ActionCardProps) {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [quoteExpiry, success, failed, loading, isOrder, paymentMethod]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quoteExpiry, success, failed, loading, isOrder, paymentMethod, amountLocked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warm up the Hub and pre-validate orders as soon as the card mounts.
   // This keeps the eventual checkout() call inside the user's click gesture
@@ -272,6 +274,11 @@ export default function ActionCard({ action }: ActionCardProps) {
 
     if (isOrder) {
       let cancelled = false;
+      
+      // Skip all validation for locked actions - they already have final amounts
+      if (amountLocked) {
+        return () => { cancelled = true; };
+      }
       
       // Only validate NIM orders at mount if payment method is NIM
       // For USDT, let the USDT-quote effect handle it
@@ -390,6 +397,9 @@ export default function ActionCard({ action }: ActionCardProps) {
   useEffect(() => {
     // Only for orders (not send actions)
     if (!isOrder || success || failed) return;
+    
+    // Skip for locked actions - they already have final amounts
+    if (amountLocked) return;
     
     // Store NIM amount when first mounting or switching FROM USDT back to NIM
     if (paymentMethod === 'nim' && !nimAmountRef.current && amount) {
