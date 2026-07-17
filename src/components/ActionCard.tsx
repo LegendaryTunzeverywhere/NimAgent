@@ -352,6 +352,8 @@ export default function ActionCard({ action }: ActionCardProps) {
   useEffect(() => {
     if (action.type === 'browse-catalog' && !action.catalogData && action.countryCode) {
       setCatalogLoading(true);
+      setCatalogError(null);
+      
       fetch('/api/catalog/browse', {
         method: 'POST',
         headers: { 
@@ -364,14 +366,19 @@ export default function ActionCard({ action }: ActionCardProps) {
         .then((res) => res.json())
         .then((data) => {
           if (data.error) {
-            setCatalogError(data.error);
+            // Show user-friendly error with retry hint if temporary
+            const errorMsg = data.retryable 
+              ? `${data.error}\n\n💡 ${data.hint || 'Please try again in a moment.'}`
+              : data.error;
+            setCatalogError(errorMsg);
           } else {
             action.catalogData = data;
             updateActionState(messageIndex, { catalogData: data });
+            setCatalogError(null);
           }
         })
         .catch((err) => {
-          setCatalogError(err.message);
+          setCatalogError(`Failed to load catalog: ${err.message}`);
         })
         .finally(() => {
           setCatalogLoading(false);
