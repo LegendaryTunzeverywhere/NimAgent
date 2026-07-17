@@ -163,8 +163,9 @@ export default function ActionCard({ action }: ActionCardProps) {
             setPriceChanged(true);
           }
           
-          setCryptoAmount(quote.cryptoAmount);
-          setAmount(quote.cryptoAmount);
+          const cryptoAmountStr = String(quote.cryptoAmount);
+          setCryptoAmount(cryptoAmountStr);
+          setAmount(cryptoAmountStr);
           setUsdtQuoteError(null);
           
           // Set expiry (default 60 seconds)
@@ -417,8 +418,9 @@ export default function ActionCard({ action }: ActionCardProps) {
         getCryptoPriceQuote(action.type, action, wallet.address || '')
           .then((quote) => {
             if (quote.valid && quote.cryptoAmount) {
-              setCryptoAmount(quote.cryptoAmount);
-              setAmount(quote.cryptoAmount);
+              const cryptoAmountStr = String(quote.cryptoAmount);
+              setCryptoAmount(cryptoAmountStr);
+              setAmount(cryptoAmountStr);
               setUsdtQuoteError(null);
             } else {
               setUsdtQuoteError(quote.error || 'Failed to get USDT price');
