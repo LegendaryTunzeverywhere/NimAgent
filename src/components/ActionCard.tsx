@@ -346,20 +346,26 @@ export default function ActionCard({ action }: ActionCardProps) {
     if (paymentMethod === 'usdt-polygon') {
       setUsdtQuoteLoading(true);
       setUsdtQuoteError(null);
+      // Clear amount immediately to prevent showing NIM amount with USDT label
+      setAmount('');
       
       import('@/lib/api-client').then(({ getCryptoPriceQuote }) => {
         getCryptoPriceQuote(action.type, action, wallet.address || '')
           .then((quote) => {
-            if (quote.valid) {
+            if (quote.valid && quote.cryptoAmount) {
               setCryptoAmount(quote.cryptoAmount);
               setAmount(quote.cryptoAmount);
               setUsdtQuoteError(null);
             } else {
               setUsdtQuoteError(quote.error || 'Failed to get USDT price');
+              // Keep amount empty if quote failed
+              setAmount('');
             }
           })
           .catch((err) => {
             setUsdtQuoteError(err.message || 'Failed to fetch USDT price');
+            // Keep amount empty if quote failed
+            setAmount('');
           })
           .finally(() => {
             setUsdtQuoteLoading(false);
