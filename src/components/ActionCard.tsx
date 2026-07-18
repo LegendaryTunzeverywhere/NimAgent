@@ -386,7 +386,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         });
       return () => { cancelled = true; };
     }
-  }, [wallet.balance?.nim.balance]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wallet.balance?.nim.balance, wallet.address, paymentMethod, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch contacts for show-contacts action type
   useEffect(() => {
