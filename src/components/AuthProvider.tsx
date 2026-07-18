@@ -45,18 +45,26 @@ export default function AuthProvider() {
       return;
     }
     
+    // Only run once per wallet connection
     if (!isReady || !wallet.address || hasCheckedSession) {
       return;
     }
 
+    // Prevent running again
     setHasCheckedSession(true);
 
     // No cache checks - always require fresh sign-in on app open
     // Mark auth check as complete immediately to show SignInPage
+    // CRITICAL: Only reset authCompleted to 0 if user hasn't authenticated yet
+    // Don't overwrite authCompleted if user has already signed in (authCompleted > 0)
     useAppStore.setState((state) => ({
-      wallet: { ...state.wallet, authChecked: true, authCompleted: 0 }
+      wallet: { 
+        ...state.wallet, 
+        authChecked: true, 
+        authCompleted: state.wallet.authCompleted > 0 ? state.wallet.authCompleted : 0 
+      }
     }));
-  }, [isReady, wallet.connected, wallet.address, wallet.authChecked, hasCheckedSession]);
+  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]); // Removed wallet.authChecked from deps
 
   // Reset check flag when wallet disconnects
   useEffect(() => {
