@@ -362,35 +362,49 @@ export default function ActionCard({ action }: ActionCardProps) {
       setCatalogLoading(true);
       setCatalogError(null);
       
-      fetch('/api/catalog/browse', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-client-platform': 'nimiq-pay-miniapp',
-          'x-wallet-kind': 'miniapp',
-        },
-        body: JSON.stringify({ countryCode: action.countryCode }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            // Show user-friendly error with retry hint if temporary
-            const errorMsg = data.retryable 
-              ? `${data.error}\n\n💡 ${data.hint || 'Please try again in a moment.'}`
-              : data.error;
-            setCatalogError(errorMsg);
-          } else {
-            action.catalogData = data;
-            updateActionState(messageIndex, { catalogData: data });
+      // Use the new catalog API
+      import('@/lib/api-client').then(({ getCatalogProducts }) => {
+        getCatalogProducts(action.countryCode!)
+          .then((data) => {
+            // Transform the response to match the expected catalogData structure
+            const catalogData = {
+              country: data.country,
+              productTypes: data.productTypes,
+              brands: data.products.reduce((acc, product) => {
+                const type = product.productType;
+                if (!acc[type]) {
+                  acc[type] = [];
+                }
+                acc[type].push({
+                  name: product.brandName,
+                  family: product.brandFamily,
+                  brandId: product.brandId,
+                  category: product.category,
+                  min: product.min !== null ? `$${product.min}` : undefined,
+                  max: product.max !== null ? `$${product.max}` : undefined,
+                  logoUrl: product.logoUrl,
+                });
+                return acc;
+              }, {} as any),
+              summary: {
+                totalBrands: data.totalProducts,
+                byType: data.products.reduce((acc, product) => {
+                  acc[product.productType] = (acc[product.productType] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>),
+              },
+            };
+            
+            updateActionState(messageIndex, { catalogData });
             setCatalogError(null);
-          }
-        })
-        .catch((err) => {
-          setCatalogError(`Failed to load catalog: ${err.message}`);
-        })
-        .finally(() => {
-          setCatalogLoading(false);
-        });
+          })
+          .catch((err) => {
+            setCatalogError(`Failed to load catalog: ${err.message}`);
+          })
+          .finally(() => {
+            setCatalogLoading(false);
+          });
+      });
     }
   }, [action.type, action.countryCode, action.catalogData, messageIndex, updateActionState]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1992,6 +2006,30 @@ export default function ActionCard({ action }: ActionCardProps) {
         </div>
       )}
 
+      {/* Payment Summary for USDT (Phase 4) */}
+      {paymentMethod === 'usdt-polygon' && cryptoAmount && !success && !failed && !usdtQuoteLoading && (
+        <div className="rounded-xl border-2 border-[#26A17B]/30 bg-[#26A17B]/5 p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-[#1F2348]/70 dark:text-white/70">Product Value</span>
+            <span className="text-sm font-semibold text-[#1F2348] dark:text-white">
+              {action.fiatAmount || action.amount} {action.currency || 'USD'}
+            </span>
+          </div>
+          <div className="h-px bg-[#1F2348]/10 dark:bg-white/10" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-[#26A17B]">💎 USDT Cost</span>
+            <span className="text-lg font-bold text-[#26A17B]">
+              {parseFloat(cryptoAmount).toFixed(6)} USDT
+            </span>
+          </div>
+          {action.currency && action.currency !== 'USD' && (
+            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60 text-center pt-1">
+              Exchange rate applied: {action.currency} → USD → USDT
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Action Button */}
       <button
         onClick={executeAction}
@@ -2004,7 +2042,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >
-        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : usdtQuoteLoading ? 'Fetching USDT price...' : paymentMethod === 'usdt-polygon' ? 'Confirm & Pay with USDT' : 'Confirm & Pay'}
+        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : usdtQuoteLoading ? 'Fetching USDT price...' : paymentMethod === 'usdt-polygon' ? `Pay ${cryptoAmount ? parseFloat(cryptoAmount).toFixed(4) : ''} USDT` : 'Confirm & Pay'}
       </button>
       {action.type === 'bill' && !billAccountConfirmed && !success && !failed && (
         <p className="text-xs text-[#E9B213] dark:text-gold/80 text-center">

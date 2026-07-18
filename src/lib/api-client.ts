@@ -1109,3 +1109,135 @@ export async function getCryptoPriceQuote(
 
   return body;
 }
+
+
+// ============================================================================
+// CRYPTOREFILLS CATALOG API (Phase 3)
+// ============================================================================
+
+export interface CatalogCountry {
+  code: string;
+  name: string;
+  loaded: boolean;
+  productTypes: string[];
+}
+
+export interface CatalogBrand {
+  brandFamily: string;
+  brandName: string;
+  brandId: string;
+  productType: string;
+  category: string;
+  min: number | null;
+  max: number | null;
+  fixedDenominations: string[] | null;
+  denominationType: 'fixed' | 'range';
+  currency: string;
+  logoUrl: string | null;
+}
+
+/**
+ * Get list of all supported countries
+ */
+export async function getCatalogCountries(): Promise<{
+  success: boolean;
+  totalCountries: number;
+  countries: CatalogCountry[];
+}> {
+  const res = await fetch(`${API_URL}/cryptorefills/catalog/countries`, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch catalog countries');
+  }
+  
+  return res.json();
+}
+
+/**
+ * Get all products for a specific country
+ */
+export async function getCatalogProducts(
+  countryCode: string,
+  type?: string
+): Promise<{
+  success: boolean;
+  country: { code: string; name: string };
+  productTypes: string[];
+  totalProducts: number;
+  products: CatalogBrand[];
+}> {
+  const url = type
+    ? `${API_URL}/cryptorefills/catalog/products/${countryCode}?type=${type}`
+    : `${API_URL}/cryptorefills/catalog/products/${countryCode}`;
+    
+  const res = await fetch(url, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch catalog products');
+  }
+  
+  return res.json();
+}
+
+/**
+ * Get brands for a specific product type in a country
+ */
+export async function getCatalogBrands(
+  countryCode: string,
+  productType: string
+): Promise<{
+  success: boolean;
+  country: string;
+  productType: string;
+  totalBrands: number;
+  brands: CatalogBrand[];
+}> {
+  const res = await fetch(`${API_URL}/cryptorefills/catalog/brands/${countryCode}/${productType}`, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch catalog brands');
+  }
+  
+  return res.json();
+}
+
+/**
+ * Search for brands across all countries
+ */
+export async function searchCatalogBrands(
+  query: string,
+  productType?: string
+): Promise<{
+  success: boolean;
+  query: string;
+  totalResults: number;
+  results: Array<{
+    brand: CatalogBrand;
+    country: { code: string; name: string };
+    productType: string;
+  }>;
+}> {
+  const url = productType
+    ? `${API_URL}/cryptorefills/catalog/search?q=${encodeURIComponent(query)}&type=${productType}`
+    : `${API_URL}/cryptorefills/catalog/search?q=${encodeURIComponent(query)}`;
+    
+  const res = await fetch(url, {
+    headers: await getHeaders('GET'),
+    credentials: 'include',
+  });
+  
+  if (!res.ok) {
+    throw new Error('Failed to search catalog');
+  }
+  
+  return res.json();
+}
