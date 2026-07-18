@@ -34,7 +34,9 @@ export default function AuthProvider() {
   }, []);
 
   // Mark auth check as complete immediately when wallet connects
-  // No session persistence - always require fresh sign-in
+  // Fresh sign-in is required on genuine cold start (handled by page.tsx sessionStorage check)
+  // but an existing in-session connection is trusted for normal navigation.
+  // This is NOT localStorage-persisted-session — sessionStorage clears on true app close.
   useEffect(() => {
     if (!wallet.connected) {
       if (!wallet.authChecked) {
@@ -53,8 +55,8 @@ export default function AuthProvider() {
     // Prevent running again
     setHasCheckedSession(true);
 
-    // No cache checks - always require fresh sign-in on app open
-    // Mark auth check as complete immediately to show SignInPage
+    // On cold start, page.tsx resets wallet state, so this runs with wallet.authCompleted = 0
+    // On in-session navigation, page.tsx preserves state, so this respects existing authCompleted
     // CRITICAL: Only reset authCompleted to 0 if user hasn't authenticated yet
     // Don't overwrite authCompleted if user has already signed in (authCompleted > 0)
     useAppStore.setState((state) => ({

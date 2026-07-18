@@ -215,6 +215,40 @@ export default function Home() {
     return p.has('to') || p.has('ref');
   });
 
+  // FIX 1: Cold-start detection using sessionStorage
+  // This distinguishes "app was truly closed" from "just navigating within same session"
+  // sessionStorage persists across tab switches, navigation, and brief WebView reloads,
+  // but is CLEARED when the app is truly closed — making it a reliable cold-start signal
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const hasLiveSession = sessionStorage.getItem('nimagent_live_session');
+    
+    if (!hasLiveSession) {
+      // True cold start — either first-ever visit, or the app was fully closed
+      // and just relaunched. sessionStorage doesn't survive a real close, so its
+      // absence here is a reliable signal. Force a fresh wallet + auth state,
+      // regardless of what's in localStorage.
+      console.log('[Cold Start] Detected cold start - resetting wallet state');
+      sessionStorage.setItem('nimagent_live_session', '1');
+      
+      useAppStore.setState((state) => ({
+        wallet: {
+          ...state.wallet,
+          connected: false,
+          address: null,
+          authCompleted: 0,
+          authChecked: false,
+        },
+      }));
+    } else {
+      // This is just an in-session navigation/tab-switch/brief WebView reload
+      // within the same still-open browsing context — do NOT reset anything here.
+      // Let the existing wallet.connected state (if any) stand as-is.
+      console.log('[Cold Start] In-session navigation - preserving existing wallet state');
+    }
+  }, []); // run once per mount, sessionStorage itself prevents re-firing per true session
+
   // Redirect chat → home if wallet disconnects
   useEffect(() => {
     if (activeTab === 'chat' && !wallet.connected) {
