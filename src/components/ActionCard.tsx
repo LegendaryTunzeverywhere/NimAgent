@@ -399,15 +399,17 @@ export default function ActionCard({ action }: ActionCardProps) {
     // Only for orders (not send actions)
     if (!isOrder || success || failed) return;
     
-    // Skip for locked actions - they already have final amounts
-    if (amountLocked) return;
+    // Skip for locked payment requests (send actions with fixed amounts)
+    // BUT allow orders to fetch USDT quotes even if amountLocked = true
+    // because "locked" means fiat amount is locked, but we still need crypto quote
+    if (amountLocked && action.type === 'send') return;
     
     // Store NIM amount when first mounting or switching FROM USDT back to NIM
     if (paymentMethod === 'nim' && !nimAmountRef.current && amount) {
       nimAmountRef.current = amount;
     }
     
-    // Fetch USDT quote when switching to USDT
+    // Fetch USDT quote when switching to USDT OR when mounting with USDT already selected
     if (paymentMethod === 'usdt-polygon') {
       setUsdtQuoteLoading(true);
       setUsdtQuoteError(null);
