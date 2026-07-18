@@ -1172,6 +1172,37 @@ export default function ActionCard({ action }: ActionCardProps) {
             // Import EVM helper functions
             const { connectEthereum, switchToPolygon, sendUSDT, isOnPolygon } = await import('@/lib/wallet/evm');
             const { createCryptoOrder, confirmCryptoPayment } = await import('@/lib/api-client');
+            const { getPaymentAddress } = await import('@/lib/wallet/WalletManager');
+
+            // STEP 1: Determine payment coin and network
+            const coin: 'NIM' | 'USDT' = 'USDT';
+            const network: 'nimiq' | 'polygon' = 'polygon';
+            
+            addMessage({
+              role: 'ai',
+              content: `🔗 Connecting to ${network} wallet for ${coin} payment...`,
+            });
+            
+            // STEP 2: Get correct payment address (auto-connects if needed)
+            console.log(`[Payment] Getting ${coin} payment address for ${network} network`);
+            let paymentAddress: string;
+            try {
+              paymentAddress = await getPaymentAddress(coin);
+              console.log(`[Payment] ✅ Payment address for ${coin}:`, paymentAddress);
+            } catch (error: any) {
+              console.error('[Payment] Failed to get payment address:', error);
+              
+              if (error.message?.includes('rejected')) {
+                addMessage({
+                  role: 'ai',
+                  content: '❌ Polygon wallet connection was rejected. USDT payments require connecting your Polygon wallet. Please try again or use NIM payment instead.',
+                });
+                setLoading(false);
+                return;
+              }
+              
+              throw new Error(`Failed to connect ${network} wallet: ${error.message}`);
+            }
 
             // CRYPTOREFILLS BEST PRACTICE: Create order FIRST
             // This allows us to show exact details before wallet interaction
@@ -1183,10 +1214,26 @@ export default function ActionCard({ action }: ActionCardProps) {
             const orderResult = await createCryptoOrder({
               type: action.type,
               details: { ...action, recipientEmail: email || undefined },
-              walletAddress: wallet.address,
+              walletAddress: wallet.address || '',  // Nimiq address for session auth
+              paymentAddress: paymentAddress,        // Polygon address for payment
+              paymentMethod: 'usdt-polygon',
+              coin: coin,
+              network: network,
             });
 
-            const { orderId, paymentAddress, paymentAmount, paymentCurrency, network } = orderResult;
+            console.log('[Payment] Order created:', orderResult.orderId);
+            console.log('[Payment] Payment will be sent to:', orderResult.paymentAddress);
+            console.log('[Payment] Network:', orderResult.network);
+
+            const { orderId, paymentAddress: cryptorefillsAddress, paymentAmount, paymentCurrency, network: orderNetwork } = orderResult;
+            
+            // Verify address matches what we sent
+            if (cryptorefillsAddress.toLowerCase() !== paymentAddress.toLowerCase()) {
+              throw new Error(
+                `Address mismatch: Expected ${paymentAddress}, got ${cryptorefillsAddress}. ` +
+                `This is a critical error - please contact support.`
+              );
+            }
 
             // Lock the amount input to prevent user error
             setAmountLocked(true);
@@ -1194,18 +1241,11 @@ export default function ActionCard({ action }: ActionCardProps) {
             // CRYPTOREFILLS BEST PRACTICE: Display exact payment details
             addMessage({
               role: 'ai',
-              content: `✅ Order created!\n\n**Payment Details:**\n• Amount: **${paymentAmount} ${paymentCurrency}**\n• Network: **${network}**\n• Recipient: \`${paymentAddress.slice(0, 10)}...${paymentAddress.slice(-8)}\`\n\n⚠️ **Important:** The transaction will be pre-filled with the exact amount and network. Please review and approve it in your wallet.\n\n**Do not modify the amount or network** - this will cause your order to fail.`,
+              content: `✅ Order created!\n\n**Payment Details:**\n• Amount: **${paymentAmount} ${paymentCurrency}**\n• Network: **${orderNetwork}**\n• Recipient: \`${cryptorefillsAddress.slice(0, 10)}...${cryptorefillsAddress.slice(-8)}\`\n\n⚠️ **Important:** The transaction will be pre-filled with the exact amount and network. Please review and approve it in your wallet.\n\n**Do not modify the amount or network** - this will cause your order to fail.`,
             });
 
-            // Step 2: Connect Ethereum wallet
-            addMessage({
-              role: 'ai',
-              content: '🔗 Connecting to Ethereum wallet...',
-            });
-
-            console.log('[USDT Payment] Attempting to connect Ethereum wallet...');
-            await connectEthereum();
-            console.log('[USDT Payment] Ethereum wallet connected successfully');
+            // Step 2: Verify Ethereum wallet connection (already connected by getPaymentAddress)
+            console.log('[USDT Payment] Ethereum wallet already connected via WalletManager');
 
             // Step 3: Switch to Polygon network
             addMessage({
@@ -1230,8 +1270,8 @@ export default function ActionCard({ action }: ActionCardProps) {
               content: `💎 Opening Nimiq Pay with your payment...\n\n**Review carefully:**\n• Verify amount is **exactly ${paymentAmount} USDT**\n• Verify network is **Polygon**\n• Approve the transaction\n\nThe payment details are pre-filled to prevent errors.`,
             });
 
-            console.log('[USDT Payment] Calling sendUSDT with:', { paymentAddress, paymentAmount });
-            const txHash = await sendUSDT(paymentAddress, paymentAmount);
+            console.log('[USDT Payment] Calling sendUSDT with:', { recipient: cryptorefillsAddress, amount: paymentAmount });
+            const txHash = await sendUSDT(cryptorefillsAddress, paymentAmount);
             console.log('[USDT Payment] Transaction sent, hash:', txHash);
 
             // Step 5: Verify payment on-chain + fulfill order

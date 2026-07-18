@@ -66,9 +66,6 @@ export default function ChatPage() {
   const MAX_WORDS  = 200;
   const wordCount  = input.trim().split(/\s+/).filter(Boolean).length;
   const isOverLimit = wordCount > MAX_WORDS;
-  
-  // DEBUG: State for showing debug panel
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // ── Keyboard detection ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -200,78 +197,14 @@ export default function ChatPage() {
       const lower = msg.toLowerCase().trim();
       console.log('[ChatPage] Message received:', msg, '| lowercase:', lower);
       
-      // DEBUG: EVM diagnostic trigger (temporary - remove after testing)
-      if (lower === 'debug evm') {
-        console.log('[ChatPage] Debug EVM trigger activated');
-        const report = {
-          hasEthereum: typeof window.ethereum !== 'undefined',
-          hasNimiqPay: typeof window.nimiqPay !== 'undefined',
-          ethereumKeys: typeof window.ethereum !== 'undefined' ? Object.keys(window.ethereum).slice(0, 10) : [],
-          isMetaMask: (window.ethereum as any)?.isMetaMask ?? null,
-          ethereumIsConnected: typeof window.ethereum !== 'undefined' ? (window.ethereum as any)?.isConnected?.() ?? null : null,
-          nimiqPayKeys: typeof window.nimiqPay !== 'undefined' ? Object.keys(window.nimiqPay).slice(0, 10) : [],
-        };
-        addMessage({
-          role: 'ai',
-          content: `🔍 **EVM Debug Report**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${report.hasEthereum ? '✅ window.ethereum exists' : '❌ window.ethereum NOT found'}\n${report.hasNimiqPay ? '✅ window.nimiqPay exists' : '❌ window.nimiqPay NOT found'}`,
-        });
-        return;
-      }
-      
-      // DEBUG: EVM connection test (temporary - remove after testing)
-      if (lower === 'debug evm connect') {
-        console.log('[ChatPage] Debug EVM Connect trigger activated');
-        const report: any = { step: 'starting', startTime: Date.now() };
-        
-        if (typeof (window as any).ethereum === 'undefined') {
-          addMessage({
-            role: 'ai',
-            content: `❌ **Cannot test connection**\n\nwindow.ethereum does not exist. Run "debug evm" first to check availability.`,
-          });
-          return;
-        }
-        
-        try {
-          report.step = 'calling eth_requestAccounts';
-          const accountsPromise = (window as any).ethereum.request({ method: 'eth_requestAccounts' });
-          
-          // Race against a timeout so we know if it's hanging vs actually failing
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('TIMEOUT after 10s - request never resolved or rejected')), 10000)
-          );
-          
-          const accounts = await Promise.race([accountsPromise, timeoutPromise]);
-          report.step = 'success';
-          report.accounts = accounts;
-          report.accountCount = (accounts as any)?.length ?? 0;
-          report.firstAccount = (accounts as any)?.[0] ?? null;
-          report.elapsedMs = Date.now() - report.startTime;
-        } catch (err: any) {
-          report.step = 'failed';
-          report.errorMessage = err?.message;
-          report.errorCode = err?.code;
-          report.errorName = err?.name;
-          report.elapsedMs = Date.now() - report.startTime;
-        }
-        
-        addMessage({
-          role: 'ai',
-          content: `🔍 **EVM Connection Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${
-            report.step === 'success' 
-              ? `✅ Connected successfully in ${report.elapsedMs}ms\nAccount: ${report.firstAccount}` 
-              : report.errorMessage?.includes('TIMEOUT')
-                ? `⏱️ **TIMEOUT** - Request hung for 10 seconds\nThis is likely a Nimiq Pay provider bridge issue.`
-                : `❌ Failed: ${report.errorMessage}\nCode: ${report.errorCode}`
-          }`,
-        });
-        return;
-      }
-      
+      // Check for QR scan command
       if (/^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lower)) {
         addMessage({ role: 'user', content: msg });
         addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { type: 'qr-scan' } });
         return;
       }
+      
+      // Send to AI endpoint
       await sendMessageToAI(msg, wallet.address || undefined);
     } catch (e) { /* Silent failure */ }
   }, [input, aiLoading, addMessage, sendMessageToAI, wallet.address]);
@@ -465,15 +398,6 @@ export default function ChatPage() {
           >
             <Icon name="sparkles" size={12} strokeWidth={2.5} />
             <span className="hidden sm:inline">Guide</span>
-          </button>
-          
-          {/* DEBUG: Temporary EVM debug button - remove after testing */}
-          <button
-            onClick={() => setShowDebugPanel(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-500/30 hover:scale-105 active:scale-95 transition-all"
-            title="EVM Debug Tools"
-          >
-            🔧
           </button>
         </div>
       </div>
@@ -757,9 +681,7 @@ export default function ChatPage() {
                 : 'bg-white/80 dark:bg-white/[0.08] text-[#1F2348]/50 dark:text-white/60'
             }`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <Icon name="send" size={14} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -940,220 +862,6 @@ export default function ChatPage() {
             <span className="animate-scroll-hint text-[#1F2348]/60 dark:text-white/60">
               <Icon name="chevron-down" size={16} strokeWidth={2.5} />
             </span>
-          </div>
-        </div>
-      </Modal>
-      
-      {/* ── DEBUG: EVM Debug Panel (temporary - remove after testing) ─────── */}
-      <Modal
-        open={showDebugPanel}
-        onClose={() => setShowDebugPanel(false)}
-        title="🔧 EVM Debug Tools"
-        subtitle="Diagnose USDT wallet connection issues"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-[#1F2348]/80 dark:text-white/75">
-            Use these tools to diagnose why the USDT wallet popup isn't appearing in Nimiq Pay.
-          </p>
-          
-          <button
-            onClick={async () => {
-              const report = {
-                hasEthereum: typeof window.ethereum !== 'undefined',
-                hasNimiqPay: typeof window.nimiqPay !== 'undefined',
-                ethereumKeys: typeof window.ethereum !== 'undefined' ? Object.keys(window.ethereum).slice(0, 15) : [],
-                isMetaMask: (window.ethereum as any)?.isMetaMask ?? null,
-                ethereumIsConnected: typeof window.ethereum !== 'undefined' ? (window.ethereum as any)?.isConnected?.() ?? null : null,
-                nimiqPayKeys: typeof window.nimiqPay !== 'undefined' ? Object.keys(window.nimiqPay).slice(0, 15) : [],
-              };
-              addMessage({
-                role: 'ai',
-                content: `🔍 **EVM Provider Check**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${report.hasEthereum ? '✅ window.ethereum exists' : '❌ window.ethereum NOT found'}\n${report.hasNimiqPay ? '✅ window.nimiqPay exists' : '❌ window.nimiqPay NOT found'}`,
-              });
-              setShowDebugPanel(false);
-            }}
-            className="w-full py-3 px-4 rounded-xl text-left bg-blue-100 dark:bg-blue-500/15 border border-blue-300 dark:border-blue-500/30 hover:bg-blue-200 dark:hover:bg-blue-500/25 transition-colors"
-          >
-            <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-1">
-              1️⃣ Check EVM Provider
-            </p>
-            <p className="text-xs text-blue-600 dark:text-blue-400/75">
-              Does window.ethereum exist? What methods are available?
-            </p>
-          </button>
-          
-          <button
-            onClick={async () => {
-              if (typeof (window as any).ethereum === 'undefined') {
-                addMessage({
-                  role: 'ai',
-                  content: `❌ **Cannot test connection**\n\nwindow.ethereum does not exist. Run test #1 first.`,
-                });
-                setShowDebugPanel(false);
-                return;
-              }
-              
-              addMessage({
-                role: 'ai',
-                content: `⏳ **Testing wallet connection...**\n\nAttempting to connect to EVM wallet. This may take up to 10 seconds.`,
-              });
-              setShowDebugPanel(false);
-              
-              const report: any = { step: 'starting', startTime: Date.now() };
-              
-              try {
-                report.step = 'calling eth_requestAccounts';
-                const accountsPromise = (window as any).ethereum.request({ method: 'eth_requestAccounts' });
-                
-                const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('TIMEOUT after 10s - request never resolved or rejected')), 10000)
-                );
-                
-                const accounts = await Promise.race([accountsPromise, timeoutPromise]);
-                report.step = 'success';
-                report.accounts = accounts;
-                report.accountCount = (accounts as any)?.length ?? 0;
-                report.firstAccount = (accounts as any)?.[0] ?? null;
-                report.elapsedMs = Date.now() - report.startTime;
-              } catch (err: any) {
-                report.step = 'failed';
-                report.errorMessage = err?.message;
-                report.errorCode = err?.code;
-                report.errorName = err?.name;
-                report.elapsedMs = Date.now() - report.startTime;
-              }
-              
-              addMessage({
-                role: 'ai',
-                content: `🔍 **Wallet Connection Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${
-                  report.step === 'success' 
-                    ? `✅ **Connected successfully** in ${report.elapsedMs}ms\n\nAccount: ${report.firstAccount}\n\n**Next:** Run test #3 to check network switching.` 
-                    : report.errorMessage?.includes('TIMEOUT')
-                      ? `⏱️ **TIMEOUT** - Request hung for 10 seconds\n\n**Root cause:** Nimiq Pay's EVM provider bridge has an issue. The \`eth_requestAccounts\` call never completes.\n\n**Action:** Report this to the Nimiq Pay development team - it's not a bug in your app code.`
-                      : `❌ **Failed:** ${report.errorMessage}\n\n**Error code:** ${report.errorCode}\n\n**Action:** Share this error with me and I can suggest a fix.`
-                }`,
-              });
-            }}
-            className="w-full py-3 px-4 rounded-xl text-left bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 hover:bg-amber-200 dark:hover:bg-amber-500/25 transition-colors"
-          >
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-300 mb-1">
-              2️⃣ Test Wallet Connection
-            </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400/75">
-              Call eth_requestAccounts with 10s timeout. May show popup.
-            </p>
-          </button>
-          
-          <button
-            onClick={async () => {
-              if (typeof (window as any).ethereum === 'undefined') {
-                addMessage({
-                  role: 'ai',
-                  content: `❌ **Cannot test network switch**\n\nwindow.ethereum does not exist. Run test #1 first.`,
-                });
-                setShowDebugPanel(false);
-                return;
-              }
-              
-              addMessage({
-                role: 'ai',
-                content: `⏳ **Testing network switching...**\n\nChecking current chain, then switching to Polygon if needed. This may take up to 18 seconds.`,
-              });
-              setShowDebugPanel(false);
-              
-              const report: any = { steps: [] };
-              
-              // Step 1: check current chain
-              try {
-                const t0 = Date.now();
-                const chainId = await Promise.race([
-                  (window as any).ethereum.request({ method: 'eth_chainId' }),
-                  new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT 8s')), 8000))
-                ]);
-                report.steps.push({ 
-                  step: 'eth_chainId', 
-                  result: chainId, 
-                  elapsedMs: Date.now() - t0, 
-                  isPolygon: chainId === '0x89',
-                  chainName: chainId === '0x89' ? 'Polygon' : chainId === '0x1' ? 'Ethereum' : `Unknown (${chainId})`
-                });
-              } catch (err: any) {
-                report.steps.push({ 
-                  step: 'eth_chainId', 
-                  error: err?.message, 
-                  code: err?.code 
-                });
-                addMessage({
-                  role: 'ai',
-                  content: `🔍 **Network Switch Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n❌ **Failed at step 1:** Cannot check current chain.\n\n**Action:** Share this error - the provider can't even tell us what network it's on.`,
-                });
-                return;
-              }
-              
-              // Step 2: switch if not on Polygon
-              if (report.steps[0].result !== '0x89') {
-                try {
-                  const t1 = Date.now();
-                  await Promise.race([
-                    (window as any).ethereum.request({
-                      method: 'wallet_switchEthereumChain',
-                      params: [{ chainId: '0x89' }],
-                    }),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT 10s - switch never resolved')), 10000))
-                  ]);
-                  report.steps.push({ 
-                    step: 'wallet_switchEthereumChain', 
-                    success: true, 
-                    elapsedMs: Date.now() - t1 
-                  });
-                } catch (err: any) {
-                  report.steps.push({ 
-                    step: 'wallet_switchEthereumChain', 
-                    error: err?.message, 
-                    code: err?.code,
-                    note: err?.code === 4902 ? 'Chain not added - would need wallet_addEthereumChain fallback' : undefined
-                  });
-                }
-              } else {
-                report.steps.push({ 
-                  step: 'wallet_switchEthereumChain', 
-                  skipped: 'already on Polygon' 
-                });
-              }
-              
-              // Analyze results
-              let analysis = '';
-              if (report.steps[0].isPolygon && report.steps[1].skipped) {
-                analysis = `✅ **Already on Polygon!** No switch needed.\n\n**Next:** The problem must be in the actual USDT transfer (\`eth_sendTransaction\`). Let me know and I'll add a test for that.`;
-              } else if (report.steps[1].success) {
-                analysis = `✅ **Switch successful!** Took ${report.steps[1].elapsedMs}ms.\n\n**Next:** The problem must be in the actual USDT transfer. Let me know and I'll add a test for that.`;
-              } else if (report.steps[1].error?.includes('TIMEOUT')) {
-                analysis = `⏱️ **TIMEOUT** - Switch request hung for 10 seconds.\n\n**Root cause:** Network switch popup never appeared or provider didn't respond.\n\n**Action:** Report to Nimiq Pay team - \`wallet_switchEthereumChain\` hangs.`;
-              } else if (report.steps[1].code === 4902) {
-                analysis = `⚠️ **Chain not added** - Error code 4902.\n\n**Expected:** The app should auto-fallback to \`wallet_addEthereumChain\` (check \`src/lib/wallet/evm.ts\` - fallback logic exists).\n\n**Action:** The fallback might not be triggering. Let me check the code.`;
-              } else if (report.steps[1].error) {
-                analysis = `❌ **Failed:** ${report.steps[1].error}\n\n**Error code:** ${report.steps[1].code}\n\n**Action:** Share this error for diagnosis.`;
-              }
-              
-              addMessage({
-                role: 'ai',
-                content: `🔍 **Network Switch Test**\n\n\`\`\`json\n${JSON.stringify(report, null, 2)}\n\`\`\`\n\n${analysis}`,
-              });
-            }}
-            className="w-full py-3 px-4 rounded-xl text-left bg-purple-100 dark:bg-purple-500/15 border border-purple-300 dark:border-purple-500/30 hover:bg-purple-200 dark:hover:bg-purple-500/25 transition-colors"
-          >
-            <p className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-1">
-              3️⃣ Test Network Switching
-            </p>
-            <p className="text-xs text-purple-600 dark:text-purple-400/75">
-              Check current chain, then switch to Polygon if needed.
-            </p>
-          </button>
-          
-          <div className="p-3 rounded-xl bg-red-100 dark:bg-red-500/15 border border-red-300 dark:border-red-500/30">
-            <p className="text-xs text-red-700 dark:text-red-300 leading-relaxed">
-              <strong>⚠️ Remove this button before production!</strong> This is a temporary diagnostic tool. Search for "DEBUG: EVM Debug Panel" and delete the modal.
-            </p>
           </div>
         </div>
       </Modal>

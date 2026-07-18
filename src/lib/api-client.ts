@@ -1000,11 +1000,17 @@ export async function getPaymentMethods(): Promise<Array<{ id: string; name: str
  * 2. User approves USDT send in Nimiq Pay
  * 3. Call confirmCryptoPayment(orderId, txHash)
  * 4. Backend verifies on-chain, then fulfills
+ * 
+ * MULTI-CHAIN FIX: Now sends payment method, coin, network, and payment address
  */
 export async function createCryptoOrder(data: {
   type: string;
   details: any;
-  walletAddress: string;
+  walletAddress: string; // Nimiq address for session auth
+  paymentAddress: string; // Blockchain-specific payment address
+  paymentMethod: 'nim' | 'usdt-polygon';
+  coin: 'NIM' | 'USDT';
+  network: 'nimiq' | 'polygon';
 }): Promise<{
   success: boolean;
   orderId: string;
