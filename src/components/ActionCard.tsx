@@ -118,16 +118,67 @@ export default function ActionCard({ action }: ActionCardProps) {
             }
           })
           .catch(() => {
-            // Crypto payments not available, use NIM only
-            setShowPaymentMethodSelector(false);
+            // Silent failure - payment methods not available
           });
       });
     }
   }, [isOrder, success, failed, isPaymentMethodLocked]);
   
-  // Find the index of this message in the messages array
+  // Find the index of this message in the messages array (needed by catalog lookup effect)
   const messageIndex = messages.findIndex(msg => msg.action === action);
+  
+  // Catalog lookup effect - fetch brands for validation
+  useEffect(() => {
+    const fetchCatalogBrands = async () => {
+      if (action.type !== 'catalog-lookup') return;
+      if (action.catalogBrands) return; // Already fetched
 
+      try {
+        setCatalogLoading(true);
+        setCatalogError(null);
+
+        const response = await fetch(
+          `/api/cryptorefills/catalog/brands/${action.countryCode}/${action.productType}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to load brands: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to load brands');
+        }
+
+        // Update action with fetched brands
+        if (messageIndex >= 0) {
+          await updateActionState(messageIndex, {
+            catalogBrands: data.brands,
+            catalogCountry: data.country
+          });
+        }
+
+        // Send brands back to AI so it can create the actual action
+        const brandNames = data.brands.map((b: any) => b.name).join(', ');
+        await sendMessageToAI(
+          `Available brands for ${action.productType} in ${data.country}: ${brandNames}. User requested: "${action.userIntent}"`
+        );
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load catalog';
+        setCatalogError(errorMsg);
+        await sendMessageToAI(
+          `Error loading catalog for ${action.productType} in ${action.countryCode}: ${errorMsg}`
+        );
+      } finally {
+        setCatalogLoading(false);
+      }
+    };
+
+    fetchCatalogBrands();
+  }, [action.type, action.catalogBrands, action.countryCode, action.productType, action.userIntent, messageIndex, sendMessageToAI, updateActionState]);
+  
+  // Other state declarations
   const [prevalidationError, setPrevalidationError] = useState<string | null>(null);
   const [amountLocked, setAmountLocked] = useState(isOrder || isPaymentRequest);
   const [quoteId, setQuoteId] = useState<string | null>(null);
@@ -776,6 +827,73 @@ export default function ActionCard({ action }: ActionCardProps) {
                 💡 To purchase, tell me which product you want (e.g., "I want Amazon gift card")
               </p>
             </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  // Handle Catalog Lookup - validate brand names before creating actions
+  if (action.type === 'catalog-lookup') {
+    return (
+      <div className="glass dark:bg-white/[0.035] border-2 border-[#1F2348]/10 dark:border-white/[0.07] rounded-2xl p-4 max-w-sm">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700 dark:text-blue-400">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-[#1F2348] dark:text-white">
+              Validating Product
+            </p>
+            <p className="text-[10px] text-[#1F2348]/60 dark:text-white/65 font-mono uppercase">
+              CATALOG LOOKUP · {action.productType}
+            </p>
+          </div>
+        </div>
+
+        {catalogLoading ? (
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="w-8 h-8 border-2 border-blue-300 dark:border-blue-800 border-t-blue-700 dark:border-t-blue-400 rounded-full animate-spin mb-3" />
+            <p className="text-sm text-[#1F2348]/70 dark:text-white/70">
+              Checking available brands in {action.countryCode}...
+            </p>
+          </div>
+        ) : catalogError ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-red-600 dark:text-red-400 mb-2">{catalogError}</p>
+          </div>
+        ) : action.catalogBrands ? (
+          <div className="space-y-3">
+            <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-xl p-3">
+              <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-2">
+                ✅ Found {action.catalogBrands.length} brands in {action.catalogCountry}
+              </p>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {action.catalogBrands.map((brand: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/80 dark:bg-white/5 border border-[#1F2348]/10 dark:border-white/10"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[#1F2348] dark:text-white">
+                        {brand.name}
+                      </p>
+                      {(brand.min || brand.max) && (
+                        <p className="text-[10px] text-[#1F2348]/60 dark:text-white/60">
+                          Range: {brand.min} - {brand.max}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-[#1F2348]/70 dark:text-white/70 text-center">
+              Creating your order with verified brand name...
+            </p>
           </div>
         ) : null}
       </div>

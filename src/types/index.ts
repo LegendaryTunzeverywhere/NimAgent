@@ -32,7 +32,7 @@ export interface Message {
 }
 
 export interface ActionCard {
-  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard' | 'browse-catalog';
+  type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard' | 'browse-catalog' | 'catalog-lookup';
   recipient?: string;
   recipientAddress?: string;
   nickname?: string;
@@ -115,6 +115,11 @@ export interface ActionCard {
       byType: Record<string, number>;
     };
   };
+  // Catalog lookup fields (for validating brand names before creating actions)
+  productType?: string;  // 'airtime' | 'data' | 'bills' | 'giftcard' | 'esim'
+  userIntent?: string;   // Original user request (e.g., "User wants Airtel credits")
+  catalogBrands?: Array<{ name: string; family: string; brandId?: string; min?: string; max?: string; logoUrl?: string; category?: string }>;
+  catalogCountry?: string;
 }
 
 export interface QuickAction {
