@@ -234,24 +234,23 @@ export const useAppStore = create<AppState>()(
 
       addMessage: async (message, forSessionId?: string) => {
         const { wallet, currentSessionId } = get();
-        // If we specified which session this message is for, check if it's still active
-        if (forSessionId && forSessionId !== currentSessionId) {
-          // Session changed - don't add this message to the new session
-          return;
-        }
+        const targetSessionId = forSessionId ?? currentSessionId;
+        const shouldRenderInActiveSession = !targetSessionId || targetSessionId === currentSessionId;
         const newMessage = { ...message, timestamp: Date.now() };
         
-        set((state) => ({
-          messages: [...state.messages, newMessage],
-        }));
+        if (shouldRenderInActiveSession) {
+          set((state) => ({
+            messages: [...state.messages, newMessage],
+          }));
+        }
 
         // Persist to DB — fire-and-forget but log failures so they're visible
-        if (wallet.address && currentSessionId) {
+        if (wallet.address && targetSessionId) {
           try {
             const { saveChatMessage } = await import('@/lib/api-client');
             await saveChatMessage({
               walletAddress: wallet.address,
-              sessionId: currentSessionId,
+              sessionId: targetSessionId,
               role: message.role,
               content: message.content,
               action: message.action,
@@ -351,11 +350,6 @@ export const useAppStore = create<AppState>()(
             set({ aiStatus: 'Asking NimAgent' });
           }
           const response = await chatWithAgent(trimmed, history, walletAddress);
-          
-          // First check: if session changed, stop processing entirely
-          if (get().currentSessionId !== requestSessionId) {
-            return;
-          }
           
           // Handle action execution for non-UI actions (save, update, delete contacts)
           if (response.action && walletAddress) {

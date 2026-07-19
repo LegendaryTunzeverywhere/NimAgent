@@ -1554,10 +1554,19 @@ export default function ActionCard({ action }: ActionCardProps) {
           setSuccess(true); // we know the on-chain send succeeded
           setTxHash(hash);
           setAmountLocked(true);
+          const explorerUrl = `https://nimiq.watch/#${hash}`;
           addMessage({
             role: 'ai',
-            content: `Payment sent (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}) but we couldn't reach our servers to process your order just now. We'll keep retrying automatically — check History in a few minutes. If it doesn't appear, contact support with this transaction hash.`,
+            content: `Payment sent (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}) but we couldn't reach our servers to process your order just now. We'll keep retrying automatically — check History in a few minutes. If it doesn't appear, contact support with this transaction hash.
+
+View transaction: ${explorerUrl}`,
           });
+          if (messageIndex >= 0) {
+            await updateActionState(messageIndex, {
+              locked: true,
+              txHash: hash
+            });
+          }
           setLoading(false);
           return; // do not fall through to the generic catch/failed state below
         }
@@ -1569,6 +1578,13 @@ export default function ActionCard({ action }: ActionCardProps) {
         // message above.
         if (result.pending && result.orderId) {
           // Update user that payment is being confirmed
+          setAmountLocked(true);
+          if (messageIndex >= 0) {
+            await updateActionState(messageIndex, {
+              locked: true,
+              txHash: hash
+            });
+          }
           addMessage({
             role: 'ai',
             content: '⏳ Confirming your payment on the blockchain... This usually takes 10-30 seconds. Please wait.',
