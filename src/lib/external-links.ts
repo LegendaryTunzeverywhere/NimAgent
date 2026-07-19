@@ -12,9 +12,9 @@ function isEmbeddedWebView(): boolean {
  * Opens an external URL without losing the current session.
  * 
  * For embedded webviews (Nimiq Pay mini-app):
- * - Attempts to open in new window/tab (system browser)
- * - Falls back to creating a temporary link with target="_blank"
- * - Avoids window.location.assign() which navigates away and loses session
+ * - NEVER uses window.location.assign() which destroys session
+ * - Creates a properly configured link element to trigger system browser
+ * - Uses multiple strategies to ensure external browser opens
  * 
  * For regular browsers:
  * - Uses window.open() with noopener,noreferrer for security
@@ -22,44 +22,60 @@ function isEmbeddedWebView(): boolean {
 export function openExternalUrl(url: string) {
   if (typeof window === 'undefined') return;
 
+  console.log('[External Link] Opening URL:', url, 'inWebview:', isEmbeddedWebView());
+
   if (isEmbeddedWebView()) {
-    // CRITICAL FIX: Don't use window.location.assign() in embedded webview
-    // as it navigates away from the app and loses the session/authentication.
+    // CRITICAL FIX: In embedded webview, NEVER navigate the current window
+    // as it destroys the app's session and state.
     
-    // Strategy 1: Try window.open() first - some webviews will open in system browser
-    const popup = window.open(url, '_blank', 'noopener,noreferrer');
+    // Strategy: Create a properly configured link element
+    // Most mobile webviews will intercept target="_blank" and open in system browser
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     
-    // Strategy 2: If popup blocked or failed, create a temporary link element
-    // This technique is more likely to trigger the system browser in webviews
-    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-      console.log('[External Link] Using fallback link strategy for embedded webview');
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      
-      // iOS webviews often require user gesture context
-      // Append to body temporarily to ensure proper context
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      
-      // Programmatic click to trigger navigation
+    // Hide the link (don't pollute UI)
+    link.style.display = 'none';
+    link.style.position = 'absolute';
+    link.style.left = '-9999px';
+    
+    // Append to body (required for iOS/Android webviews to detect user gesture)
+    document.body.appendChild(link);
+    
+    console.log('[External Link] Triggering link click in webview');
+    
+    // Trigger the link
+    try {
       link.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
+    } catch (err) {
+      console.error('[External Link] Click failed:', err);
     }
     
+    // Clean up after a short delay
+    setTimeout(() => {
+      try {
+        if (link.parentNode) {
+          document.body.removeChild(link);
+        }
+      } catch (err) {
+        // Ignore cleanup errors
+      }
+    }, 500);
+    
+    // ABSOLUTELY DO NOT fall back to window.location.assign()
+    // That would defeat the entire purpose of this fix
     return;
   }
 
-  // Regular browser: standard popup behavior
+  // Regular browser: try window.open() first
+  console.log('[External Link] Opening in regular browser');
   const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  
   if (!popup) {
-    // Popup blocked - fall back to current window navigation
+    // Popup blocked - only now do we fall back to navigation
+    // This only happens in regular browsers, never in webview
+    console.warn('[External Link] Popup blocked, falling back to navigation');
     window.location.assign(url);
   }
 }

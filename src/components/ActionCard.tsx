@@ -346,7 +346,15 @@ export default function ActionCard({ action }: ActionCardProps) {
             if (validation.productId) action.productId = validation.productId;
             if (validation.operatorId) action.operatorId = validation.operatorId;
             if (validation.billerId) action.billerId = validation.billerId;
-            if (validation.quoteId) setQuoteId(validation.quoteId);
+            
+            // CRITICAL FIX: Always set quoteId when received from validation
+            if (validation.quoteId) {
+              console.log('[Validation] Quote received:', validation.quoteId);
+              setQuoteId(validation.quoteId);
+            } else {
+              console.warn('[Validation] No quoteId in validation response!');
+            }
+            
             if (typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
               action.amountLuna = validation.amountLuna;
               // Only set amount if payment method is NIM
@@ -1517,6 +1525,9 @@ export default function ActionCard({ action }: ActionCardProps) {
           content: 'Payment sent. Confirming it on the Nimiq network before releasing your order — this can take a few seconds…',
         });
 
+        // CRITICAL: Log quoteId for debugging
+        console.log('[Order Creation] QuoteId:', quoteId, 'Type:', action.type, 'Wallet:', wallet.address);
+        
         // Queue the order for retry in case createOrder fails to reach the backend
         const syncId = enqueuePendingSync({
           kind: 'order',
