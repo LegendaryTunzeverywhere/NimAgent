@@ -32,6 +32,7 @@ export interface Message {
 }
 
 export interface ActionCard {
+  id: string;  // UUID for stable identification across message updates
   type: 'send' | 'gift-card' | 'airtime' | 'bill' | 'qr-code' | 'qr-scan' | 'balance' | 'show-contacts' | 'list-contacts' | 'save-contact' | 'update-contact' | 'delete-contact' | 'lookup-contact' | 'support' | 'referral' | 'leaderboard' | 'browse-catalog' | 'catalog-lookup';
   recipient?: string;
   recipientAddress?: string;
@@ -149,6 +150,7 @@ export interface AppState {
   theme: 'dark' | 'light';
   aiLoading: boolean;
   aiStatus: string | null;
+  isSendingMessage: boolean;
   pendingLinkAction: {
     type: 'payment' | 'referral';
     to?: string;

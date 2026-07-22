@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppState, Balance, ActionCard, Message } from '@/types';
 
-let isSendingMessage = false;
-
 // FIX 3 FRONTEND: Generate UUID v4 format for sessionIds (backend validation requirement)
 function generateSessionId(): string {
   // Use crypto.randomUUID() if available (modern browsers)
@@ -18,6 +16,9 @@ function generateSessionId(): string {
     return v.toString(16);
   });
 }
+
+// Generate action ID (same as session ID - both are UUIDs)
+export const generateActionId = generateSessionId;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -39,6 +40,7 @@ export const useAppStore = create<AppState>()(
       aiLoading: false,
       aiStatus: null,
       pendingLinkAction: null,
+      isSendingMessage: false,  // Moved from module-level variable
 
       setActiveTab: (tab) => {
         set({ activeTab: tab });
@@ -108,16 +110,20 @@ export const useAppStore = create<AppState>()(
           if (isLikelyColdStartError(error) && !isRetry) {
             await new Promise(r => setTimeout(r, 1500));
             
-            // Reset detection cache before retry
+            // Reset detection cache AND adapter cache before retry
             const { _resetDetectionCache } = await import('@/lib/wallet/detect');
+            const { _resetAdapterCache } = await import('@/lib/wallet');
             _resetDetectionCache();
+            _resetAdapterCache();
             
             return get().connectWallet({ isRetry: true });
           }
           
-          // Reset detection cache for manual retry
+          // Reset detection cache AND adapter cache for manual retry
           const { _resetDetectionCache } = await import('@/lib/wallet/detect');
+          const { _resetAdapterCache } = await import('@/lib/wallet');
           _resetDetectionCache();
+          _resetAdapterCache();
           
           let errorMessage = 'Failed to connect wallet';
           if (error?.message?.includes('only inside the Nimiq Pay app')) {
@@ -297,9 +303,14 @@ export const useAppStore = create<AppState>()(
       },
 
       sendMessageToAI: async (content: string, walletAddress?: string, options?: { bypassRateLimit?: boolean }) => {
-        // Guard: prevent multiple concurrent calls
-        if (isSendingMessage) return;
-        isSendingMessage = true;
+        // Guard: prevent multiple concurrent calls using Zustand state
+        if (get().isSendingMessage) return;
+        set({ isSendingMessage: true });
+
+        // Safety timeout: release lock after 30s if something goes wrong
+        const timeout = setTimeout(() => {
+          set({ isSendingMessage: false });
+        }, 30_000);
 
         try {
           const { messages, addMessage } = get();
@@ -533,10 +544,16 @@ export const useAppStore = create<AppState>()(
           if (get().currentSessionId === requestSessionId) {
             set({ aiStatus: 'Finalizing response' });
           }
+          
+          // CRITICAL FIX P0-4: Ensure all actions have stable IDs
+          const actionWithId = response.action 
+            ? { ...response.action, id: response.action.id || generateActionId() }
+            : undefined;
+          
           await addMessage({
             role: 'ai',
             content: response.message,
-            action: response.action ?? undefined,
+            action: actionWithId,
           }, requestSessionId);
         } catch (error: any) {
           const isRateLimit = typeof error?.message === 'string' && error.message.includes('429');
@@ -552,10 +569,11 @@ export const useAppStore = create<AppState>()(
             set({ aiLoading: false, aiStatus: null });
           }
         }
-      } finally {
-        isSendingMessage = false;
-      }
-    },
+        } finally {
+          clearTimeout(timeout);
+          set({ isSendingMessage: false });
+        }
+      },
 
       addTransaction: (transaction) => {
         set((state) => ({

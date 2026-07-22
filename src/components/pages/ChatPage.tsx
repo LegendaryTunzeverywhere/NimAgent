@@ -200,7 +200,8 @@ export default function ChatPage() {
       // Check for QR scan command
       if (/^(scan|scan qr|scan qr code|scan a qr|qr scan)$/.test(lower)) {
         addMessage({ role: 'user', content: msg });
-        addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { type: 'qr-scan' } });
+        const { generateActionId } = await import('@/store/useAppStore');
+        addMessage({ role: 'ai', content: 'Ready to scan! Point your camera at a QR code.', action: { id: generateActionId(), type: 'qr-scan' } });
         return;
       }
       

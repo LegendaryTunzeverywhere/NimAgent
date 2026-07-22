@@ -295,10 +295,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           if (amount) responseMessage += `\nAmount: ${amount} NIM`;
           if (message) responseMessage += `\nFor: ${message}`;
           
+          const { generateActionId } = await import('@/store/useAppStore');
           addMessage({
             role: 'ai',
             content: responseMessage,
             action: {
+              id: generateActionId(),
               type: 'send',
               recipient: formattedAddress,
               amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,
@@ -329,10 +331,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           if (message) responseMessage += `\nFor: ${message}`;
           if (hasAmount) responseMessage += `\n\n⚠️ Amount is fixed by the requester and cannot be changed.`;
 
+          const { generateActionId } = await import('@/store/useAppStore');
           addMessage({
             role: 'ai',
             content: responseMessage,
             action: {
+              id: generateActionId(),
               type: 'send',
               recipient: formattedAddress,
               amountLuna: hasAmount ? Math.round(parseFloat(amount!) * 100000) : 0,
@@ -347,10 +351,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       } else if (data.toUpperCase().startsWith('NQ') && normalizeAddress(data).length >= 36) {
         // Nimiq address detected (with or without spaces)
         const formattedAddress = formatAddress(data);
+        const { generateActionId } = await import('@/store/useAppStore');
         addMessage({
           role: 'ai',
           content: `QR code scanned!\n\nDetected Nimiq address:\n${formattedAddress}\n\nHow much NIM would you like to send to this address?`,
           action: {
+            id: generateActionId(),
             type: 'send',
             recipient: formattedAddress,
             amountLuna: 0,
@@ -372,10 +378,12 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             message += `\nAmount: ${amount} NIM`;
           }
           
+          const { generateActionId } = await import('@/store/useAppStore');
           addMessage({
             role: 'ai',
             content: message,
             action: {
+              id: generateActionId(),
               type: 'send',
               recipient: formattedAddress,
               amountLuna: amount ? Math.round(parseFloat(amount) * 100000) : 0,

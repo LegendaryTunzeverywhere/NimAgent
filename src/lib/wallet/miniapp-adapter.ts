@@ -7,17 +7,21 @@ import { getNimiqProvider } from './detect';
 const APP_NAME = 'NimAgent';
 
 function isErrorResponse(value: unknown): value is ErrorResponse {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'error' in value &&
-    typeof (value as ErrorResponse).error?.message === 'string'
-  );
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as any;
+  if (v.error?.message) return true;
+  if (typeof v.error === 'string') return true;
+  if (v.message && (v.code !== undefined || v.error !== undefined)) return true;
+  return false;
 }
 
 function unwrap<T>(value: T | ErrorResponse): T {
   if (isErrorResponse(value)) {
-    throw new Error(value.error.message || 'Wallet request was rejected.');
+    const msg = (value as any).error?.message
+       || (value as any).error
+       || (value as any).message
+       || 'Wallet request was rejected.';
+    throw new Error(msg);
   }
   return value;
 }
@@ -118,9 +122,13 @@ export const miniAppAdapter: WalletAdapter = {
   /** Basic account balance only (Luna). */
   async getNimBalance(address: string): Promise<number | null> {
     try {
-      const nimiq  = await provider();
-      const result = await nimiq.request({ method: 'getAccountByAddress', params: [toRpcAddr(address)] }) as any;
-      const luna   = result?.data?.balance ?? result?.balance ?? result?.account?.balance;
+      const res = await fetch('/api/nimiq-rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'getAccountByAddress', params: [toRpcAddr(address)] }),
+      });
+      const data = await res.json();
+      const luna = data?.result?.data?.balance ?? data?.result?.balance;
       return typeof luna === 'number' ? luna : null;
     } catch { return null; }
   },
@@ -137,28 +145,30 @@ export const miniAppAdapter: WalletAdapter = {
    */
   async getTotalNimBalance(address: string): Promise<number | null> {
     try {
-      const nimiq     = await provider();
       const rpcAddr   = toRpcAddr(address);
       const cleanAddr = address.replace(/\s/g, '').toUpperCase();
 
-      // Basic balance
-      const basicResult = await nimiq.request({
-        method: 'getAccountByAddress',
-        params: [rpcAddr],
-      }) as any;
-      const basicLuna: number =
-        basicResult?.data?.balance ?? basicResult?.balance ?? 0;
+      // Basic balance — use /api/nimiq-rpc proxy
+      const basicRes = await fetch('/api/nimiq-rpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'getAccountByAddress', params: [rpcAddr] }),
+      });
+      const basicData = await basicRes.json();
+      const basicLuna: number = basicData?.result?.data?.balance ?? basicData?.result?.balance ?? 0;
 
       // Recent transactions — getTransactionsByAddress(address, max, startAt)
       // startAt=null means from the latest block backwards
       let htlcAddresses: string[] = [];
       try {
-        const txResult = await nimiq.request({
-          method: 'getTransactionsByAddress',
-          params: [rpcAddr, 20, null],
-        }) as any;
+        const txRes = await fetch('/api/nimiq-rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: 'getTransactionsByAddress', params: [rpcAddr, 20, null] }),
+        });
+        const txData = await txRes.json();
 
-        const txList: any[] = txResult?.data ?? txResult ?? [];
+        const txList: any[] = txData?.result?.data ?? txData?.result ?? [];
         const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
 
         htlcAddresses = txList
@@ -179,11 +189,13 @@ export const miniAppAdapter: WalletAdapter = {
       const htlcResults = await Promise.all(
         htlcAddresses.map(async (htlcAddr: string) => {
           try {
-            const r = await nimiq.request({
-              method: 'getAccountByAddress',
-              params: [toRpcAddr(htlcAddr)],
-            }) as any;
-            const d = r?.data ?? r;
+            const htlcRes = await fetch('/api/nimiq-rpc', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ method: 'getAccountByAddress', params: [toRpcAddr(htlcAddr)] }),
+            });
+            const htlcData = await htlcRes.json();
+            const d = htlcData?.result?.data ?? htlcData?.result;
             if (d?.type === 'htlc' && typeof d.timeout === 'number' && d.timeout > now) {
               return typeof d.balance === 'number' ? d.balance : 0;
             }

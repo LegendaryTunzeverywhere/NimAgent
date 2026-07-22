@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore, generateActionId } from '@/store/useAppStore';
 import ThemeProvider from '@/components/ThemeProvider';
 import Navigation from '@/components/Navigation';
 import TickerBar from '@/components/TickerBar';
@@ -113,6 +113,7 @@ function PaymentLinkHandler() {
               : 'The sender can choose the amount.',
           ].filter(Boolean).join('\n'),
           action: {
+            id: generateActionId(),
             type: 'send',
             recipient: to,
             amountLuna,

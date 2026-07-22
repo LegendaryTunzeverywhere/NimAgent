@@ -434,10 +434,12 @@ export default function HomePage({ connecting = false }: { connecting?: boolean 
     
     // Handle Scan QR directly without going through AI
     if (actionType === 'Scan QR') {
+      const { generateActionId } = await import('@/store/useAppStore');
       addMessage({
         role: 'ai',
         content: 'Ready to scan! Point your camera at a QR code containing a Nimiq address or payment request. 📷',
         action: {
+          id: generateActionId(),
           type: 'qr-scan',
         }
       });

@@ -7,6 +7,7 @@ import { SOCIAL_LINKS } from '@/lib/social-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, pollOrderStatus, getLeaderboard } from '@/lib/api-client';
 import { enqueuePendingSync, removePendingSync } from '@/lib/pending-sync-queue';
+import { copyToClipboard } from '@/lib/clipboard';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
@@ -125,7 +126,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   }, [isOrder, success, failed, isPaymentMethodLocked]);
   
   // Find the index of this message in the messages array (needed by catalog lookup effect)
-  const messageIndex = messages.findIndex(msg => msg.action === action);
+  const messageIndex = messages.findIndex(msg => msg.action?.id === action.id);
   
   // Catalog lookup effect - fetch brands for validation
   useEffect(() => {
@@ -527,10 +528,12 @@ export default function ActionCard({ action }: ActionCardProps) {
     const referralLink = action.referralLink || '';
     const referralCount = action.referralCount || 0;
     
-    const copyLink = () => {
-      navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    const copyLink = async () => {
+      const success = await copyToClipboard(referralLink);
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     };
     
     const shareLink = async () => {
@@ -1160,8 +1163,12 @@ export default function ActionCard({ action }: ActionCardProps) {
     }
 
     // For orders (gift-card, airtime, bill), use the validated amountLuna from the backend
-    // which includes the 0.5% markup (volatility buffer + service fee). For simple sends, calculate from user input.
-    const amountLuna = (action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill')
+    // which includes the 0.5% markup (volatility buffer + service fee).
+    // For locked sends (payment requests), use the pre-specified amount.
+    // For simple sends, calculate from user input.
+    const isLockedOrder = action.type === 'gift-card' || action.type === 'airtime' || action.type === 'bill';
+    const isLockedSend = action.type === 'send' && action.locked;
+    const amountLuna = (isLockedOrder || isLockedSend)
       ? (action.amountLuna || Math.round(nimAmount * 100000))
       : Math.round(nimAmount * 100000);
     
@@ -1361,9 +1368,6 @@ export default function ActionCard({ action }: ActionCardProps) {
               );
             }
 
-            // Lock the amount input to prevent user error
-            setAmountLocked(true);
-
             // CRYPTOREFILLS BEST PRACTICE: Display exact payment details
             addMessage({
               role: 'ai',
@@ -1409,6 +1413,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             const result = await confirmCryptoPayment(orderId, txHash, wallet.address);
 
             // Step 6: Display success + fulfillment data
+            // CRITICAL FIX P0-7: Only lock AFTER successful confirmation
             setSuccess(true);
             setTxHash(txHash);
             setAmountLocked(true);

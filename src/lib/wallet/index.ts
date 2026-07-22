@@ -13,6 +13,16 @@ let adapterPromise: Promise<WalletAdapter> | null = null;
 let gettingAddress = false;
 let addressPromise: Promise<string> | null = null;
 
+/**
+ * Reset the adapter cache (used for retry on cold-start failures).
+ * Exported for use by store's connectWallet retry logic.
+ */
+export function _resetAdapterCache(): void {
+  adapterPromise = null;
+  gettingAddress = false;
+  addressPromise = null;
+}
+
 async function resolveAdapter(): Promise<WalletAdapter> {
   const inside = await isInsideNimiqPay();
   if (!inside) {
@@ -101,9 +111,8 @@ export async function getTotalNimBalanceFromProvider(address: string): Promise<n
 }
 
 /**
- * Send a NIM payment. Waits for consensus before sending — retries up to
- * 3 times with a 3s gap if Nimiq Pay is still syncing, so QR payment
- * requests don't fail immediately on first open.
+ * Send a NIM payment. Waits for consensus before sending — retries with
+ * offline detection and faster polling to avoid long waits.
  */
 export async function requestPayment(
   recipientAddress: string,
@@ -115,22 +124,31 @@ export async function requestPayment(
   const adapter = await getWalletAdapter();
   const data = memo ? `${context}:${memo}` : context;
 
-  // Wait for consensus — up to 3 attempts × 3s before giving up
-  let networkState = await adapter.getNetworkState();
-  for (let attempt = 0; !networkState.consensusEstablished && attempt < 3; attempt++) {
-    await new Promise(r => setTimeout(r, 3000));
-    networkState = await adapter.getNetworkState();
+  // Check network connectivity first
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('No internet connection. Please check your network and try again.');
   }
 
-  if (!networkState.consensusEstablished) {
-    throw new Error('Nimiq Pay is still syncing with the Nimiq network. Please wait a moment and try again.');
+  // Wait for consensus with timeout and faster retries
+  const startTime = Date.now();
+  const MAX_WAIT_MS = 10_000; // 10 seconds total
+  
+  while (Date.now() - startTime < MAX_WAIT_MS) {
+    const state = await adapter.getNetworkState();
+    if (state.consensusEstablished) break;
+    await new Promise(r => setTimeout(r, 2000)); // 2s intervals
+  }
+
+  const final = await adapter.getNetworkState();
+  if (!final.consensusEstablished) {
+    throw new Error('Nimiq Pay is still syncing. Please wait and try again.');
   }
 
   return adapter.requestPayment({
     recipient: recipientAddress,
     value: amountLuna,
     data,
-    ...(networkState.blockNumber != null ? { validityStartHeight: networkState.blockNumber } : {}),
+    ...(final.blockNumber != null ? { validityStartHeight: final.blockNumber } : {}),
     sender: senderAddress,
   });
 }
