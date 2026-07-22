@@ -5,6 +5,9 @@ const NIMIQ_PAY_PLATFORM = 'nimiq-pay-miniapp';
 // Mark this route as dynamic (not statically generated)
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+// Set a longer timeout for payment verification (120 seconds)
+// This allows the backend to complete its 100s payment verification polling
+export const maxDuration = 120;
 
 /**
  * BFF (Backend-for-Frontend) Proxy Layer
@@ -205,46 +208,67 @@ export async function POST(
     // Path already includes correct route from Next.js, use it directly
     const url = `${BACKEND_URL}/api/${path}`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: createProxyHeaders(request),
-      body: JSON.stringify(body),
-      credentials: 'include', // Important for cookies
-    });
+    // Set a longer timeout for order creation (120 seconds) to handle payment verification
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
 
-    // Log non-2xx responses before parsing
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[BFF] Backend POST error:', response.status);
-      // Try to parse as JSON, fallback to text error
-      try {
-        const errorData = JSON.parse(text);
-        const errorResponse = NextResponse.json(errorData, {
-          status: response.status,
-        });
-        copyResponseHeaders(response, errorResponse);
-        return errorResponse;
-      } catch {
-        const errorResponse = NextResponse.json(
-          { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
-          { status: response.status }
-        );
-        copyResponseHeaders(response, errorResponse);
-        return errorResponse;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: createProxyHeaders(request),
+        body: JSON.stringify(body),
+        credentials: 'include', // Important for cookies
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // Log non-2xx responses before parsing
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('[BFF] Backend POST error:', response.status, 'Path:', path);
+        // Try to parse as JSON, fallback to text error
+        try {
+          const errorData = JSON.parse(text);
+          const errorResponse = NextResponse.json(errorData, {
+            status: response.status,
+          });
+          copyResponseHeaders(response, errorResponse);
+          return errorResponse;
+        } catch {
+          const errorResponse = NextResponse.json(
+            { error: 'Backend request failed', status: response.status, message: text.slice(0, 200) },
+            { status: response.status }
+          );
+          copyResponseHeaders(response, errorResponse);
+          return errorResponse;
+        }
       }
+
+      const data = await response.json();
+
+      const nextResponse = NextResponse.json(data, {
+        status: response.status,
+      });
+      copyResponseHeaders(response, nextResponse);
+      return nextResponse;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error('[BFF] Request timeout after 120s, path:', path);
+        return NextResponse.json(
+          { error: 'Request timeout - server is taking too long to respond' },
+          { status: 504 }
+        );
+      }
+      
+      throw fetchError; // Re-throw for outer catch
     }
-
-    const data = await response.json();
-
-    const nextResponse = NextResponse.json(data, {
-      status: response.status,
-    });
-    copyResponseHeaders(response, nextResponse);
-    return nextResponse;
   } catch (error: any) {
-    console.error('[BFF] POST error');
+    console.error('[BFF] POST error, path:', params.path.join('/'), 'Error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to post to backend' },
+      { error: 'Failed to post to backend', details: error.message },
       { status: 502 }
     );
   }
