@@ -256,9 +256,14 @@ export async function POST(
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
-        console.error('[BFF] Request timeout after 120s, path:', path);
+        console.error('[BFF] Request timeout after 120s, path:', path, 'Body:', JSON.stringify(body).slice(0, 200));
         return NextResponse.json(
-          { error: 'Request timeout - server is taking too long to respond' },
+          { 
+            error: 'Request timeout - server is taking too long to respond', 
+            details: 'The payment verification process exceeded the 2-minute timeout. Your payment may still be processing in the background.',
+            path,
+            timeout: '120s'
+          },
           { status: 504 }
         );
       }

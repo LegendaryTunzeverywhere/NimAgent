@@ -260,8 +260,8 @@ export async function getOrderStatus(orderId: string): Promise<{
 export async function pollOrderStatus(
   orderId: string,
   options: {
-    maxAttempts?: number;    // Default: 30 attempts
-    intervalMs?: number;      // Default: 4000ms (4 seconds)
+    maxAttempts?: number;    // Default: 40 attempts
+    intervalMs?: number;      // Default: 3000ms (3 seconds)
     onStatusChange?: (status: string, message: string) => void;
   } = {}
 ): Promise<{
@@ -273,16 +273,24 @@ export async function pollOrderStatus(
   refundNeeded?: boolean;
   timedOut?: boolean;
 }> {
-  const maxAttempts = options.maxAttempts || 30;  // 30 * 4s = 2 minutes
-  const intervalMs = options.intervalMs || 4000;   // 4 seconds between polls
+  const maxAttempts = options.maxAttempts || 40;  // 40 * 3s = 2 minutes
+  const intervalMs = options.intervalMs || 3000;   // 3 seconds between polls
   const onStatusChange = options.onStatusChange;
+
+  let lastStatus = '';
+  let consecutiveErrors = 0;
+  const maxConsecutiveErrors = 5; // Allow up to 5 consecutive network errors before giving up
 
   for (let i = 0; i < maxAttempts; i++) {
     try {
       const status = await getOrderStatus(orderId);
 
-      // Notify caller of status changes
-      if (onStatusChange) {
+      // Reset error counter on successful fetch
+      consecutiveErrors = 0;
+
+      // Notify caller of status changes (only if status actually changed)
+      if (onStatusChange && status.status !== lastStatus) {
+        lastStatus = status.status;
         onStatusChange(status.status, status.message || '');
       }
 
@@ -321,20 +329,38 @@ export async function pollOrderStatus(
           orderId: status.orderId,
           status: status.status,
           success: false,
-          error: 'Order status check timed out',
+          error: 'Order status check timed out - order is still being processed. Check your order history in a few minutes.',
           timedOut: true,
         };
       }
     } catch (err) {
-      console.error(`[Poll Order Status] Attempt ${i + 1}/${maxAttempts} failed:`, err);
+      consecutiveErrors++;
+      console.error(`[Poll Order Status] Attempt ${i + 1}/${maxAttempts} failed (${consecutiveErrors} consecutive errors):`, err);
       
-      // On final attempt, throw the error
-      if (i === maxAttempts - 1) {
-        throw err;
+      // If we hit too many consecutive network errors, give up
+      if (consecutiveErrors >= maxConsecutiveErrors) {
+        return {
+          orderId,
+          status: 'unknown',
+          success: false,
+          error: 'Network connection lost while checking order status. Your order is still being processed - check your order history in a few minutes.',
+          timedOut: true,
+        };
       }
       
-      // Otherwise, wait and retry
-      await new Promise(resolve => setTimeout(resolve, intervalMs));
+      // On final attempt, return error
+      if (i === maxAttempts - 1) {
+        return {
+          orderId,
+          status: 'unknown',
+          success: false,
+          error: 'Failed to check order status. Your order may still be processing - check your order history in a few minutes.',
+          timedOut: true,
+        };
+      }
+      
+      // Otherwise, wait and retry (use longer delay after errors)
+      await new Promise(resolve => setTimeout(resolve, intervalMs * 1.5));
     }
   }
 

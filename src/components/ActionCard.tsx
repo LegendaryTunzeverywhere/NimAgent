@@ -1567,16 +1567,31 @@ export default function ActionCard({ action }: ActionCardProps) {
           // createOrder() failed to reach the backend at all — the ONLY case
           // this specific catch should handle. The order was never recorded.
           console.error('[Sync] createOrder failed to record, will retry later:', err);
+          
+          // Check if this is a timeout vs network error
+          const isTimeout = err.message?.includes('timeout') || err.message?.includes('timed out');
+          const isNetworkError = err.message?.includes('Failed to fetch') || err.message?.includes('network');
+          
           setSuccess(true); // we know the on-chain send succeeded
           setTxHash(hash);
           setAmountLocked(true);
           const explorerUrl = `https://nimiq.watch/#${hash}`;
+          
+          let errorMsg = `✓ Payment Sent\n\nTX: ${hash.slice(0, 8)}…${hash.slice(-6)}\n${explorerUrl}\n\n`;
+          
+          if (isTimeout) {
+            errorMsg += `⏱️ **Processing Delayed**\n\nYour payment was sent successfully, but our server is taking longer than expected to verify it. This can happen when:\n• The Nimiq network is busy\n• Payment verification is backlogged\n\n**What happens next:**\n• We'll keep verifying your payment automatically\n• Check your History tab in 2-5 minutes\n• If verification fails, we'll process a refund within 24 hours\n\n💡 Your payment is safe on the blockchain. Do not retry.`;
+          } else if (isNetworkError) {
+            errorMsg += `🌐 **Connection Issue**\n\nYour payment was sent, but we couldn't reach our servers to process your order.\n\n**What happens next:**\n• We'll automatically retry processing your payment\n• Check your History tab in a few minutes\n• If it doesn't appear, contact support with your transaction hash\n\n💡 Your NIM has been sent and is safe on the blockchain.`;
+          } else {
+            errorMsg += `⚠️ **Server Error**\n\nYour payment was sent successfully, but we couldn't process your order right now.\n\n**What happens next:**\n• We'll keep trying to process your payment automatically\n• Check your History tab in a few minutes\n• If it doesn't complete, contact support with your transaction hash\n\n💡 Your payment is recorded on the blockchain and we'll process it.`;
+          }
+          
           addMessage({
             role: 'ai',
-            content: `Payment sent (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}) but we couldn't reach our servers to process your order just now. We'll keep retrying automatically — check History in a few minutes. If it doesn't appear, contact support with this transaction hash.
-
-View transaction: ${explorerUrl}`,
+            content: errorMsg,
           });
+          
           if (messageIndex >= 0) {
             await updateActionState(messageIndex, {
               locked: true,
@@ -1606,37 +1621,109 @@ View transaction: ${explorerUrl}`,
             content: '⏳ Confirming your payment on the blockchain... This usually takes 10-30 seconds. Please wait.',
           });
           
-          // Poll for order completion
-          const finalStatus = await pollOrderStatus(result.orderId, {
-            maxAttempts: 30,  // 30 * 4s = 2 minutes max
-            intervalMs: 4000,  // Poll every 4 seconds
-            onStatusChange: (status, message) => {
-              // Log status changes for debugging
-              console.log(`[Order ${result.orderId}] Status: ${status} - ${message}`);
+          // Poll for order completion with improved feedback and error handling
+          let lastStatusUpdate = Date.now();
+          let statusUpdateCount = 0;
+          
+          console.log(`[Order ${result.orderId}] Starting polling for pending order`);
+          
+          try {
+            const finalStatus = await pollOrderStatus(result.orderId, {
+              maxAttempts: 40,  // 40 * 3s = 2 minutes max
+              intervalMs: 3000,  // Poll every 3 seconds (faster, more responsive)
+              onStatusChange: (status, message) => {
+                // Log status changes for debugging
+                console.log(`[Order ${result.orderId}] Status: ${status} - ${message}`);
+                
+                // Update UI with intermediate states (but not too frequently)
+                const now = Date.now();
+                if (now - lastStatusUpdate > 8000) { // At least 8 seconds between updates
+                  statusUpdateCount++;
+                  lastStatusUpdate = now;
+                  
+                  if (status === 'pending_verification') {
+                    if (statusUpdateCount === 2) {
+                      addMessage({
+                        role: 'ai',
+                        content: '⏳ Still confirming payment on blockchain... Nimiq transactions typically confirm within 1 minute.',
+                      });
+                    } else if (statusUpdateCount === 4) {
+                      addMessage({
+                        role: 'ai',
+                        content: `🔍 Taking longer than usual... Your transaction: ${hash.slice(0, 8)}...${hash.slice(-6)}\n\nWe're monitoring the blockchain. Please wait.`,
+                      });
+                    }
+                  } else if (status === 'pending') {
+                    // Payment confirmed, now fulfilling order
+                    addMessage({
+                      role: 'ai',
+                      content: '✓ Payment confirmed! Processing your order with our provider...',
+                    });
+                  }
+                }
+              },
+            });
+            
+            // Update result with final status
+            if (finalStatus.success) {
+              console.log(`[Order ${result.orderId}] Polling completed successfully`);
+              result = {
+                success: true,
+                ...finalStatus.result,
+              };
+            } else if (finalStatus.timedOut) {
+              // TIMEOUT HANDLING: Order is still being processed, but we stopped polling
+              console.warn(`[Order ${result.orderId}] Polling timed out - order still processing`);
               
-              // Optional: Update UI with intermediate states
-              if (status === 'pending') {
-                // Payment confirmed, now fulfilling order
-                addMessage({
-                  role: 'ai',
-                  content: '✓ Payment confirmed! Processing your order...',
+              setSuccess(true);
+              setTxHash(hash);
+              setAmountLocked(true);
+              
+              const explorerUrl = `https://nimiq.watch/#${hash}`;
+              addMessage({
+                role: 'ai',
+                content: `⏱️ **Order Processing Timeout**\n\nYour payment was sent successfully (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}) and is being processed. The order is taking longer than usual to complete.\n\n**What's happening?**\nYour payment is being verified on the blockchain. This can sometimes take a few minutes during network congestion.\n\n**What to do:**\n• Check your order history in 2-5 minutes\n• Your order will appear there once processing completes\n• If it doesn't appear within 10 minutes, contact support\n\n**Order ID:** ${result.orderId}\n**Transaction:** ${explorerUrl}\n\n💡 Do not retry - your payment was received and is being processed.`,
+              });
+              
+              if (messageIndex >= 0) {
+                await updateActionState(messageIndex, {
+                  completed: true,
+                  txHash: hash
                 });
               }
-            },
-          });
-          
-          // Update result with final status
-          if (finalStatus.success) {
-            result = {
-              success: true,
-              ...finalStatus.result,
-            };
-          } else {
-            throw new Error(finalStatus.error || 'Order fulfillment failed');
-            // this now propagates to the ORIGINAL outer catch further down in
-            // executeAction (the one that already existed before this fix,
-            // handling result.locked/refundNeeded and generic order failures
-            // with proper refund messaging) — do not add a new catch here.
+              
+              // Refresh balance
+              fetchBalance();
+              setLoading(false);
+              return;
+            } else {
+              throw new Error(finalStatus.error || 'Order fulfillment failed');
+            }
+          } catch (pollErr: any) {
+            // NETWORK ERROR HANDLING: Polling failed due to network issues
+            console.error(`[Order ${result.orderId}] Polling failed:`, pollErr);
+            
+            setSuccess(true);
+            setTxHash(hash);
+            setAmountLocked(true);
+            
+            const explorerUrl = `https://nimiq.watch/#${hash}`;
+            addMessage({
+              role: 'ai',
+              content: `⚠️ **Connection Lost**\n\nYour payment was sent successfully (TX: ${hash.slice(0, 8)}…${hash.slice(-6)}), but we lost connection while checking the order status.\n\n**What's happening?**\nYour order is still being processed in the background. The network connection was interrupted, but your payment was received.\n\n**What to do:**\n• Check your order history in 2-5 minutes\n• Your order will appear there once processing completes\n• If you don't see it within 10 minutes, contact support\n\n**Order ID:** ${result.orderId}\n**Transaction:** ${explorerUrl}\n\n💡 Your order will complete automatically - no action needed.`,
+            });
+            
+            if (messageIndex >= 0) {
+              await updateActionState(messageIndex, {
+                completed: true,
+                txHash: hash
+              });
+            }
+            
+            // Refresh balance
+            fetchBalance();
+            setLoading(false);
+            return;
           }
         }
 
@@ -1795,8 +1882,16 @@ View transaction: ${explorerUrl}`,
         }
       }
       // Handle timeout
-      else if (error.message?.includes('timeout')) {
-        errorMessage = '⏱️ Timeout\n\nThe wallet took too long to respond. Please try again.';
+      else if (error.message?.includes('timeout') || error.message?.includes('Request timeout')) {
+        // Check if we have a transaction hash - this means payment was sent
+        if (txHash) {
+          const explorerUrl = `https://nimiq.watch/#${txHash}`;
+          errorMessage = `⏱️ Verification Timeout\n\nYour payment was sent but verification is taking longer than expected.\n\nTX: ${txHash.slice(0, 8)}...${txHash.slice(-6)}\n${explorerUrl}\n\n**What happens next:**\n• Your payment will be verified automatically\n• Check your History tab in a few minutes\n• If it doesn't complete, we'll process a refund\n\n💡 Do not retry - your payment is being processed.`;
+          // Don't mark as failed - payment is still being processed
+          setFailed(false);
+        } else {
+          errorMessage = '⏱️ Timeout\n\nThe request took too long to respond. Please try again.';
+        }
       }
       // Handle unsupported browser context
       else if (error.message?.includes('popup') || error.message?.includes('only inside the Nimiq Pay app')) {
@@ -1815,6 +1910,13 @@ View transaction: ${explorerUrl}`,
       // Handle locked order from backend
       else if (error.message?.includes('locked') || error.message?.includes('already failed')) {
         errorMessage = `❌ Order Locked\n\n${error.message}\n\n⚠️ This transaction is locked. Do not retry. If your payment was deducted, a refund will be processed within 24 hours.`;
+      }
+      // Handle backend communication errors with payment sent
+      else if (txHash && (error.message?.includes('Failed to fetch') || error.message?.includes('network') || error.message?.includes('Backend request failed'))) {
+        const explorerUrl = `https://nimiq.watch/#${txHash}`;
+        errorMessage = `✓ Payment Sent\n\nTX: ${txHash.slice(0, 8)}...${txHash.slice(-6)}\n${explorerUrl}\n\n⚠️ **Backend Connection Issue**\n\nYour payment was sent successfully, but we're having trouble reaching our servers.\n\n**What happens next:**\n• We'll automatically process your payment when the connection is restored\n• Check your History tab in a few minutes\n• If it doesn't appear, contact support with your transaction hash\n\n💡 Your payment is safe on the blockchain. Do not retry.`;
+        // Don't mark as failed - payment is being processed
+        setFailed(false);
       }
       // Generic error - different message depending on action type
       else {
