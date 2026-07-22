@@ -125,7 +125,12 @@ export const miniAppAdapter: WalletAdapter = {
       const res = await fetch('/api/nimiq-rpc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'getAccountByAddress', params: [toRpcAddr(address)] }),
+        body: JSON.stringify({ 
+          jsonrpc: '2.0',
+          method: 'getAccountByAddress', 
+          params: [toRpcAddr(address)],
+          id: 1
+        }),
       });
       const data = await res.json();
       const luna = data?.result?.data?.balance ?? data?.result?.balance;
@@ -152,7 +157,12 @@ export const miniAppAdapter: WalletAdapter = {
       const basicRes = await fetch('/api/nimiq-rpc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'getAccountByAddress', params: [rpcAddr] }),
+        body: JSON.stringify({ 
+          jsonrpc: '2.0',
+          method: 'getAccountByAddress', 
+          params: [rpcAddr],
+          id: 1
+        }),
       });
       const basicData = await basicRes.json();
       const basicLuna: number = basicData?.result?.data?.balance ?? basicData?.result?.balance ?? 0;
@@ -164,7 +174,12 @@ export const miniAppAdapter: WalletAdapter = {
         const txRes = await fetch('/api/nimiq-rpc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ method: 'getTransactionsByAddress', params: [rpcAddr, 20, null] }),
+          body: JSON.stringify({ 
+            jsonrpc: '2.0',
+            method: 'getTransactionsByAddress', 
+            params: [rpcAddr, 20, null],
+            id: 1
+          }),
         });
         const txData = await txRes.json();
 
@@ -192,7 +207,12 @@ export const miniAppAdapter: WalletAdapter = {
             const htlcRes = await fetch('/api/nimiq-rpc', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ method: 'getAccountByAddress', params: [toRpcAddr(htlcAddr)] }),
+              body: JSON.stringify({ 
+                jsonrpc: '2.0',
+                method: 'getAccountByAddress', 
+                params: [toRpcAddr(htlcAddr)],
+                id: 1
+              }),
             });
             const htlcData = await htlcRes.json();
             const d = htlcData?.result?.data ?? htlcData?.result;

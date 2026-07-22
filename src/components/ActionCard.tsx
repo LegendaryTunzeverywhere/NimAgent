@@ -1552,13 +1552,16 @@ export default function ActionCard({ action }: ActionCardProps) {
         let result: any;
         
         try {
+          // CRITICAL: Always pass quoteId to prevent price mismatch
+          console.log('[Order Submission] Sending order with quoteId:', quoteId || 'NONE');
+          
           result = await createOrder({
             type: action.type,
             txHash: hash,
             amountLuna,
             details: { ...action, recipientEmail: email || undefined },
             walletAddress: wallet.address,
-            quoteId: quoteId || undefined,
+            quoteId: quoteId || undefined, // Pass the validated quote ID
           });
           
           // Successfully reached backend - remove from queue

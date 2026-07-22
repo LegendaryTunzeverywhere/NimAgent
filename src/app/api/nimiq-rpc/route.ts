@@ -20,7 +20,7 @@ const RPC_ENDPOINTS = [
   'https://rpc.mainnet.nimiq.network',
 ];
 
-const ALLOWED_RPC_METHODS = new Set(['getAccountByAddress']);
+const ALLOWED_RPC_METHODS = new Set(['getAccountByAddress', 'getTransactionsByAddress']);
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 60;
 const rpcRequestLog = new Map<string, number[]>();
