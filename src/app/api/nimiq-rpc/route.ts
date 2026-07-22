@@ -84,13 +84,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('[RPC Proxy] Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { 
+          jsonrpc: '2.0',
+          error: { code: -32700, message: 'Parse error: Invalid JSON' },
+          id: null
+        },
+        { status: 400 }
+      );
+    }
     
     // Validate JSON-RPC structure
     if (!body.jsonrpc || !body.method || body.id === undefined) {
-      console.error('[RPC Proxy] Invalid request structure');
+      console.error('[RPC Proxy] Invalid request structure:', JSON.stringify(body).slice(0, 100));
       return NextResponse.json(
-        { error: 'Invalid JSON-RPC request' },
+        { 
+          jsonrpc: '2.0',
+          error: { code: -32600, message: 'Invalid Request: Missing required JSON-RPC fields' },
+          id: body.id || null
+        },
         { status: 400 }
       );
     }

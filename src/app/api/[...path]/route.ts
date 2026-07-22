@@ -55,6 +55,14 @@ function createProxyHeaders(request: NextRequest) {
   const cookieHeader = request.headers.get('cookie');
   if (cookieHeader) {
     headers['cookie'] = cookieHeader;
+    // Log cookie forwarding for debugging session issues
+    if (cookieHeader.includes('nimagent_session')) {
+      console.log('[BFF] Forwarding session cookie to backend');
+    } else {
+      console.log('[BFF] No session cookie found in request');
+    }
+  } else {
+    console.log('[BFF] No cookies in request headers');
   }
 
   return headers;
@@ -69,13 +77,15 @@ function copyResponseHeaders(backendResponse: Response, nextResponse: NextRespon
   // directly and check its length instead.
   const cookies = backendResponse.headers.getSetCookie();
   
-  // Diagnostic logging to confirm the bug
-  // console.log('[BFF] set-cookie via .get():', backendResponse.headers.get('set-cookie')); commented out <-
-  // console.log('[BFF] set-cookie via getSetCookie():', cookies); <-
-  
+  // Diagnostic logging for cookie issues
   if (cookies.length > 0) {
+    console.log('[BFF] Forwarding', cookies.length, 'Set-Cookie header(s) from backend');
     cookies.forEach(cookie => {
       nextResponse.headers.append('set-cookie', cookie);
+      // Log if it's a session cookie
+      if (cookie.includes('nimagent_session')) {
+        console.log('[BFF] Session cookie being set:', cookie.slice(0, 50) + '...');
+      }
     });
   }
 
