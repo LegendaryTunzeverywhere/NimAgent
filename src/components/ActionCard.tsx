@@ -329,7 +329,8 @@ export default function ActionCard({ action }: ActionCardProps) {
       let cancelled = false;
       
       // Skip all validation for locked actions - they already have final amounts
-      if (amountLocked) {
+      // BUT only skip if they ALSO have a quoteId (meaning they were already validated)
+      if (amountLocked && quoteId) {
         return () => { cancelled = true; };
       }
       
