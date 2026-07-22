@@ -5,11 +5,19 @@ import { useAppStore } from '@/store/useAppStore';
 import { signInWithWallet } from '@/lib/auth';
 
 /**
- * AuthProvider - Fresh sign-in on every app open
+ * AuthProvider - Smart session restoration with minimal friction
  * 
- * Users must manually click "Sign In" to authenticate their wallet.
- * No session persistence - app close disconnects wallet.
- * App reopen requires fresh wallet connection and signature.
+ * On app open:
+ * 1. Wallet connection is always required (~230ms, unavoidable)
+ * 2. If wallet connects with authCompleted === 0 (cold start):
+ *    - Checks server-side session status
+ *    - If valid 24h session exists: Skip signature, go straight to app
+ *    - If session expired: Show SignInPage, require fresh signature
+ * 3. If wallet connects with authCompleted > 0 (in-session navigation):
+ *    - Trust existing auth state, no server check needed
+ * 
+ * Result: Cold starts within 24h window require ONLY wallet connection (fast),
+ * not connection + signature. Only genuinely expired sessions require re-signing.
  * 
  * All wallet-scoped API calls verify authentication server-side.
  */
@@ -34,9 +42,8 @@ export default function AuthProvider() {
   }, []);
 
   // Mark auth check as complete immediately when wallet connects
-  // Fresh sign-in is required on genuine cold start (handled by page.tsx sessionStorage check)
-  // but an existing in-session connection is trusted for normal navigation.
-  // This is NOT localStorage-persisted-session — sessionStorage clears on true app close.
+  // BUT: if authCompleted is 0 (cold start), check server-side session first
+  // Only require fresh signature if session has actually expired
   useEffect(() => {
     if (!wallet.connected) {
       if (!wallet.authChecked) {
@@ -55,18 +62,74 @@ export default function AuthProvider() {
     // Prevent running again
     setHasCheckedSession(true);
 
-    // On cold start, page.tsx resets wallet state, so this runs with wallet.authCompleted = 0
-    // On in-session navigation, page.tsx preserves state, so this respects existing authCompleted
-    // CRITICAL: Only reset authCompleted to 0 if user hasn't authenticated yet
-    // Don't overwrite authCompleted if user has already signed in (authCompleted > 0)
-    useAppStore.setState((state) => ({
-      wallet: { 
-        ...state.wallet, 
-        authChecked: true, 
-        authCompleted: state.wallet.authCompleted > 0 ? state.wallet.authCompleted : 0 
+    const currentState = useAppStore.getState().wallet;
+    
+    // If user has already authenticated in this session (authCompleted > 0), trust it
+    if (currentState.authCompleted > 0) {
+      useAppStore.setState((state) => ({
+        wallet: { 
+          ...state.wallet, 
+          authChecked: true, 
+          authCompleted: state.wallet.authCompleted 
+        }
+      }));
+      return;
+    }
+
+    // authCompleted === 0 (cold start) - check if server-side session is still valid
+    // This prevents unnecessary re-signing within the 24h session window
+    (async () => {
+      setAuthStatus('checking');
+      setShowFeedback(true);
+
+      try {
+        const { checkAuthStatus } = await import('@/lib/auth');
+        const session = await checkAuthStatus();
+        
+        if (session.authenticated && session.wallet === wallet.address) {
+          // Valid session found! Skip SignInPage, go straight to app
+          console.log('[AuthProvider] Valid session found for', wallet.address, '- skipping signature');
+          useAppStore.setState((state) => ({
+            wallet: { 
+              ...state.wallet, 
+              authChecked: true, 
+              authCompleted: 1 // Set to 1 to indicate authenticated
+            }
+          }));
+          setShowFeedback(false);
+          setAuthStatus('idle');
+          
+          // Notify that auth is complete (triggers data refresh)
+          useAppStore.getState().notifyAuthComplete();
+        } else {
+          // No valid session - require fresh signature
+          console.log('[AuthProvider] No valid session found - signature required');
+          useAppStore.setState((state) => ({
+            wallet: { 
+              ...state.wallet, 
+              authChecked: true, 
+              authCompleted: 0 
+            }
+          }));
+          setShowFeedback(false);
+          setAuthStatus('idle');
+        }
+      } catch (error) {
+        console.error('[AuthProvider] Session check failed:', error);
+        // On error, require signature to be safe
+        useAppStore.setState((state) => ({
+          wallet: { 
+            ...state.wallet, 
+            authChecked: true, 
+            authCompleted: 0 
+          }
+        }));
+        setShowFeedback(false);
+        setAuthStatus('idle');
       }
-    }));
-  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]); // Removed wallet.authChecked from deps
+    })();
+  }, [isReady, wallet.connected, wallet.address, hasCheckedSession]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Note: wallet.authChecked intentionally excluded to prevent infinite loop
 
   // Reset check flag when wallet disconnects
   useEffect(() => {
