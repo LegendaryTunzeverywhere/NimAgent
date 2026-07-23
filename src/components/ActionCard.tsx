@@ -6,7 +6,7 @@ import { openExternalUrl } from '@/lib/external-links';
 import { SOCIAL_LINKS } from '@/lib/social-links';
 import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, pollOrderStatus, getLeaderboard } from '@/lib/api-client';
-import { enqueuePendingSync, removePendingSync } from '@/lib/pending-sync-queue';
+import { enqueuePendingSync, removePendingSync, isTxHashPending, findPendingByActionDetails } from '@/lib/pending-sync-queue';
 import { copyToClipboard } from '@/lib/clipboard';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
@@ -36,6 +36,8 @@ export default function ActionCard({ action }: ActionCardProps) {
   const isExecutingRef = useRef(false);
   const [success, setSuccess] = useState(action.completed || false);
   const [failed, setFailed] = useState(action.failed || false);
+  // Track if this action is already being processed (prevents double-submission)
+  const [isAlreadyProcessing, setIsAlreadyProcessing] = useState(false);
   const [amount, setAmount] = useState(action.amountLuna ? (action.amountLuna / 100000).toFixed(2) : '');
   const [email, setEmail] = useState('');
   const [txHash, setTxHash] = useState<string | null>(action.txHash || null);
@@ -397,6 +399,33 @@ export default function ActionCard({ action }: ActionCardProps) {
       return () => { cancelled = true; };
     }
   }, [wallet.balance?.nim.balance, wallet.address, paymentMethod, action.type]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // CRITICAL: Check if this action is already being processed (prevents double-submission)
+  // This runs once on mount to detect if the same transaction is already in the pending sync queue
+  useEffect(() => {
+    // Only check for order types that could have pending syncs
+    if (action.type !== 'gift-card' && action.type !== 'airtime' && action.type !== 'bill' && action.type !== 'send') {
+      return;
+    }
+    
+    // Skip if already marked as completed or failed
+    if (success || failed) {
+      return;
+    }
+    
+    // Check if this specific action is already in the pending sync queue
+    const pendingEntry = findPendingByActionDetails(action.type, action);
+    
+    if (pendingEntry) {
+      console.log('[ActionCard] Action already being processed:', action.id, 'txHash:', pendingEntry.txHash);
+      setIsAlreadyProcessing(true);
+      
+      // If we have a txHash from the pending entry, show it to the user
+      if (pendingEntry.txHash && !txHash) {
+        setTxHash(pendingEntry.txHash);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch contacts for show-contacts action type
   useEffect(() => {
@@ -1127,7 +1156,40 @@ export default function ActionCard({ action }: ActionCardProps) {
       });
       return;
     }
-    
+
+    // CRITICAL: Check if this action is already being processed (prevents double-submission)
+    // This handles the case where a user retries while a previous attempt is still in the pending sync queue
+    if (isAlreadyProcessing) {
+      addMessage({
+        role: 'ai',
+        content: `⏳ This transaction is already being processed.
+
+Your previous submission is still pending. Please wait a moment and check your History tab for updates.
+
+If you see this message for more than 5 minutes, the transaction may have completed but the confirmation was delayed. Please check your History tab before attempting a new transaction.`,
+      });
+      return;
+    }
+
+    // Also check in real-time if this action is already in the pending queue
+    const existingPending = findPendingByActionDetails(action.type, action);
+    if (existingPending) {
+      console.log('[ActionCard] Found existing pending entry:', existingPending.txHash);
+      setIsAlreadyProcessing(true);
+      if (existingPending.txHash) {
+        setTxHash(existingPending.txHash);
+      }
+      addMessage({
+        role: 'ai',
+        content: `⏳ This transaction is already being processed.
+
+A previous submission with transaction hash ${existingPending.txHash.slice(0, 8)}...${existingPending.txHash.slice(-6)} is still pending.
+
+Please check your History tab for updates. Do not retry to avoid double-charging.`,
+      });
+      return;
+    }
+
     if (!wallet.address) {
       addMessage({
         role: 'ai',
@@ -1218,6 +1280,22 @@ export default function ActionCard({ action }: ActionCardProps) {
           'direct',
           wallet.address // Pass wallet address to skip address selection
         );
+
+        // CRITICAL: Check if this transaction hash is already being processed
+        // This prevents double-submission when the user clicks multiple times
+        if (isTxHashPending(hash)) {
+          console.log('[ActionCard] Transaction hash already pending:', hash);
+          addMessage({
+            role: 'ai',
+            content: `⏳ This transaction is already being processed.
+
+Transaction hash: ${hash.slice(0, 8)}...${hash.slice(-6)}
+
+Your previous submission is still pending. Please check your History tab for updates.`,
+          });
+          setLoading(false);
+          return;
+        }
 
         // The on-chain send succeeded. This is real and irreversible —
         // reflect that to the user regardless of what happens next.
@@ -1523,6 +1601,22 @@ export default function ActionCard({ action }: ActionCardProps) {
           action.type,
           wallet.address // Pass wallet address to skip address selection
         );
+
+        // CRITICAL: Check if this transaction hash is already being processed
+        // This prevents double-submission when the user clicks multiple times
+        if (isTxHashPending(hash)) {
+          console.log('[ActionCard] Order transaction hash already pending:', hash);
+          addMessage({
+            role: 'ai',
+            content: `⏳ This order is already being processed.
+
+Transaction hash: ${hash.slice(0, 8)}...${hash.slice(-6)}
+
+Your previous submission is still pending. Please check your History tab for updates.`,
+          });
+          setLoading(false);
+          return;
+        }
 
         // Let the user know we're confirming the payment on-chain before
         // releasing the gift card code / airtime / bill payment.
@@ -2329,16 +2423,18 @@ export default function ActionCard({ action }: ActionCardProps) {
       {/* Action Button */}
       <button
         onClick={executeAction}
-        disabled={loading || success || failed || !amount || parseFloat(amount) <= 0 || !!prevalidationError || (action.type === 'bill' && !billAccountConfirmed) || usdtQuoteLoading || !!usdtQuoteError}
+        disabled={loading || success || failed || isAlreadyProcessing || !amount || parseFloat(amount) <= 0 || !!prevalidationError || (action.type === 'bill' && !billAccountConfirmed) || usdtQuoteLoading || !!usdtQuoteError}
         className={`w-full py-3 rounded-xl font-semibold transition-all ${
           success
             ? 'bg-success/10 text-success cursor-default border border-success/20'
             : failed
             ? 'bg-error/10 text-error cursor-default border border-error/20'
+            : isAlreadyProcessing
+            ? 'bg-gold/20 text-gold cursor-default border border-gold/30'
             : 'btn-gold hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed'
         }`}
       >
-        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : usdtQuoteLoading ? 'Fetching USDT price...' : paymentMethod === 'usdt-polygon' ? `Pay ${cryptoAmount ? parseFloat(cryptoAmount).toFixed(4) : ''} USDT` : 'Confirm & Pay'}
+        {loading ? 'Processing...' : success ? '✓ Payment Complete!' : failed ? '✗ Transaction Failed' : isAlreadyProcessing ? '⏳ Processing...' : usdtQuoteLoading ? 'Fetching USDT price...' : paymentMethod === 'usdt-polygon' ? `Pay ${cryptoAmount ? parseFloat(cryptoAmount).toFixed(4) : ''} USDT` : 'Confirm & Pay'}
       </button>
       {action.type === 'bill' && !billAccountConfirmed && !success && !failed && (
         <p className="text-xs text-[#E9B213] dark:text-gold/80 text-center">
@@ -2358,6 +2454,29 @@ export default function ActionCard({ action }: ActionCardProps) {
           <p className="text-[11px] text-error/80 mt-0.5">
             This request is locked. Ask the AI to start a new payment request.
           </p>
+        </div>
+      )}
+
+      {isAlreadyProcessing && !failed && !success && (
+        <div className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-center">
+          <p className="text-xs font-semibold text-gold">⏳ Transaction Processing</p>
+          <p className="text-[11px] text-gold/80 mt-0.5">
+            This action is already being processed. Check your History tab for updates. Do not retry to avoid double-charging.
+          </p>
+          {txHash && (
+            <a
+              href={`https://nimiq.watch/#${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-gold underline mt-1 inline-block"
+              onClick={(e) => {
+                e.preventDefault();
+                openExternalUrl(`https://nimiq.watch/#${txHash}`);
+              }}
+            >
+              View on Nimiq Watch: {txHash.slice(0, 8)}...{txHash.slice(-6)}
+            </a>
+          )}
         </div>
       )}
     </div>

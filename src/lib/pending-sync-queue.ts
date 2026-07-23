@@ -166,3 +166,61 @@ export function clearFailedEntries(): void {
 export function getPendingSyncCount(): number {
   return getPendingSyncQueue().length;
 }
+
+/**
+ * Check if a specific transaction hash is already in the pending sync queue
+ * This prevents double-submission of the same transaction
+ */
+export function isTxHashPending(txHash: string): boolean {
+  const queue = getPendingSyncQueue();
+  return queue.some(entry => entry.txHash.toLowerCase() === txHash.toLowerCase());
+}
+
+/**
+ * Check if an action is already being processed by looking at the pending sync queue
+ * Returns the pending entry if found, null otherwise
+ */
+export function findPendingByActionDetails(
+  type: string,
+  details: Record<string, any>
+): PendingSync | null {
+  const queue = getPendingSyncQueue();
+  
+  // For orders, match by order type and key details
+  if (type === 'gift-card' || type === 'airtime' || type === 'bill') {
+    return queue.find(entry => {
+      if (entry.kind !== 'order') return false;
+      const payload = entry.payload;
+      return (
+        payload.type === type &&
+        payload.details?.product === details.product &&
+        payload.details?.recipient === details.recipient
+      );
+    }) || null;
+  }
+  
+  // For sends, match by recipient and amount
+  if (type === 'send') {
+    return queue.find(entry => {
+      if (entry.kind !== 'send') return false;
+      const payload = entry.payload;
+      return (
+        payload.toAddress === details.recipient &&
+        payload.amountLuna === details.amountLuna
+      );
+    }) || null;
+  }
+  
+  return null;
+}
+
+/**
+ * Get all pending syncs for a specific wallet address
+ */
+export function getPendingSyncsForWallet(walletAddress: string): PendingSync[] {
+  const queue = getPendingSyncQueue();
+  return queue.filter(entry => {
+    const entryWallet = entry.payload?.walletAddress || entry.payload?.fromAddress;
+    return entryWallet?.toLowerCase() === walletAddress.toLowerCase();
+  });
+}
