@@ -8,6 +8,7 @@ import { requestPayment, prewarmHub } from '@/lib/wallet';
 import { recordTransaction, createOrder, validateOrder, pollOrderStatus, getLeaderboard } from '@/lib/api-client';
 import { enqueuePendingSync, removePendingSync, isTxHashPending, findPendingByActionDetails } from '@/lib/pending-sync-queue';
 import { copyToClipboard } from '@/lib/clipboard';
+import { normalizeAddress } from '@/lib/address-utils';
 import QRCodeDisplay from './QRCodeDisplay';
 import BalanceDisplay from './BalanceDisplay';
 import QRScanner from './QRScanner';
@@ -232,7 +233,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         const validation = await validateOrder({
           type: action.type,
           details: action,
-          walletAddress: wallet.address || undefined,
+          walletAddress: wallet.address ? normalizeAddress(wallet.address) : undefined,
         });
         
         if (validation.valid && typeof validation.amountLuna === 'number' && validation.amountLuna > 0) {
@@ -343,7 +344,7 @@ export default function ActionCard({ action }: ActionCardProps) {
         return () => { cancelled = true; };
       }
       
-      validateOrder({ type: action.type, details: action, walletAddress: wallet.address || undefined })
+      validateOrder({ type: action.type, details: action, walletAddress: wallet.address ? normalizeAddress(wallet.address) : undefined })
         .then((validation) => {
           if (cancelled) return;
           if (validation.valid) {
@@ -432,7 +433,7 @@ export default function ActionCard({ action }: ActionCardProps) {
     if ((action.type === 'show-contacts' || action.type === 'list-contacts') && wallet.address && savedContacts.length === 0) {
       setLoadingContacts(true);
       import('@/lib/api-client').then(({ getSavedAddresses }) => {
-        getSavedAddresses(wallet.address!)
+        getSavedAddresses(normalizeAddress(wallet.address!))
           .then(contacts => {
             setSavedContacts(contacts);
           })
@@ -1320,12 +1321,13 @@ Your previous submission is still pending. Please check your History tab for upd
 
         // Recording is now a separate, retryable concern — never let its
         // failure undo the success message above.
+        const normalizedFromAddress = normalizeAddress(wallet.address);
         const syncId = enqueuePendingSync({
           kind: 'send',
           txHash: hash,
           payload: {
             type: 'send',
-            fromAddress: wallet.address,
+            fromAddress: normalizedFromAddress,
             toAddress: normalizedRecipient,
             amountLuna,
             txHash: hash,
@@ -1336,7 +1338,7 @@ Your previous submission is still pending. Please check your History tab for upd
         try {
           await recordTransaction({
             type: 'send',
-            fromAddress: wallet.address,
+            fromAddress: normalizedFromAddress,
             toAddress: normalizedRecipient,
             amountLuna,
             txHash: hash,
@@ -1356,7 +1358,7 @@ Your previous submission is still pending. Please check your History tab for upd
           
           // Check if this address is already saved
           const { getSavedAddresses } = await import('@/lib/api-client');
-          const contacts = await getSavedAddresses(wallet.address || '');
+          const contacts = await getSavedAddresses(normalizeAddress(wallet.address || ''));
           const alreadySaved = contacts.some(c => c.recipient_address.replace(/\s/g, '').toUpperCase() === normalizedRecipient.toUpperCase());
           
           if (!alreadySaved) {
@@ -1426,7 +1428,7 @@ Your previous submission is still pending. Please check your History tab for upd
             const orderResult = await createCryptoOrder({
               type: action.type,
               details: { ...action, recipientEmail: email || undefined },
-              walletAddress: wallet.address || '',  // Nimiq address for session auth
+              walletAddress: wallet.address ? normalizeAddress(wallet.address) : '',  // Nimiq address for session auth
               paymentAddress: paymentAddress,        // Polygon address for payment
               paymentMethod: 'usdt-polygon',
               coin: coin,
@@ -1489,7 +1491,7 @@ Your previous submission is still pending. Please check your History tab for upd
               content: `✅ USDT payment sent!\n\nVerifying on Polygon blockchain and fulfilling your order...\n\nTX: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
             });
 
-            const result = await confirmCryptoPayment(orderId, txHash, wallet.address);
+            const result = await confirmCryptoPayment(orderId, txHash, normalizeAddress(wallet.address));
 
             // Step 6: Display success + fulfillment data
             // CRITICAL FIX P0-7: Only lock AFTER successful confirmation
@@ -1626,7 +1628,8 @@ Your previous submission is still pending. Please check your History tab for upd
         });
 
         // CRITICAL: Log quoteId for debugging
-        console.log('[Order Creation] QuoteId:', quoteId, 'Type:', action.type, 'Wallet:', wallet.address);
+        const normalizedWalletAddress = normalizeAddress(wallet.address);
+        console.log('[Order Creation] QuoteId:', quoteId, 'Type:', action.type, 'Wallet:', normalizedWalletAddress);
         
         // Queue the order for retry in case createOrder fails to reach the backend
         const syncId = enqueuePendingSync({
@@ -1637,7 +1640,7 @@ Your previous submission is still pending. Please check your History tab for upd
             txHash: hash,
             amountLuna,
             details: { ...action, recipientEmail: email || undefined },
-            walletAddress: wallet.address,
+            walletAddress: normalizedWalletAddress,
             quoteId: quoteId || undefined,
           },
         });
@@ -1655,7 +1658,7 @@ Your previous submission is still pending. Please check your History tab for upd
             txHash: hash,
             amountLuna,
             details: { ...action, recipientEmail: email || undefined },
-            walletAddress: wallet.address,
+            walletAddress: normalizedWalletAddress,
             quoteId: quoteId || undefined, // Pass the validated quote ID
           });
           
